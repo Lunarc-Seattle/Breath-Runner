@@ -3,14 +3,52 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gamified Breathing Training for Lung Recovery — Jie (Fia) Yin</title>
+  <title>AeroCare — Smart Breathing Trainer Web Client</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    body { background-color: #F6F5F0; color: #111315; font-family: 'Inter', sans-serif; }
-    .font-serif { font-family: 'Instrument Serif', Georgia, serif; }
-    .font-mono { font-family: 'JetBrains Mono', monospace; }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
+    :root {
+      --pdf-teal: #13A4A9;
+      --pdf-purple: #8E90C6;
+      --pdf-yellow: #F0C754;
+      --pdf-pink: #F0A7AB;
+      --pdf-blue: #96C7D2;
+    }
+    body {
+      background-color: #F4F6FA;
+      color: #1E2432;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Top-left Smooth Ease-Out Dropdown Animation */
+    .dropdown-panel {
+      transform-origin: top left;
+      transition: opacity 0.36s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.36s cubic-bezier(0.16, 1, 0.3, 1),
+                  max-height 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .dropdown-closed {
+      opacity: 0;
+      transform: translateY(-10px) scale(0.97);
+      max-height: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .dropdown-open {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      max-height: 680px;
+      pointer-events: auto;
+    }
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-page {
+      animation: fadeSlideUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
   </style>
 </head>
 <body>
