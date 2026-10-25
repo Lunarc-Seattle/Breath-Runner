@@ -1,58 +1,325 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AeroCare — Smart Breathing Trainer Web Client</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <title>Lunarc Pacer · 地图1 - 森林·荧光秘境</title>
   <style>
     :root {
-      --pdf-teal: #13A4A9;
-      --pdf-purple: #8E90C6;
-      --pdf-yellow: #F0C754;
-      --pdf-pink: #F0A7AB;
-      --pdf-blue: #96C7D2;
+      --bg-dark: #071324;
+      --card-bg: rgba(12, 28, 52, 0.88);
+      --accent-lime: #d9e021;
+      --accent-amber: #fbb03b;
+      --accent-coral: #f15a24;
+      --text-main: #f4f7fb;
+      --text-muted: #9cb3c9;
     }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background-color: #F4F6FA;
-      color: #1E2432;
-      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: radial-gradient(circle at top right, #182e52, var(--bg-dark));
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 18px 24px;
     }
-    .font-mono {
-      font-family: 'JetBrains Mono', monospace;
+    .top-banner {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: linear-gradient(90deg, rgba(241, 90, 36, 0.22), rgba(217, 224, 33, 0.16));
+      border: 1px solid rgba(251, 176, 59, 0.45);
+      border-radius: 14px;
+      padding: 12px 18px;
+      margin-bottom: 16px;
     }
-    /* Top-left Smooth Ease-Out Dropdown Animation */
-    .dropdown-panel {
-      transform-origin: top left;
-      transition: opacity 0.36s cubic-bezier(0.16, 1, 0.3, 1),
-                  transform 0.36s cubic-bezier(0.16, 1, 0.3, 1),
-                  max-height 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(241, 90, 36, 0.25);
+      border: 1px solid var(--accent-coral);
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #ffd3c4;
     }
-    .dropdown-closed {
-      opacity: 0;
-      transform: translateY(-10px) scale(0.97);
-      max-height: 0;
-      pointer-events: none;
+    .status-pill.connected {
+      background: rgba(57, 181, 74, 0.25);
+      border-color: #39b54a;
+      color: #b9f6ca;
+    }
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--accent-coral);
+      box-shadow: 0 0 8px var(--accent-coral);
+    }
+    .status-pill.connected .dot {
+      background: #39b54a;
+      box-shadow: 0 0 8px #39b54a;
+    }
+    .banner-title { font-size: 16px; font-weight: 700; color: #fff; }
+    .banner-highlight { color: var(--accent-lime); text-decoration: underline; text-underline-offset: 4px; }
+    .btn {
+      cursor: pointer;
+      border: none;
+      border-radius: 10px;
+      padding: 9px 15px;
+      font-weight: 600;
+      font-size: 13px;
+      transition: transform 0.15s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: linear-gradient(135deg, var(--accent-amber), var(--accent-coral)); color: #fff; }
+    .btn-outline { background: rgba(255, 255, 255, 0.08); color: var(--text-main); border: 1px solid rgba(255, 255, 255, 0.22); }
+    .main-grid { display: grid; grid-template-columns: 1fr 350px; gap: 18px; }
+    @media (max-width: 960px) { .main-grid { grid-template-columns: 1fr; } }
+    .canvas-card {
+      position: relative;
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 18px;
       overflow: hidden;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
     }
-    .dropdown-open {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-      max-height: 680px;
+    #forestCanvas { width: 100%; height: 500px; display: block; cursor: pointer; }
+    .hud-overlay {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      right: 14px;
+      display: flex;
+      justify-content: space-between;
+      pointer-events: none;
+    }
+    .hud-box {
       pointer-events: auto;
+      background: rgba(7, 19, 36, 0.76);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 12px;
+      padding: 10px 14px;
     }
-    @keyframes fadeSlideUp {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
+    .hud-score { font-size: 22px; font-weight: 800; color: var(--accent-lime); }
+    .controls-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 16px;
+      background: rgba(7, 19, 36, 0.9);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
     }
-    .animate-page {
-      animation: fadeSlideUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    .side-panel { display: flex; flex-direction: column; gap: 14px; }
+    .panel-card {
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      padding: 16px;
     }
+    .panel-card h3 {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--accent-amber);
+      margin-bottom: 10px;
+    }
+    .layer-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 0;
+      font-size: 13px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .api-log {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      background: rgba(0, 0, 0, 0.45);
+      border-radius: 10px;
+      padding: 10px;
+      max-height: 190px;
+      overflow-y: auto;
+      color: #a5d6ff;
+    }
+    .api-log div { margin-bottom: 6px; border-bottom: 1px dashed rgba(255, 255, 255, 0.1); padding-bottom: 4px; }
   </style>
 </head>
 <body>
-  <div id="root"></div>
-  <script type="module" src="./src/app.js"></script>
+  <header class="top-banner">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <span id="deviceBadge" class="status-pill">
+        <span class="dot"></span>
+        <span id="deviceStatusText">未连接设备 (No Device Linked)</span>
+      </span>
+      <span class="banner-title">
+        你还没有连接设备，但可以试玩 <span class="banner-highlight">【地图1 - 森林·荧光秘境】</span>
+      </span>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button id="toggleDeviceBtn" class="btn btn-outline">切换：模拟硬件设备连接</button>
+      <button id="syncBackendBtn" class="btn btn-primary">同步成绩至后端 API (POST /api/sessions)</button>
+    </div>
+  </header>
+
+  <main class="main-grid">
+    <section class="canvas-card">
+      <div class="hud-overlay">
+        <div class="hud-box">
+          <div style="font-size:12px;color:var(--text-muted);">当前试玩章节</div>
+          <div style="font-weight:700;font-size:15px;">地图1 - 森林·荧光秘境 (Forest Sanctuary)</div>
+          <div id="breathText" style="font-size:12px;color:var(--accent-amber);margin-top:4px;">节律引导：吸气 INHALE (4s)</div>
+        </div>
+        <div class="hud-box" style="text-align:right;">
+          <div style="font-size:12px;color:var(--text-muted);">收集 '$' 金币得分</div>
+          <div class="hud-score">$<span id="scoreValue">12</span> <span style="font-size:13px;color:#fff;">(Combo x<span id="comboValue">3</span>)</span></div>
+        </div>
+      </div>
+
+      <canvas id="forestCanvas" title="点击画面或按空格键让女孩跳跃收集金币"></canvas>
+
+      <div class="controls-bar">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button id="jumpBtn" class="btn btn-primary">跳跃收集 '$' 金币 (Space / 点击画面)</button>
+          <span style="font-size:13px;color:var(--text-muted);">提示：跟随前方金色折面箭头节奏跳跃</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;">
+          <span>动画倍速:</span>
+          <input id="speedSlider" type="range" min="0.5" max="2.0" step="0.1" value="1.0" />
+          <span id="speedLabel">1.0x</span>
+        </div>
+      </div>
+    </section>
+
+    <aside class="side-panel">
+      <div class="panel-card">
+        <h3>Illustrator (.ai) 动画图层检视器</h3>
+        <label class="layer-toggle">
+          <span>gold · 同心圆金月光晕脉动</span>
+          <input type="checkbox" checked data-layer="goldMoon" />
+        </label>
+        <label class="layer-toggle">
+          <span>山 1 / 山 2 · 多重远山视差滚动</span>
+          <input type="checkbox" checked data-layer="mountains" />
+        </label>
+        <label class="layer-toggle">
+          <span>图层 1 · 乳白分叉古树迎风摇曳</span>
+          <input type="checkbox" checked data-layer="ancientTrees" />
+        </label>
+        <label class="layer-toggle">
+          <span>奔跑女孩骨骼 + 3D金箭头 + '$'金币</span>
+          <input type="checkbox" checked data-layer="runnerAndCoins" />
+        </label>
+        <label class="layer-toggle">
+          <span>图层 3 · 森林荧光孢子粒子流</span>
+          <input type="checkbox" checked data-layer="particles" />
+        </label>
+      </div>
+
+      <div class="panel-card">
+        <h3>全栈后端遥测日志 (Express REST API)</h3>
+        <div id="apiLogBox" class="api-log">
+          <div>[SYSTEM] 已加载模块化架构: src/core/forestMapState.js, src/animation/forestEngine.js, src/services/forestTelemetryClient.js</div>
+          <div>[MODE] 当前处于「未连接设备」免硬件试玩模式 -> 地图1 - 森林·荧光秘境</div>
+        </div>
+      </div>
+
+      <div class="panel-card">
+        <h3>工程目录分类架构 (Clean Architecture)</h3>
+        <div style="font-size:12px;line-height:1.7;color:var(--text-muted);">
+          • <code>src/animation/forestEngine.js</code>：HiDPI 矢量场景与骨骼动画<br/>
+          • <code>src/core/forestMapState.js</code>：跳跃物理、碰撞检测与状态机<br/>
+          • <code>src/services/forestTelemetryClient.js</code>：REST API 通信与离线存储<br/>
+          • <code>server/app.js</code> & <code>routes/</code>：Express 后端接口与持久层
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <script type="module">
+    import { ForestMapState } from './src/core/forestMapState.js';
+    import { ForestTelemetryClient } from './src/services/forestTelemetryClient.js';
+    import { ForestAnimationEngine } from './src/animation/forestEngine.js';
+
+    const game = new ForestMapState();
+    const api = new ForestTelemetryClient();
+    const canvas = document.getElementById('forestCanvas');
+
+    const scoreEl = document.getElementById('scoreValue');
+    const comboEl = document.getElementById('comboValue');
+    const breathEl = document.getElementById('breathText');
+    const logBox = document.getElementById('apiLogBox');
+
+    function appendLog(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      logBox.prepend(div);
+    }
+
+    const engine = new ForestAnimationEngine(canvas, game, ({ score, combo }) => {
+      scoreEl.textContent = score;
+      comboEl.textContent = combo;
+      appendLog(`[COIN] 收集 '$' 金币成功！当前得分: $${score} (Combo x${combo})`);
+    });
+
+    function loop() {
+      engine.render();
+      breathEl.textContent = `节律引导：${game.breathPhase}`;
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+
+    const handleJump = () => game.triggerJump();
+    canvas.addEventListener('pointerdown', handleJump);
+    document.getElementById('jumpBtn').addEventListener('click', handleJump);
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        handleJump();
+      }
+    });
+
+    document.getElementById('speedSlider').addEventListener('input', (e) => {
+      game.speedMultiplier = parseFloat(e.target.value);
+      document.getElementById('speedLabel').textContent = `${game.speedMultiplier.toFixed(1)}x`;
+    });
+
+    document.querySelectorAll('[data-layer]').forEach((checkbox) => {
+      checkbox.addEventListener('change', (e) => {
+        const key = e.target.getAttribute('data-layer');
+        engine.layers[key] = e.target.checked;
+      });
+    });
+
+    document.getElementById('toggleDeviceBtn').addEventListener('click', () => {
+      const connected = game.toggleDeviceConnection();
+      const badge = document.getElementById('deviceBadge');
+      const statusText = document.getElementById('deviceStatusText');
+      if (connected) {
+        badge.classList.add('connected');
+        statusText.textContent = '已连接模拟传感器 (BLE Connected)';
+        appendLog('[DEVICE] 蓝牙呼吸传感器已模拟接入，实时流同步开启');
+      } else {
+        badge.classList.remove('connected');
+        statusText.textContent = '未连接设备 (No Device Linked)';
+        appendLog('[DEVICE] 已切换回免设备试玩模式：地图1 - 森林·荧光秘境');
+      }
+    });
+
+    document.getElementById('syncBackendBtn').addEventListener('click', async () => {
+      const res = await api.syncSessionData({
+        mapId: game.mapId,
+        deviceConnected: game.deviceConnected,
+        score: game.score,
+        combo: game.combo
+      });
+      appendLog(`[POST /api/sessions] 200 OK -> 会话 ${res.id} 已保存 (模式: ${res.deviceMode}, 金币: $${res.coinsCollected})`);
+    });
+  </script>
 </body>
 </html>
