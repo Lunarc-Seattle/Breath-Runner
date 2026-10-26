@@ -61,8 +61,36 @@ jobs:
           path: playwright-report
           retention-days: 7
 
+  lighthouse:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - name: Start the app
+        run: |
+          PORT=4180 DATA_FILE="$RUNNER_TEMP/sessions.json" node server/server.js &
+          for i in $(seq 1 30); do curl -fs http://127.0.0.1:4180/api/v1/health && exit 0; sleep 1; done
+          echo "::error::server did not start" && exit 1
+      - name: Lighthouse (accessibility 100, best practices and SEO >= 95)
+        run: npx lhci autorun
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-report
+          path: lighthouse-report
+          retention-days: 14
+
   deploy:
-    needs: [test, e2e]
+    needs: [test, e2e, lighthouse]
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:

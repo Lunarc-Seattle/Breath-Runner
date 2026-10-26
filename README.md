@@ -56,21 +56,37 @@ The game runs on the original `pic/background.ai` file, not on a redrawing of it
 ## Engineering highlights
 
 - **Art pipeline from the source file.** `scripts/assets/export_forest_ai.py` uses PyMuPDF to read the `.ai`. It deletes the sprite images before rendering the background, samples the cliff paths into top-surface profiles, and writes the coin, runner and arrow positions to `src/animation/forestMap.js`.
-- **Game logic separated from rendering.** `src/core/forestRunner.ts` is a pure, typed step function covering jump, glide, lung, coins, falls and laps, all in the illustration's own coordinates. `src/animation/forestEngine.js` only draws what the state says, so the rules can be unit-tested without a browser.
+- **Game logic separated from rendering.** `src/core/forestRunner.ts` is a pure, typed step function covering jump, glide, lung, coins, falls and laps, all in the illustration's own coordinates. `src/animation/forestEngine.js` only draws what the state says (type-checked through JSDoc against the core types), so the rules can be unit-tested without a browser.
 - **Levels that are guaranteed to be beatable.** Levels 2 and 3 are written as *breath scripts* (where to inhale, for how long). The physics simulates each script and drops coins along the flight arcs, so every coin is reachable by construction. A test plays each script and checks that it collects every coin with zero falls.
 - **Microphone breath detection.** `src/lib/micBreath.js` band-passes the mic signal, calibrates to the room's noise floor, and uses hysteresis so a fading breath doesn't flicker. The detector is a pure function with its own tests.
 - **Typed core, small React shell.** Vite + React 18. The game rules, levels, session model and stats in `src/core/` are TypeScript with domain types (`RunnerState`, a discriminated `RunnerEvent` union, `ForestMap`, `Session`). Node 24 runs the same `.ts` files directly for the server and tests, so the browser and the API share one validator.
-- **One codebase, two storage backends.** On GitHub Pages, runs are saved in `localStorage`; under `npm start`, they go through an Express REST API (`/api/v1/sessions`). The client probes for the API and falls back on its own. The server generates ids, rejects impossible results (coins above what a run allows, future timestamps), returns 413 for oversized bodies, and its JSON store rolls back failed writes so memory and disk never disagree.
+- **One codebase, two storage backends.** On GitHub Pages, runs are saved in `localStorage`. Under `npm start`, they go through an Express REST API documented in [`docs/openapi.yaml`](docs/openapi.yaml) and served at `/api/v1/openapi.yaml`. The client probes for the API and falls back on its own.
+- **A production-shaped API, before there's a database.**
+  - **Validation:** the server generates ids and rejects impossible results (coins above what a run allows, future timestamps), returning 400s with reasons, 413 for oversized bodies and 429 from the write rate limit.
+  - **Paging:** cursor pagination is stable even when timestamps tie.
+  - **Hardening:** helmet security headers with a strict CSP, structured pino request logs that never contain bodies, and a health check that verifies storage is writable.
+  - **Shutdown:** on SIGTERM the server drains in-flight writes before exiting.
+  - **The JSON store:** it skips corrupt rows on load and rolls back failed writes, so memory and disk stay consistent even when writes interleave.
 - **Routing and resilience.** Hash routes (`#/play`, `#/history`) make deep links, reload and the back button work on static hosting. Each page sits in its own error boundary.
-- **Tested at three levels.** 39 unit and API tests (`node:test`, 93% line coverage with a CI gate), and 34 Playwright end-to-end tests. One plays a full lap by following the on-screen breath cue, saves it, and checks it in Run History. Others cover every route, keyboard and focus behaviour, and API validation.
-- **CI that gates the deploy.** Each push and PR runs lint (ESLint), formatting (Prettier), type checking, unit tests with coverage, the production build and the e2e suite. Only `main` deploys, and only when all of it passes. Dependabot keeps dependencies current.
-- **Accessible and fast.** Lighthouse (desktop) scores **100 for Accessibility, Best Practices and SEO** on the home, game and history pages, with Performance 97–99. Filled brand colors use slightly deeper variants wherever they carry white text, so every label meets WCAG AA contrast (4.5:1). The game has an `aria-live` breath cue, labelled controls, focus moved to each card's main action, and reduced-motion support. The navigation drawer is `inert` while closed.
+- **Tested at three levels.** 57 unit and API tests (`node:test`, 94% line coverage with a CI gate) and 34 Playwright end-to-end tests. One plays a full lap by following the on-screen breath cue, saves it, and checks it in Run History. Others cover every route, keyboard and focus behaviour, and API validation.
+- **CI that gates the deploy.** Each push and PR runs:
+  - lint (ESLint), formatting (Prettier) and type checking;
+  - unit tests with coverage, and the production build;
+  - the e2e suite;
+  - Lighthouse CI, which fails the build if any of the three key pages drops below 100 accessibility.
+
+  `main` is protected: changes land only through pull requests with passing checks, and only `main` deploys. Dependabot keeps dependencies current.
+- **A design system in code.** The palette lives in one token file ([`src/styles/tokens.js`](src/styles/tokens.js)) that feeds Tailwind and the JS helpers. Each token documents its role and contrast rule (e.g. white text only on the "deep" variants). Moving 220 hard-coded colors to tokens was verified to change nothing: computed styles matched across 2,325 elements on all 13 pages.
+- **No third-party requests at runtime.** Fonts are self-hosted and React is bundled, so the static build ships a CSP of `default-src 'self'`.
+- **Accessible and fast.** Lighthouse (desktop, checked in CI) scores **100 for Accessibility, Best Practices and SEO** on the home, game and history pages, with Performance 98–100. Filled brand colors use slightly deeper variants wherever they carry white text, so every label meets WCAG AA contrast (4.5:1). The game has an `aria-live` breath cue, labelled controls, focus moved to each card's main action, and reduced-motion support. The navigation drawer is `inert` while closed.
 
 ## The rest of the app
 
 Breath Runner is page 04 of a 12-page companion-app prototype: welcome & resume, daily schedule, map choice, spirometry lab, co-op mode, leaderboard, hygiene booking, device rental, physician guidance, recovery journey and profile. A 13th page, **Run History**, lists your saved runs with coins, breath sync, falls and laps. Navigation hides in a drawer that eases in when you hover the page pill or the left edge of the screen; the AeroCare mark is always Home.
 
 ![Navigation drawer open from the left edge, grouped into Train, Together, Care and You](docs/media/nav-drawer.jpg)
+
+![Run History: total runs, minutes, best breath sync and coins, then a table of saved runs with level, duration, coins, breath sync, falls and laps](docs/media/run-history.jpg)
 
 **Honest scope:** apart from the game, these pages are interactive prototypes with sample data. Trainer pairing uses the real Web Bluetooth API (Chrome / Edge) and looks for a device named `AeroCare…`. The trainer itself is a design concept, so without one the app says no trainer was found and points you to free-trial mode. The microphone input, the game and the session storage are real.
 
@@ -86,10 +102,12 @@ npm run dev           # Vite dev server with hot reload (run `npm run server` al
 
 | Command | What it does |
 |---|---|
-| `npm test` | 39 unit and API tests (`npm run test:coverage` adds the coverage gate) |
+| `npm test` | 57 unit and API tests (`npm run test:coverage` adds the coverage gate) |
 | `npm run test:e2e` | 34 Playwright end-to-end tests (builds and starts the server itself) |
 | `npm run lint` · `npm run typecheck` · `npm run format:check` | the same checks CI runs |
 | `npm run check` | lint, format, types and unit tests with coverage in one go |
+
+Server settings (environment variables): `PORT` (default 4000), `DATA_FILE` (session JSON file), `LOG_LEVEL` (pino level, default `info`), `RATE_LIMIT_PER_MIN` (writes per client per minute, default 30), `TRUST_PROXY` (set when running behind a reverse proxy).
 
 To re-export the level art after editing the illustration:
 
@@ -105,12 +123,15 @@ pic/background.ai               original illustration (source of truth for the l
 scripts/assets/                 .ai -> web assets + cliff/coin data
 public/assets/forest/           exported background and sprites
 src/core/                       typed game rules, levels, session model, stats (pure, tested)
+src/styles/tokens.js            design tokens: the brand palette and its contrast rules
 src/animation/forestEngine.js   canvas renderer, camera, particles
 src/app/                        routes, hash router, app state (useApp)
 src/pages/                      one component per route
 src/components/                 game stage, navigation drawer, error boundary
 src/lib/micBreath.js            microphone breath detector
 server/                         Express API and JSON session store
+config/csp.js                   one Content-Security-Policy for the server header and the static build
+docs/openapi.yaml               API specification
 tests/                          node:test suites; tests/e2e/ Playwright specs
 ```
 
