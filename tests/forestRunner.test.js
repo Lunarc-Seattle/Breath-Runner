@@ -53,7 +53,60 @@ test('each level is harder than the one before', () => {
   assert.ok(l1.speed < l2.speed && l2.speed < l3.speed);
   assert.ok(l1.config.lungSec > l2.config.lungSec && l2.config.lungSec > l3.config.lungSec);
   assert.ok(l1.config.coinReach > l2.config.coinReach && l2.config.coinReach > l3.config.coinReach);
-  assert.ok(l2.config.breathCues.length < l3.config.breathCues.length);
+  assert.ok(l1.config.refillSec < l2.config.refillSec && l2.config.refillSec < l3.config.refillSec);
+  // Canyon trains rhythm (more breaths); Glacier trains long breaths (fewer, longer).
+  assert.ok(l2.breathsPerLap > l1.breathsPerLap && l2.breathsPerLap > l3.breathsPerLap);
+  const avgHold = l => l.config.breathCues.reduce((sum, [, hold]) => sum + hold, 0) / l.config.breathCues.length;
+  assert.ok(avgHold(l3) > avgHold(l2));
+});
+
+/** Plays one lap jumping only at cliff edges with the given inhale length. */
+function edgeRun(level, holdSec) {
+  const { map, config, speed } = level;
+  let s = createRunnerState(map);
+  let holdLeft = 0;
+  let jumps = 0;
+  const collected = new Set(); // from events: `taken` resets when the lap completes
+  while (s.lap === 1 && s.elapsed < 60) {
+    if (s.onGround && holdLeft <= 0 && edgeDistance(map, s.x, s.y, 40, config) < 30) {
+      holdLeft = holdSec;
+      jumps += 1;
+    }
+    s = stepRunner(s, DT, holdLeft > 0, map, config, speed);
+    holdLeft -= DT;
+    for (const e of s.events) if (e.type === 'coin') collected.add(e.i);
+  }
+  return { s, jumps, collected };
+}
+
+test('Level 1: every coin in the artwork is collectable, including the two drawn half-size', () => {
+  const level = FOREST_LEVELS['MAP-FOREST-01'];
+  assert.ok(
+    level.map.coins.every(c => c.r === level.map.coins[0].r),
+    'one standard coin size'
+  );
+  const { jumps, collected } = edgeRun(level, 1.6);
+  assert.ok(collected.has(22), 'low coin by the third cliff');
+  assert.ok(collected.has(25), 'coin above the floating ledge');
+  assert.equal(jumps, level.breathsPerLap, 'breathsPerLap matches a clean lap');
+});
+
+test('Glacier rewards long breaths: short, just-enough inhales miss most coins', () => {
+  const level = FOREST_LEVELS['MAP-GLACIER-03'];
+  const { map, config, speed } = level;
+  // Same jump points as the script, but each inhale cut to 0.6s.
+  let s = createRunnerState(map);
+  let next = 0;
+  let holdLeft = 0;
+  while (s.lap === 1 && s.elapsed < 60) {
+    if (s.onGround && next < config.breathCues.length && s.x >= config.breathCues[next][0]) {
+      next += 1;
+      holdLeft = 0.6;
+    }
+    s = stepRunner(s, DT, holdLeft > 0, map, config, speed);
+    holdLeft -= DT;
+  }
+  assert.ok(s.coins < map.coins.length / 2, `short breaths got ${s.coins}/${map.coins.length}`);
 });
 
 test("following a scripted level's breath cues collects every coin without falling", () => {
