@@ -28,11 +28,15 @@ Breath Runner turns the same exercise into a short run through an illustrated la
 
 Input: hold the screen, hold Space, or **breathe into your microphone**. The mic mode listens for the sound of airflow, measures the room's noise first, and needs no hardware.
 
-| Level | Coins | Breaths per lap | Lung (glide time) | Pace |
-|---|---|---|---|---|
-| Forest · 1 | 30, placed as drawn in the illustration | ~5, only at the gaps | 2.4 s | 1.0× |
-| Sunlit Canyon · 2 | 22, along longer glide arcs | 7 | 2.2 s | 1.1× |
-| Glacier Ridge · 3 | 22, higher and sparser | 10 | 2.0 s | 1.2× |
+Each level trains a different breathing skill instead of just running faster. The start card explains it, and every number below is computed from the level data:
+
+| Level | Skill | Breaths per lap | Avg inhale | Breath refill | Coins | Pace |
+|---|---|---|---|---|---|---|
+| Forest · 1 | Learn the jump: only the big gap needs a real breath | 4 | 0.33 s | 1.6 s | 30, as drawn in the illustration | 1.0× |
+| Sunlit Canyon · 2 | Keep a rhythm: short hops between the big jumps | 7 | 0.64 s | 2.2 s | 25 | 1.1× |
+| Glacier Ridge · 3 | Long, controlled breaths: coins at the top of long glides, slow refill | 4 | 1.23 s | 2.8 s | 19 | 1.2× |
+
+A test proves the Glacier point: cutting each breath to 0.6 s at the same jump points collects fewer than half the coins.
 
 <p>
   <img src="docs/media/level1-forest.jpg" alt="Level 1 in play: HUD with coins and breath sync, runner on the cliffs, breath dock at the bottom" width="49%" />

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createForestStage, FOREST_BACKGROUND_URL } from '../animation/forestEngine.js';
 import { getSessionRepository } from '../services/apiClient.js';
 import { playChime, playCoin, unlockAudio } from '../lib/audio.js';
-import { getLevel } from '../core/forestLevels.ts';
+import { getLevel, LEVEL_COUNT } from '../core/forestLevels.ts';
 import { solidStyle } from '../data/simStore.js';
 import { startMicBreath, describeMicError } from '../lib/micBreath.js';
 
@@ -411,29 +411,45 @@ export function ForestRunnerStage({
           {!started && (
             <div className="absolute inset-0 flex items-center justify-center p-4 bg-game-navy/25 backdrop-blur-[2px]">
               <div
-                className={`${GLASS} rounded-3xl max-w-md w-full p-6 md:p-7 text-center pointer-events-auto`}
+                className={`${GLASS} rounded-3xl max-w-md w-full max-h-full overflow-y-auto p-5 md:p-7 text-center pointer-events-auto`}
                 onPointerDown={keepPointer}
               >
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-yellow/20 text-game-coin-soft text-[11px] font-mono font-semibold">
-                  {map.valveKpa} kPa valve · target {map.targetL} L
+                <div className="flex items-center justify-center gap-2 text-[11px] font-mono font-semibold">
+                  <span className="text-white/70">
+                    LEVEL {level.number} OF {LEVEL_COUNT}
+                  </span>
+                  <span className="flex gap-1" role="img" aria-label={`Difficulty ${level.number} of ${LEVEL_COUNT}`}>
+                    {Array.from({ length: LEVEL_COUNT }, (_, i) => (
+                      <span
+                        key={i}
+                        className={`w-2 h-2 rounded-full ${i < level.number ? 'bg-game-coin' : 'bg-white/25'}`}
+                      />
+                    ))}
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-brand-yellow/20 text-game-coin-soft">
+                    {map.valveKpa} kPa · {map.targetL} L
+                  </span>
                 </div>
                 <h3 className="text-2xl font-bold mt-3">{map.name}</h3>
-                <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+                <div className="mt-1 text-sm font-semibold text-game-mint">Skill: {level.skill}</div>
+                <p className="text-sm text-white/85 mt-2 leading-relaxed">{level.focus}</p>
+                <div className="mt-4 grid grid-cols-4 gap-2 text-center">
                   {[
-                    [level.map.coins.length, 'coins'],
-                    [`${level.config.lungSec}s`, 'lung'],
-                    [`${level.speed}×`, 'pace']
+                    [level.breathsPerLap, 'breaths / lap'],
+                    [`${level.avgBreathSec}s`, 'avg inhale'],
+                    [`${level.config.refillSec}s`, 'breath refill'],
+                    [level.map.coins.length, 'coins']
                   ].map(([v, k]) => (
-                    <div key={k} className="rounded-xl bg-white/10 py-2">
+                    <div key={k} className="rounded-xl bg-white/10 py-2 px-1">
                       <div className="text-base font-bold font-mono text-game-coin">{v}</div>
-                      <div className="text-[10px] uppercase tracking-wider text-white/60">{k}</div>
+                      <div className="text-[10px] leading-tight uppercase tracking-wider text-white/70">{k}</div>
                     </div>
                   ))}
                 </div>
-                <p className="text-sm text-white/80 mt-2 leading-relaxed">
+                <p className="text-xs text-white/75 mt-3 leading-relaxed">
                   She runs on her own. When the golden arrow tilts up,{' '}
-                  <strong className="text-game-coin">start a long, steady inhale</strong> to jump. Keep inhaling to
-                  glide across the gap, then exhale to land.
+                  <strong className="text-game-coin">start a long, steady inhale</strong> to jump; keep inhaling to
+                  glide, then exhale to land. Pace {level.speed}×.
                 </p>
                 <div className="mt-4 grid grid-cols-3 gap-2 text-[11px] font-mono text-white/75">
                   <div className="rounded-xl bg-white/10 py-2">Hold screen</div>
