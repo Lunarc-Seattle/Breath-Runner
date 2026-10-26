@@ -14,6 +14,9 @@ concurrency:
   # Never cancel a Pages deploy halfway through.
   cancel-in-progress: false
 
+# test, e2e and lighthouse run in parallel; each builds the same commit (the build takes ~1s).
+# report always runs and turns their outputs into the quality page + PR summary;
+# deploy (main only) publishes the app with the quality page at /quality/.
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -28,7 +31,7 @@ jobs:
       - run: npm run format:check
       - run: npm run typecheck
       - name: Unit tests with coverage gate
-        run: npm run test:coverage
+        run: npm run test:ci
       - run: npm run build
       - uses: actions/upload-artifact@v4
         with:
@@ -36,9 +39,14 @@ jobs:
           path: dist
           if-no-files-found: error
           retention-days: 1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: coverage
+          retention-days: 7
 
   e2e:
-    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -47,22 +55,21 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci --no-audit --no-fund
-      - run: npx playwright install --with-deps chromium
-      - uses: actions/download-artifact@v8
-        with:
-          name: dist
-          path: dist
+      - run: npm run build
+      # Playwright runs on the Google Chrome preinstalled on the runner (see playwright.config.js),
+      # so there is no browser download here.
       - name: End-to-end tests (Playwright)
         run: npm run test:e2e
       - uses: actions/upload-artifact@v4
-        if: failure()
+        if: always()
         with:
           name: playwright-report
-          path: playwright-report
+          path: |
+            playwright-report
+            e2e-results
           retention-days: 7
 
   lighthouse:
-    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -71,13 +78,10 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci --no-audit --no-fund
-      - uses: actions/download-artifact@v8
-        with:
-          name: dist
-          path: dist
+      - run: npm run build
       - name: Start the app
         run: |
-          PORT=4180 DATA_FILE="$RUNNER_TEMP/sessions.json" node server/server.js &
+          PORT=4180 DATA_FILE="$RUNNER_TEMP/sessions.json" LOG_LEVEL=warn node server/server.js &
           for i in $(seq 1 30); do curl -fs http://127.0.0.1:4180/api/v1/health && exit 0; sleep 1; done
           echo "::error::server did not start" && exit 1
       - name: Lighthouse (accessibility 100, best practices and SEO >= 95)
@@ -89,8 +93,44 @@ jobs:
           path: lighthouse-report
           retention-days: 14
 
-  deploy:
+  report:
     needs: [test, e2e, lighthouse]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: actions/download-artifact@v8
+        continue-on-error: true
+        with:
+          name: coverage
+          path: coverage
+      - uses: actions/download-artifact@v8
+        continue-on-error: true
+        with:
+          name: playwright-report
+          path: .
+      - uses: actions/download-artifact@v8
+        continue-on-error: true
+        with:
+          name: lighthouse-report
+          path: lighthouse-report
+      - name: Build the quality report (also written to this run's summary)
+        run: >-
+          node scripts/ci/quality-report.mjs --out quality
+          --lcov coverage/lcov.info --junit coverage/junit.xml
+          --e2e e2e-results/results.json --e2e-report playwright-report
+          --lighthouse lighthouse-report
+      - uses: actions/upload-artifact@v4
+        with:
+          name: quality
+          path: quality
+          retention-days: 14
+
+  deploy:
+    needs: [test, e2e, lighthouse, report]
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
@@ -104,6 +144,10 @@ jobs:
         with:
           name: dist
           path: dist
+      - uses: actions/download-artifact@v8
+        with:
+          name: quality
+          path: dist/quality
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:
