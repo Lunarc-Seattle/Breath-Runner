@@ -16,18 +16,21 @@ function read(key, fallback) {
   }
 }
 
+/** Returns false when storage is unavailable or full, so callers can tell the user. */
 function write(key, value) {
   try {
     window.localStorage.setItem(key, JSON.stringify(value));
+    return true;
   } catch {
-    // Storage unavailable or full; in-memory state still works for this visit.
+    return false;
   }
 }
 
 export const LocalStore = {
   loadSessions: () => {
     const list = read(KEYS.sessions, []);
-    return Array.isArray(list) ? list : [];
+    // Ignore anything that isn't a saved run (hand-edited or corrupted storage).
+    return Array.isArray(list) ? list.filter(s => s && typeof s === 'object' && typeof s.completedAt === 'string') : [];
   },
   saveSessions: sessions => write(KEYS.sessions, sessions)
 };

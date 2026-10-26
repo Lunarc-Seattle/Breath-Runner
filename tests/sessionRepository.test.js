@@ -66,3 +66,57 @@ test('concurrent adds are all persisted', async () => {
   await Promise.all(Array.from({ length: 10 }, () => repo.add(run)));
   assert.equal(JSON.parse(fs.files.get('/data/sessions.json')).length, 10);
 });
+
+test('malformed rows in the file are skipped, not fatal', async () => {
+  const fs = fakeFs();
+  const good = {
+    id: 'a',
+    patternId: 'p',
+    patternName: 'P',
+    rounds: 1,
+    durationSec: 10,
+    completedAt: '2026-10-01T10:00:00.000Z'
+  };
+  fs.files.set(
+    '/data/sessions.json',
+    JSON.stringify([good, { id: 'no-date' }, null, 'junk', { ...good, id: 'b', completedAt: 'nope' }])
+  );
+  const warnings = [];
+  const repo = await createSessionRepository({
+    filePath: '/data/sessions.json',
+    fs,
+    log: { warn: m => warnings.push(m) }
+  });
+  assert.deepEqual(
+    repo.list().map(s => s.id),
+    ['a']
+  );
+  assert.equal(warnings.length, 1);
+});
+
+test('interleaved adds: a failed write never resurrects its row on disk', async () => {
+  const fs = fakeFs();
+  const repo = await createSessionRepository({ filePath: '/data/sessions.json', fs });
+  fs.failNext = 1;
+  const [a, b] = await Promise.allSettled([repo.add(run), repo.add(run)]);
+  assert.equal(a.status, 'rejected');
+  assert.equal(b.status, 'fulfilled');
+  const onDisk = JSON.parse(fs.files.get('/data/sessions.json'));
+  assert.deepEqual(
+    onDisk.map(s => s.id),
+    repo.list().map(s => s.id)
+  );
+  assert.equal(onDisk.length, 1);
+});
+
+test('a failed clear keeps rows added while it was in flight', async () => {
+  const fs = fakeFs();
+  const repo = await createSessionRepository({ filePath: '/data/sessions.json', fs });
+  await repo.add(run);
+  fs.failNext = 1;
+  const [cleared, added] = await Promise.allSettled([repo.clear(), repo.add(run)]);
+  assert.equal(cleared.status, 'rejected');
+  assert.equal(added.status, 'fulfilled');
+  assert.equal(repo.list().length, 2);
+  assert.equal(JSON.parse(fs.files.get('/data/sessions.json')).length, 2);
+});

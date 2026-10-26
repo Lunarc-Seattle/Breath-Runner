@@ -123,3 +123,16 @@ test('an oversized body is a 413, not a 500', async () => {
   const res = await post({ patternId: 'x'.repeat(20000) });
   assert.equal(res.status, 413);
 });
+
+test('long sessions with many laps can still be saved', async () => {
+  const res = await post({
+    patternId: 'MAP-FOREST-01',
+    patternName: 'Forest',
+    rounds: 40,
+    durationSec: 900,
+    coins: 1150,
+    totalCoins: 30
+  });
+  assert.equal(res.status, 201);
+  await fetch(`${base}/sessions`, { method: 'DELETE' });
+});

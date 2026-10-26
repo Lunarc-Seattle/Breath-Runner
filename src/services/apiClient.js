@@ -37,9 +37,17 @@ export async function detectBackend() {
 
 let repositoryPromise = null;
 
-/** The session repository for this page, resolved once (the health probe can take up to 800ms). */
+/**
+ * The session repository for this page. A found server is remembered; "no server" is not,
+ * so one slow probe (e.g. a cold start) doesn't pin the whole visit to localStorage.
+ */
 export function getSessionRepository() {
-  if (!repositoryPromise) repositoryPromise = detectBackend().then(createSessionRepository);
+  if (!repositoryPromise) {
+    repositoryPromise = detectBackend().then(mode => {
+      if (mode !== 'server') repositoryPromise = null;
+      return createSessionRepository(mode);
+    });
+  }
   return repositoryPromise;
 }
 
@@ -60,9 +68,13 @@ export function createSessionRepository(mode) {
     list: async () => LocalStore.loadSessions(),
     add: async session => {
       const clean = normalizeSession(session);
-      LocalStore.saveSessions([clean, ...LocalStore.loadSessions()]);
+      if (!LocalStore.saveSessions([clean, ...LocalStore.loadSessions()])) {
+        throw new Error("this browser's storage is full or blocked");
+      }
       return clean;
     },
-    clear: async () => LocalStore.saveSessions([])
+    clear: async () => {
+      if (!LocalStore.saveSessions([])) throw new Error("this browser's storage is full or blocked");
+    }
   };
 }

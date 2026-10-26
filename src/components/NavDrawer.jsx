@@ -31,15 +31,16 @@ function HomeMark({ active, onClick }) {
       type="button"
       onClick={onClick}
       title="Home"
-      aria-label="AeroCare home"
       aria-current={active ? 'page' : undefined}
       className={`group flex items-center gap-2.5 pl-1.5 pr-3 py-1.5 rounded-2xl transition-colors ${active ? 'bg-[#13A4A9]/10' : 'hover:bg-slate-100'}`}
     >
       <span className="relative w-8 h-8 rounded-xl bg-gradient-to-br from-[#13A4A9] to-[#96C7D2] flex items-center justify-center shadow-sm">
         <HouseIcon className="w-[18px] h-[18px] text-white" />
       </span>
+      {/* Accessible name = the visible "AeroCare HOME"; screen-reader-only text covers phones, where it's hidden. */}
+      <span className="sr-only sm:hidden">AeroCare home</span>
       <span className="hidden sm:flex flex-col items-start leading-none">
-        <span className="text-sm font-bold text-slate-900">AeroCare</span>
+        <span className="text-sm font-bold text-slate-900">AeroCare</span>{' '}
         <span
           className={`text-[10px] font-mono mt-0.5 transition-colors ${active ? 'text-[#0B7377]' : 'text-slate-500 group-hover:text-[#0B7377]'}`}
         >
@@ -151,14 +152,15 @@ export function NavDrawer({ routes, currentSlug, onNavigate }) {
           }}
           aria-expanded={open}
           aria-controls="nav-drawer"
-          aria-label={`Pages menu, current page ${active.code} ${active.name}`}
           className={`flex items-center gap-2.5 px-3.5 py-2 rounded-2xl text-sm transition-colors ${
             open ? 'bg-[#1E2432] text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200/80'
           }`}
         >
           <span className="w-2 h-2 rounded-full" style={{ backgroundColor: active.badge }} aria-hidden="true"></span>
-          <span className={`font-mono text-xs ${open ? 'text-[#F0C754]' : 'text-slate-600'}`}>{active.code}</span>
+          <span className="sr-only">Pages menu, current page </span>
+          <span className={`font-mono text-xs ${open ? 'text-[#F0C754]' : 'text-slate-600'}`}>{active.code}</span>{' '}
           <span className="font-semibold hidden sm:inline">{active.name}</span>
+          <span className="sr-only sm:hidden">{active.name}</span>
           <svg
             className={`w-3.5 h-3.5 transition-transform duration-500 ${open ? 'rotate-90' : ''}`}
             fill="none"

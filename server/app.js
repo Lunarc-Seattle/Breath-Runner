@@ -28,7 +28,15 @@ export function createApp({ repository, serveStatic = true }) {
     // Serve only the built browser app (npm run build -> dist/), never server code or local data.
     const distDir = resolve(ROOT_DIR, 'dist');
     app.use(express.static(distDir));
-    app.get('/', (req, res, next) => res.sendFile(resolve(distDir, 'index.html'), err => err && next()));
+    app.get('/', (req, res) =>
+      res.sendFile(resolve(distDir, 'index.html'), err => {
+        if (err)
+          res
+            .status(503)
+            .type('text')
+            .send('The front end is not built yet. Run `npm run build` (or `npm start`), then reload.');
+      })
+    );
   }
 
   // Express only treats a middleware as an error handler when it declares all four arguments.

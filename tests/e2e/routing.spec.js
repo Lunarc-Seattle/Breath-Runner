@@ -43,6 +43,6 @@ test.describe('hash routing', () => {
   test('an unknown hash falls back to home', async ({ page }) => {
     await page.goto('/#/does-not-exist');
     await expect(pagesMenu(page)).toHaveAccessibleName(/01 Welcome & Today$/);
-    await expect(page.getByRole('button', { name: 'AeroCare home' })).toHaveAttribute('aria-current', 'page');
+    await expect(page.getByRole('button', { name: /^AeroCare home$/i })).toHaveAttribute('aria-current', 'page');
   });
 });

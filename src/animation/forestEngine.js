@@ -442,6 +442,8 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
     if (document.hidden) {
       cancelAnimationFrame(raf);
       raf = 0;
+      // Don't resume a run behind the user's back: let the page show its paused state.
+      if (running && onEvent) onEvent({ type: 'hidden' }, snapshot());
     } else if (!raf) {
       last = performance.now();
       raf = requestAnimationFrame(frame);

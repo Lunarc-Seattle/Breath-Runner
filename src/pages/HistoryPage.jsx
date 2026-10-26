@@ -62,9 +62,8 @@ export default function HistoryPage() {
     try {
       const repo = await getSessionRepository();
       const list = await repo.list();
-      const sorted = [...(Array.isArray(list) ? list : [])].sort(
-        (a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime()
-      );
+      const rows = (Array.isArray(list) ? list : []).filter(r => r && typeof r === 'object');
+      const sorted = rows.sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
       setRuns(sorted);
       setStatus('ready');
     } catch (err) {

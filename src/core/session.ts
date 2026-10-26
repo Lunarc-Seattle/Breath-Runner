@@ -62,7 +62,8 @@ export const MAX_CLOCK_SKEW_MS = 5 * 60 * 1000;
 
 // Optional Breath Runner results, validated when present: [field, max].
 const GAME_FIELDS: readonly (readonly [GameField, number])[] = [
-  ['coins', 1000],
+  // Coins accumulate across laps; the real bound is the coins-per-lap check below.
+  ['coins', 100000],
   ['totalCoins', 1000],
   ['syncPct', 100],
   ['falls', 1000]

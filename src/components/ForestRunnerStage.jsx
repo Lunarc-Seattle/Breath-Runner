@@ -50,6 +50,7 @@ export function ForestRunnerStage({
   const manualHoldRef = useRef(false);
   const micHoldRef = useRef(false);
   const micStopRef = useRef(null);
+  const unmountedRef = useRef(false);
   const micMeterRef = useRef(null);
   const micChangeRef = useRef(() => {});
   const keyHandlersRef = useRef(null);
@@ -72,6 +73,12 @@ export function ForestRunnerStage({
           setFallHint(true);
           clearTimeout(fallHintTimer.current);
           fallHintTimer.current = setTimeout(() => setFallHint(false), 2600);
+        }
+        if (e.type === 'hidden') {
+          engine.setRunning(false);
+          engine.setHolding(false);
+          setHoldingState(false);
+          setPaused(true);
         }
         if (e.type === 'lap') {
           setLapResult(e);
@@ -157,7 +164,8 @@ export function ForestRunnerStage({
     setMicStatus('asking');
     try {
       let status = '';
-      micStopRef.current = await startMicBreath(u => {
+      const stop = await startMicBreath(u => {
+        if (unmountedRef.current) return;
         const next = u.calibrating ? 'calibrating' : 'on';
         if (next !== status) {
           setMicStatus((status = next));
@@ -167,13 +175,18 @@ export function ForestRunnerStage({
         if (micMeterRef.current) micMeterRef.current.style.transform = `scaleX(${u.level})`;
         if (u.active !== micHoldRef.current) micChangeRef.current(u.active);
       });
+      // Left the page while the permission prompt was open: release the mic right away.
+      if (unmountedRef.current) return stop();
+      micStopRef.current = stop;
     } catch (err) {
+      if (unmountedRef.current) return;
       setMicStatus('off');
       notify(describeMicError(err));
     }
   };
   useEffect(
     () => () => {
+      unmountedRef.current = true;
       micStopRef.current?.();
       clearTimeout(fallHintTimer.current);
     },
@@ -187,7 +200,15 @@ export function ForestRunnerStage({
     const isBreathKey = e => e.code === 'Space' || e.code === 'ArrowUp';
     const down = e => {
       if (!isBreathKey(e) || e.repeat) return;
-      if (e.target instanceof HTMLElement && e.target.closest('input, textarea, select')) return;
+      // Space/↑ on a focused control should operate that control, not the game
+      // (except the hold-to-inhale button, which is itself the breath input).
+      if (
+        e.target instanceof HTMLElement &&
+        e.target.closest(
+          'input, textarea, select, a, button:not([data-breath-input]), [role="button"], [role="checkbox"]'
+        )
+      )
+        return;
       e.preventDefault();
       keyHandlersRef.current.pressStart();
     };
@@ -279,7 +300,7 @@ export function ForestRunnerStage({
               style={m.id === map.id ? solidStyle(m.color) : undefined}
             >
               {m.name}
-              <span className="ml-1.5 font-mono opacity-70">{m.kpa} kPa</span>
+              <span className="ml-1.5 font-mono">{m.kpa} kPa</span>
             </button>
           ))}
         </div>
@@ -420,8 +441,8 @@ export function ForestRunnerStage({
                   <button
                     type="button"
                     onClick={toggleMic}
-                    aria-label={micStatus === 'off' ? 'Use the microphone to breathe' : `Microphone: ${micLabel}`}
                     aria-pressed={micStatus !== 'off'}
+                    title="Breathe audibly near the microphone to inhale"
                     className={`rounded-xl py-2 transition-colors ${micStatus === 'off' ? 'bg-white/10 hover:bg-white/20' : 'bg-[#7accf3]/30 text-white'}`}
                   >
                     {micStatus === 'off' ? 'or 🎙 mic' : micLabel}
@@ -505,6 +526,7 @@ export function ForestRunnerStage({
             </div>
 
             <button
+              data-breath-input
               type="button"
               onPointerDown={e => {
                 e.stopPropagation();
@@ -526,7 +548,7 @@ export function ForestRunnerStage({
               <button
                 type="button"
                 onClick={togglePause}
-                disabled={!started}
+                disabled={!started || !!lapResult}
                 aria-label={paused ? 'Resume' : 'Pause'}
                 title={paused ? 'Resume' : 'Pause'}
                 className="w-10 h-10 rounded-xl bg-white/15 hover:bg-white/25 disabled:opacity-40 text-sm"
@@ -536,7 +558,6 @@ export function ForestRunnerStage({
               <button
                 type="button"
                 onClick={toggleMic}
-                aria-label={micStatus === 'off' ? 'Use the microphone to breathe' : `Microphone: ${micLabel}`}
                 aria-pressed={micStatus !== 'off'}
                 title="Breathe audibly near the microphone to inhale"
                 className={`relative h-10 px-3 rounded-xl text-xs font-bold overflow-hidden ${micStatus === 'off' ? 'bg-white/15 hover:bg-white/25' : 'bg-[#7accf3]/25 ring-1 ring-[#7accf3]/70'}`}
