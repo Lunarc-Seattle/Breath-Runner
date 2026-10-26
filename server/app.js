@@ -13,7 +13,8 @@ import { createSessionsRouter } from './routes/sessions.routes.js';
 import { CSP_DIRECTIVES, CSP_HEADER_ONLY } from '../config/csp.js';
 
 const ROOT_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const OPENAPI_FILE = resolve(ROOT_DIR, 'docs', 'openapi.yaml');
+// sendFile gets a root + relative name: with an absolute path, Express 5 refuses any path that
+// contains a dot-directory (e.g. a checkout under ~/.cache), and the file would 404.
 
 /** Write routes (POST and DELETE under /api/v1) share this budget per client IP. */
 export const DEFAULT_RATE_LIMIT = { windowMs: 60_000, limit: 30 };
@@ -25,8 +26,16 @@ const WRITE_METHODS = new Set(['POST', 'DELETE']);
  * @param {boolean} [options.serveStatic=true]  also serve the built front end from dist/
  * @param {import('pino').Logger} [options.logger]  request/error logger; defaults to pino at LOG_LEVEL or info
  * @param {{ windowMs?: number, limit?: number } | false} [options.rateLimit]  write-route limit, or false to disable
+ * @param {string} [options.rootDir]  repo root holding docs/ and dist/ (injectable for tests)
  */
-export function createApp({ repository, serveStatic = true, logger, rateLimit: rateLimitOptions = {} }) {
+export function createApp({
+  repository,
+  serveStatic = true,
+  logger,
+  rateLimit: rateLimitOptions = {},
+  rootDir = ROOT_DIR
+}) {
+  const docsDir = resolve(rootDir, 'docs');
   const log = logger ?? pino({ level: process.env.LOG_LEVEL || 'info' });
   const app = express();
   app.disable('x-powered-by');
@@ -76,7 +85,7 @@ export function createApp({ repository, serveStatic = true, logger, rateLimit: r
   });
 
   app.get('/api/v1/openapi.yaml', (req, res, next) => {
-    res.type('application/yaml').sendFile(OPENAPI_FILE, err => err && next(err));
+    res.type('application/yaml').sendFile('openapi.yaml', { root: docsDir }, err => err && next(err));
   });
 
   app.use('/api/v1', createSessionsRouter(repository));
@@ -87,10 +96,10 @@ export function createApp({ repository, serveStatic = true, logger, rateLimit: r
 
   if (serveStatic) {
     // Serve only the built browser app (npm run build -> dist/), never server code or local data.
-    const distDir = resolve(ROOT_DIR, 'dist');
+    const distDir = resolve(rootDir, 'dist');
     app.use(express.static(distDir));
     app.get('/', (req, res) =>
-      res.sendFile(resolve(distDir, 'index.html'), err => {
+      res.sendFile('index.html', { root: distDir }, err => {
         if (err)
           res
             .status(503)
