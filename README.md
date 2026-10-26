@@ -5,8 +5,11 @@
 Designed, illustrated and built by **Jie (Fia) Yin**.
 
 [![Test & Deploy](https://github.com/Lunarc-Seattle/breath-runner/actions/workflows/test-and-deploy.yml/badge.svg)](https://github.com/Lunarc-Seattle/breath-runner/actions/workflows/test-and-deploy.yml)
+[![Tests](https://img.shields.io/endpoint?url=https://lunarc-seattle.github.io/breath-runner/quality/badges/tests.json)](https://lunarc-seattle.github.io/breath-runner/quality/)
+[![Coverage](https://img.shields.io/endpoint?url=https://lunarc-seattle.github.io/breath-runner/quality/badges/coverage.json)](https://lunarc-seattle.github.io/breath-runner/quality/)
+[![Lighthouse accessibility](https://img.shields.io/endpoint?url=https://lunarc-seattle.github.io/breath-runner/quality/badges/accessibility.json)](https://lunarc-seattle.github.io/breath-runner/quality/)
 
-**[▶ Play it live](https://lunarc-seattle.github.io/breath-runner/)** · [Full design case study (PDF)](pic/Jie_Yin_Breath_Training.pdf)
+**[▶ Play it live](https://lunarc-seattle.github.io/breath-runner/)** · **[Quality report](https://lunarc-seattle.github.io/breath-runner/quality/)** · [Full design case study (PDF)](pic/Jie_Yin_Breath_Training.pdf)
 
 ![Breath Runner gameplay: the runner jumps a gap on a long inhale and collects coins](docs/media/breath-runner.gif)
 
@@ -73,13 +76,13 @@ The game runs on the original `pic/background.ai` file, not on a redrawing of it
   - **The JSON store:** it skips corrupt rows on load and rolls back failed writes, so memory and disk stay consistent even when writes interleave.
 - **Routing and resilience.** Hash routes (`#/play`, `#/history`) make deep links, reload and the back button work on static hosting. Each page sits in its own error boundary.
 - **Tested at three levels.** 57 unit and API tests (`node:test`, 94% line coverage with a CI gate) and 34 Playwright end-to-end tests. One plays a full lap by following the on-screen breath cue, saves it, and checks it in Run History. Others cover every route, keyboard and focus behaviour, and API validation.
-- **CI that gates the deploy.** Each push and PR runs:
+- **CI that gates the deploy, with a public report.** Each push and PR runs these in parallel:
   - lint (ESLint), formatting (Prettier) and type checking;
   - unit tests with coverage, and the production build;
   - the e2e suite;
   - Lighthouse CI, which fails the build if any of the three key pages drops below 100 accessibility.
 
-  `main` is protected: changes land only through pull requests with passing checks, and only `main` deploys. Dependabot keeps dependencies current.
+  A report job turns the results into a summary on every PR and, on `main`, into the public [quality report](https://lunarc-seattle.github.io/breath-runner/quality/). The report shows every e2e test by name, coverage per file and the full Lighthouse reports, and it feeds the badges above. `main` is protected: changes land only through pull requests with passing checks, and only `main` deploys. Dependabot batches dependency updates weekly; major versions are upgraded deliberately.
 - **A design system in code.** The palette lives in one token file ([`src/styles/tokens.js`](src/styles/tokens.js)) that feeds Tailwind and the JS helpers. Each token documents its role and contrast rule (e.g. white text only on the "deep" variants). Moving 220 hard-coded colors to tokens was verified to change nothing: computed styles matched across 2,325 elements on all 13 pages.
 - **No third-party requests at runtime.** Fonts are self-hosted and React is bundled, so the static build ships a CSP of `default-src 'self'`.
 - **Accessible and fast.** Lighthouse (desktop, checked in CI) scores **100 for Accessibility, Best Practices and SEO** on the home, game and history pages, with Performance 98–100. Filled brand colors use slightly deeper variants wherever they carry white text, so every label meets WCAG AA contrast (4.5:1). The game has an `aria-live` breath cue, labelled controls, focus moved to each card's main action, and reduced-motion support. The navigation drawer is `inert` while closed.

@@ -16,3 +16,5 @@ test-results/
 coverage/
 lighthouse-report/
 .lighthouseci/
+e2e-results/
+quality/
