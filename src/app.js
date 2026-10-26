@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useRef } from 'https://esm.sh/react@18.2.0';
 import { createRoot } from 'https://esm.sh/react-dom@18.2.0/client';
 import htm from 'https://esm.sh/htm@3.1.1';
-import { PAGES_META, INITIAL_SIM_STATE, PDF_COLORS } from './data/simStore.js';
+import { PAGES_META, INITIAL_SIM_STATE, PDF_COLORS, solidStyle } from './data/simStore.js';
+import { ForestRunnerStage } from './components/ForestRunnerStage.js';
+import { NavDrawer } from './components/NavDrawer.js';
+import { bluetoothSupport, SUPPORT_MESSAGES, pairTrainer, describePairError } from './services/trainerBluetooth.js';
 
 const html = htm.bind(React.createElement);
 
 function AeroCareClientApp() {
   const [currentPage, setCurrentPage] = useState(1);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [state, setState] = useState(INITIAL_SIM_STATE);
   const [toast, setToast] = useState(null);
 
@@ -15,10 +17,6 @@ function AeroCareClientApp() {
   const [testingBreath, setTestingBreath] = useState(false);
   const [liveFlow, setLiveFlow] = useState(392);
   const [liveFvc, setLiveFvc] = useState(3.89);
-  const [gameActive, setGameActive] = useState(false);
-  const [inhaling, setInhaling] = useState(false);
-  const [gameScore, setGameScore] = useState(4308);
-  const canvasRef = useRef(null);
 
   const notify = (msg) => {
     setToast(msg);
@@ -27,23 +25,41 @@ function AeroCareClientApp() {
 
   const navTo = (id) => {
     setCurrentPage(id);
-    setMenuOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Inline Bluetooth Pair / Re-Scan Handler on Welcome Page
-  const handleBluetoothPair = () => {
-    setState(p => ({ ...p, bleScanning: true }));
-    notify('Scanning for nearby Smart Breathing Trainer via Bluetooth...');
-    setTimeout(() => {
-      setState(p => ({
-        ...p,
-        bleScanning: false,
-        bleConnected: true,
-        batteryPct: 78
-      }));
-      notify('Connected to AeroCare Trainer #AC-9942 (Battery 78%)');
-    }, 900);
+  // Real Web Bluetooth pairing: the browser's chooser lists nearby AeroCare trainers.
+  const trainerRef = useRef(null);
+  const handleDisconnect = () => {
+    trainerRef.current = null;
+    setState(p => ({ ...p, bleConnected: false, deviceName: null, batteryPct: null }));
+  };
+  const handleBluetoothPair = async () => {
+    if (state.bleScanning) return;
+    const support = bluetoothSupport();
+    if (support !== 'ok') {
+      setState(p => ({ ...p, bleError: SUPPORT_MESSAGES[support] }));
+      notify(SUPPORT_MESSAGES[support]);
+      return;
+    }
+    setState(p => ({ ...p, bleScanning: true, bleError: null }));
+    try {
+      const trainer = await pairTrainer({ onDisconnect: () => {
+        handleDisconnect();
+        notify('Trainer disconnected.');
+      } });
+      trainerRef.current = trainer;
+      setState(p => ({ ...p, bleScanning: false, bleConnected: true, deviceName: trainer.name, batteryPct: trainer.battery }));
+      notify(`Connected to ${trainer.name}${trainer.battery !== null ? ` (battery ${trainer.battery}%)` : ''}`);
+    } catch (err) {
+      const message = describePairError(err);
+      setState(p => ({ ...p, bleScanning: false, bleConnected: false, bleError: message }));
+      notify(message);
+    }
+  };
+  const handleBluetoothDisconnect = () => {
+    trainerRef.current?.disconnect();
+    handleDisconnect();
   };
 
   // Select Map & Optionally Jump to Game
@@ -61,142 +77,35 @@ function AeroCareClientApp() {
     }));
     if (startImmediately) {
       navTo(4);
-      setGameActive(true);
       notify(`Launching ${mapObj.name} (${mapObj.kpa} kPa resistance)...`);
     } else {
       notify(`Switched active training map to ${mapObj.name}`);
     }
   };
 
-  // Forest Level 1 Game Canvas Loop (Page 4)
-  useEffect(() => {
-    if (currentPage !== 4 || !canvasRef.current) return;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    let animId, playerY = 175, velY = 0, scrollX = 0;
-
-    const render = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      grad.addColorStop(0, '#D6E8EE');
-      grad.addColorStop(1, '#F4F6FA');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // PDF Misty Blue Mountains (#96C7D2)
-      ctx.fillStyle = '#96C7D2';
-      ctx.beginPath();
-      ctx.moveTo(0, 245); ctx.lineTo(180, 75); ctx.lineTo(360, 195); ctx.lineTo(580, 60); ctx.lineTo(890, 245);
-      ctx.fill();
-
-      // Pine Trees
-      for (let t = 0; t < 8; t++) {
-        const tx = ((t * 135 - scrollX * 0.45) % 1080 + 1080) % 1080;
-        ctx.fillStyle = '#184A4F';
-        ctx.beginPath();
-        ctx.moveTo(tx, 235); ctx.lineTo(tx + 18, 168); ctx.lineTo(tx + 36, 235);
-        ctx.fill();
-      }
-
-      if (gameActive) {
-        scrollX += 2.6;
-        velY = inhaling ? -3.6 : velY + 0.22;
-        playerY = Math.max(42, Math.min(205, playerY + velY));
-      }
-
-      // Gold Coins (#F0C754)
-      for (let i = 0; i < 11; i++) {
-        const cx = ((i * 115 - scrollX) % 1200 + 1200) % 1200;
-        const cy = 95 + (i % 3) * 34;
-        if (Math.hypot(cx - 115, cy - playerY) < 24 && gameActive) {
-          setGameScore(s => s + 5);
-        }
-        ctx.fillStyle = '#F0C754';
-        ctx.beginPath(); ctx.arc(cx, cy, 8.5, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = '#FFF'; ctx.lineWidth = 2; ctx.stroke();
-      }
-
-      // Runner Avatar (#13A4A9 / #F0A7AB)
-      ctx.fillStyle = inhaling ? '#13A4A9' : '#F0A7AB';
-      ctx.beginPath(); ctx.arc(115, playerY, 15, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#1E2432';
-      ctx.font = '600 11px JetBrains Mono';
-      ctx.fillText(inhaling ? 'INHALING: 395 L/min ↑' : 'EXHALING / GLIDING', 82, playerY - 22);
-
-      // Cliff Ground
-      ctx.fillStyle = '#4A5B62';
-      ctx.fillRect(0, 235, canvas.width, 45);
-
-      animId = requestAnimationFrame(render);
-    };
-    render();
-    return () => cancelAnimationFrame(animId);
-  }, [currentPage, gameActive, inhaling]);
-
-  const activePageMeta = PAGES_META.find(p => p.id === currentPage) || PAGES_META[0];
-
   return html`
     <div className="min-h-screen flex flex-col justify-between">
-      <!-- ==================== TOP BAR WITH TOP-LEFT SMOOTH DROPDOWN ==================== -->
+      <!-- ==================== TOP BAR: HOME MARK + HOVER-REVEAL PAGE DRAWER ==================== -->
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-4 lg:px-10 py-3.5">
         <div className="max-w-[1380px] mx-auto flex items-center justify-between gap-4">
-          
-          <!-- Left: Smooth Ease-Out Navigation Dropdown Trigger -->
-          <div className="relative">
-            <button
-              onClick=${() => setMenuOpen(!menuOpen)}
-              className="flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-[#1E2432] text-white hover:bg-[#13A4A9] transition-colors shadow-sm"
-            >
-              <span className="w-2.5 h-2.5 rounded-full" style=${{ backgroundColor: activePageMeta.badge }}></span>
-              <span className="font-mono text-xs text-[#F0C754]">${activePageMeta.code}</span>
-              <span className="font-semibold text-sm">${activePageMeta.name}</span>
-              <svg className=${`w-4 h-4 transition-transform duration-300 ${menuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-
-            <!-- Smooth Ease-Out Dropdown Panel -->
-            <div className=${`dropdown-panel ${menuOpen ? 'dropdown-open' : 'dropdown-closed'} absolute left-0 mt-3 w-[360px] sm:w-[420px] rounded-3xl bg-white shadow-2xl border border-slate-200/90 p-3 z-50`}>
-              <div className="px-3 py-2 flex items-center justify-between border-b border-slate-100 mb-1.5">
-                <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400">All 12 Client Pages</span>
-                <span className="text-[11px] font-mono text-[#13A4A9]">Smooth Quick-Jump</span>
-              </div>
-              <div className="grid grid-cols-1 gap-1 max-h-[520px] overflow-y-auto pr-1">
-                ${PAGES_META.map(p => html`
-                  <button
-                    key=${p.id}
-                    onClick=${() => navTo(p.id)}
-                    className=${`w-full text-left px-3.5 py-2.5 rounded-2xl transition-all flex items-center justify-between ${
-                      currentPage === p.id
-                        ? 'bg-[#13A4A9]/12 text-[#13A4A9] font-semibold'
-                        : 'hover:bg-slate-100 text-slate-700'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="w-6 h-6 rounded-lg flex items-center justify-center font-mono text-xs text-white font-bold" style=${{ backgroundColor: p.badge }}>
-                        ${p.code}
-                      </span>
-                      <div>
-                        <div className="text-sm leading-tight">${p.name}</div>
-                        <div className="text-[11px] text-slate-400 font-normal">${p.subtitle}</div>
-                      </div>
-                    </div>
-                    <span className="text-xs font-mono opacity-60">→</span>
-                  </button>
-                `)}
-              </div>
-            </div>
-          </div>
+          <${NavDrawer} pages=${PAGES_META} currentPage=${currentPage} onNavigate=${navTo} />
 
           <!-- Center/Right Quick Status & Profile Pill -->
           <div className="flex items-center gap-3">
             <!-- Inline Bluetooth Pill -->
             <button
               onClick=${handleBluetoothPair}
-              className="hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-[#13A4A9]/10 text-[#13A4A9] text-xs font-mono font-medium hover:bg-[#13A4A9]/20 transition-colors"
+              title=${state.bleConnected ? 'Trainer connected' : 'Pair your AeroCare trainer'}
+              className=${`hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-2xl text-xs font-mono font-medium transition-colors ${
+                state.bleConnected ? 'bg-[#13A4A9]/10 text-[#0B7377] hover:bg-[#13A4A9]/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
             >
-              <span className="w-2 h-2 rounded-full bg-[#13A4A9] animate-pulse"></span>
-              <span>${state.bleScanning ? 'Pairing BLE...' : `${state.deviceName} • ${state.batteryPct}%`}</span>
+              <span className=${`w-2 h-2 rounded-full ${state.bleConnected ? 'bg-[#0F8387]' : state.bleScanning ? 'bg-[#71739E] animate-pulse' : 'bg-slate-400'}`}></span>
+              <span>${state.bleScanning
+                ? 'Searching…'
+                : state.bleConnected
+                  ? `${state.deviceName}${state.batteryPct !== null ? ` • ${state.batteryPct}%` : ''}`
+                  : 'No trainer · Pair'}</span>
             </button>
 
             <!-- Quick Profile Avatar Button (Jumps to Page 12 Profile) -->
@@ -204,7 +113,7 @@ function AeroCareClientApp() {
               onClick=${() => navTo(12)}
               className="flex items-center gap-2.5 pl-2 pr-3.5 py-1.5 rounded-2xl bg-[#8E90C6]/15 hover:bg-[#8E90C6]/25 transition-colors"
             >
-              <div className="w-7 h-7 rounded-full bg-[#8E90C6] text-white flex items-center justify-center text-xs font-bold">
+              <div className="w-7 h-7 rounded-full bg-[#71739E] text-white flex items-center justify-center text-xs font-bold">
                 XM
               </div>
               <span className="text-xs font-semibold text-slate-700">${state.userName}</span>
@@ -222,7 +131,7 @@ function AeroCareClientApp() {
       `}
 
       <!-- ==================== MAIN CONTENT AREA ==================== -->
-      <main className="max-w-[1380px] w-full mx-auto px-4 lg:px-10 py-8 flex-1" onClick=${() => menuOpen && setMenuOpen(false)}>
+      <main className="max-w-[1380px] w-full mx-auto px-4 lg:px-10 py-8 flex-1">
 
         <!-- ==================== PAGE 01: USER WELCOME, RESUME / PICK MAP & INLINE BLE PAIRING ==================== -->
         ${currentPage === 1 && html`
@@ -237,7 +146,7 @@ function AeroCareClientApp() {
                 <div className=" right-24 -bottom-16 w-40 h-40 rounded-full opacity-20 pointer-events-none" style=${{ backgroundColor: PDF_COLORS.yellow, position: 'absolute' }}></div>
 
                 <div className="space-y-4 relative z-10">
-                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold" style=${{ backgroundColor: '#13A4A918', color: PDF_COLORS.teal }}>
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold" style=${{ backgroundColor: '#13A4A918', color: PDF_COLORS.tealInk }}>
                     <span>🌿 Daily Lung Recovery Companion</span>
                     <span>•</span>
                     <span>Day 18 Streak</span>
@@ -254,20 +163,20 @@ function AeroCareClientApp() {
                 <!-- Primary Action Cards: Resume Last Session VS Choose New Map -->
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-8 relative z-10">
                   <!-- Option A: Resume Last Session -->
-                  <div className="p-5 rounded-3xl text-white flex flex-col justify-between shadow-md" style=${{ backgroundColor: PDF_COLORS.teal }}>
+                  <div className="p-5 rounded-3xl text-white flex flex-col justify-between shadow-md" style=${{ backgroundColor: PDF_COLORS.tealDeep }}>
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between text-xs font-mono opacity-90">
+                      <div className="flex items-center justify-between text-xs font-mono">
                         <span>RESUME LAST PRACTICE</span>
                         <span>${state.lastMap.progressPct}% DONE</span>
                       </div>
                       <div className="text-2xl font-bold">${state.lastMap.name}</div>
-                      <div className="text-xs opacity-90">
+                      <div className="text-xs">
                         Valve Resistance: ${state.lastMap.valveKpa} kPa • Target: ${state.lastMap.targetL}L
                       </div>
                     </div>
                     <button
-                      onClick=${() => { navTo(4); setGameActive(true); }}
-                      className="mt-5 w-full py-3 rounded-2xl bg-white text-[#13A4A9] font-bold text-xs uppercase tracking-wider hover:bg-opacity-95 transition-all flex items-center justify-center gap-2"
+                      onClick=${() => navTo(4)}
+                      className="mt-5 w-full py-3 rounded-2xl bg-white text-[#0B7377] font-bold text-xs uppercase tracking-wider hover:bg-opacity-95 transition-all flex items-center justify-center gap-2"
                     >
                       <span>▶ Resume ${state.lastMap.name}</span>
                     </button>
@@ -276,7 +185,7 @@ function AeroCareClientApp() {
                   <!-- Option B: QuickSpirometry or Schedule -->
                   <div className="p-5 rounded-3xl bg-[#8E90C6]/15 border border-[#8E90C6]/30 flex flex-col justify-between">
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between text-xs font-mono text-[#8E90C6] font-semibold">
+                      <div className="flex items-center justify-between text-xs font-mono text-[#5D5FA0] font-semibold">
                         <span>TODAY'S CHECKUP</span>
                         <span>PEAK: 3.89 L</span>
                       </div>
@@ -289,7 +198,7 @@ function AeroCareClientApp() {
                       <button
                         onClick=${() => navTo(5)}
                         className="flex-1 py-3 rounded-2xl text-white font-bold text-xs uppercase tracking-wider transition-all"
-                        style=${{ backgroundColor: PDF_COLORS.purple }}
+                        style=${{ backgroundColor: PDF_COLORS.purpleDeep }}
                       >
                         Spirometry Lab
                       </button>
@@ -308,9 +217,9 @@ function AeroCareClientApp() {
               <div className="lg:col-span-4 rounded-[32px] bg-white p-7 border border-slate-200/80 shadow-sm flex flex-col justify-between">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-mono uppercase tracking-wider text-slate-400">Bluetooth Trainer</span>
-                    <span className="px-3 py-1 rounded-full text-xs font-bold" style=${{ backgroundColor: state.bleConnected ? '#13A4A918' : '#F0A7AB30', color: state.bleConnected ? PDF_COLORS.teal : '#D94E34' }}>
-                      ${state.bleScanning ? 'SCANNING...' : state.bleConnected ? '● PAIRED & READY' : 'DISCONNECTED'}
+                    <span className="text-xs font-mono uppercase tracking-wider text-slate-500">Bluetooth Trainer</span>
+                    <span className="px-3 py-1 rounded-full text-xs font-bold" style=${{ backgroundColor: state.bleConnected ? '#13A4A918' : state.bleScanning ? '#8E90C620' : '#F0A7AB30', color: state.bleConnected ? PDF_COLORS.tealInk : state.bleScanning ? '#5D5FA0' : '#B23A26' }}>
+                      ${state.bleScanning ? 'SEARCHING…' : state.bleConnected ? '● CONNECTED' : 'NOT CONNECTED'}
                     </span>
                   </div>
 
@@ -326,26 +235,39 @@ function AeroCareClientApp() {
 
                   <div className="p-4 rounded-2xl bg-slate-50 space-y-2 text-xs">
                     <div className="flex justify-between">
-                      <span className="text-slate-500">Device ID</span>
-                      <span className="font-mono font-semibold">${state.deviceName}</span>
+                      <span className="text-slate-600">Device</span>
+                      <span className="font-mono font-semibold">${state.deviceName || '—'}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-500">Battery Level</span>
-                      <span className="font-mono font-bold text-[#13A4A9]">${state.batteryPct}% Charged</span>
+                      <span className="text-slate-600">Battery Level</span>
+                      <span className="font-mono font-bold text-[#0B7377]">${state.batteryPct !== null ? `${state.batteryPct}%` : '—'}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-500">Mouthpiece Status</span>
-                      <span className="font-mono text-[#8E90C6]">Sterile (UV-C OK)</span>
+                      <span className="text-slate-600">Mouthpiece Status</span>
+                      <span className="font-mono text-[#5D5FA0]">${state.bleConnected ? 'Sterile (UV-C OK)' : '—'}</span>
                     </div>
                   </div>
+
+                  ${state.bleError && !state.bleConnected && html`
+                    <div className="p-3.5 rounded-2xl bg-[#F0C754]/15 border border-[#F0C754]/50 text-xs text-slate-700 leading-relaxed">
+                      <div className="font-bold text-[#8a6500] mb-0.5">Trainer not found</div>
+                      ${state.bleError}
+                    </div>
+                  `}
+                  ${!state.bleConnected && html`
+                    <button onClick=${() => navTo(4)} className="text-xs font-semibold text-[#0B7377] hover:underline">
+                      No trainer? Play Forest · Level 1 in free-trial mode →
+                    </button>
+                  `}
                 </div>
 
                 <button
-                  onClick=${handleBluetoothPair}
+                  onClick=${state.bleConnected ? handleBluetoothDisconnect : handleBluetoothPair}
+                  disabled=${state.bleScanning}
                   className="mt-4 w-full py-3.5 rounded-2xl font-bold text-xs uppercase tracking-wider text-white transition-all shadow-sm"
-                  style=${{ backgroundColor: state.bleScanning ? PDF_COLORS.purple : '#1E2432' }}
+                  style=${{ backgroundColor: state.bleScanning ? PDF_COLORS.purpleDeep : '#1E2432' }}
                 >
-                  ${state.bleScanning ? '🔄 Searching Bluetooth...' : '⚡ Re-Sync / Pair Bluetooth Trainer'}
+                  ${state.bleScanning ? 'Searching for trainer…' : state.bleConnected ? 'Disconnect trainer' : 'Pair Bluetooth trainer'}
                 </button>
               </div>
             </div>
@@ -355,9 +277,9 @@ function AeroCareClientApp() {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-bold text-slate-900">Pick a Map to Practice Today</h2>
-                  <p className="text-xs text-slate-500">Click any scene below to load its resistance valve profile and start training</p>
+                  <p className="text-xs text-slate-600">Click any scene below to load its resistance valve profile and start training</p>
                 </div>
-                <button onClick=${() => navTo(3)} className="text-xs font-semibold text-[#13A4A9] hover:underline">
+                <button onClick=${() => navTo(3)} className="text-xs font-semibold text-[#0B7377] hover:underline">
                   View Full Map Catalog (03) →
                 </button>
               </div>
@@ -372,21 +294,21 @@ function AeroCareClientApp() {
                   >
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="px-3 py-1 rounded-full text-xs font-bold text-white" style=${{ backgroundColor: m.color }}>
+                        <span className="px-3 py-1 rounded-full text-xs font-bold text-white" style=${solidStyle(m.color)}>
                           ${m.tag}
                         </span>
-                        <span className="font-mono text-xs text-slate-400">${m.kpa} kPa</span>
+                        <span className="font-mono text-xs text-slate-500">${m.kpa} kPa</span>
                       </div>
                       <h3 className="text-2xl font-bold text-slate-800">${m.name}</h3>
-                      <p className="text-xs text-slate-500 leading-relaxed">${m.desc}</p>
+                      <p className="text-xs text-slate-600 leading-relaxed">${m.desc}</p>
                     </div>
 
                     <div className="pt-5 mt-5 border-t border-slate-100 flex items-center justify-between gap-2">
-                      <span className="text-xs font-mono text-slate-500">Target: ${m.targetL}L</span>
+                      <span className="text-xs font-mono text-slate-600">Target: ${m.targetL}L</span>
                       <button
                         onClick=${() => handleSelectMap(m, true)}
                         className="px-4 py-2 rounded-xl text-xs font-bold text-white transition-opacity hover:opacity-90"
-                        style=${{ backgroundColor: m.color }}
+                        style=${solidStyle(m.color)}
                       >
                         Practice Map →
                       </button>
@@ -405,13 +327,13 @@ function AeroCareClientApp() {
             <div className="lg:col-span-4 rounded-[32px] bg-white p-7 border border-slate-200/80 space-y-6">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-sm text-slate-800">Weekly Pinned</span>
-                <span className="text-xs font-semibold text-[#13A4A9]">Peking Univ. Rehab</span>
+                <span className="text-xs font-semibold text-[#0B7377]">Peking Univ. Rehab</span>
               </div>
 
               <div className="p-5 rounded-3xl bg-[#F0C754]/20 border border-[#F0C754]/40 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="px-2.5 py-0.5 rounded-full bg-[#F0C754] text-slate-900 font-bold text-[10px]">DOCTOR NOTE</span>
-                  <span className="text-xs font-mono text-slate-500">Dr. Chen</span>
+                  <span className="text-xs font-mono text-slate-600">Dr. Chen</span>
                 </div>
                 <div className="font-bold text-base text-slate-900">Call doctor for spirometry review</div>
                 <p className="text-xs text-slate-600">Share your 3.89L FVC curve and adjust valve resistance to 2.0 kPa.</p>
@@ -422,10 +344,10 @@ function AeroCareClientApp() {
                   <span className="w-8 h-8 rounded-xl bg-[#F0A7AB]/30 flex items-center justify-center">🧼</span>
                   <div>
                     <div className="text-xs font-bold">Mouthpiece Sterilization</div>
-                    <div className="text-[11px] text-slate-400">Booked for April 19</div>
+                    <div className="text-[11px] text-slate-500">Booked for April 19</div>
                   </div>
                 </div>
-                <button onClick=${() => navTo(8)} className="text-xs font-semibold text-[#13A4A9]">View →</button>
+                <button onClick=${() => navTo(8)} className="text-xs font-semibold text-[#0B7377]">View →</button>
               </div>
             </div>
 
@@ -481,10 +403,10 @@ function AeroCareClientApp() {
           <section className="space-y-6 animate-page">
             <div className="flex flex-wrap justify-between items-end gap-4">
               <div>
-                <span className="text-xs font-mono text-[#13A4A9] font-semibold">03 CHOOSE A MAP // SCENE & RESISTANCE SELECTOR</span>
+                <span className="text-xs font-mono text-[#0B7377] font-semibold">03 CHOOSE A MAP // SCENE & RESISTANCE SELECTOR</span>
                 <h2 className="text-3xl font-bold text-slate-900 mt-1">Pick a Scene & Valve Level</h2>
               </div>
-              <button onClick=${() => navTo(4)} className="px-6 py-3 rounded-2xl bg-[#13A4A9] text-white font-bold text-xs">
+              <button onClick=${() => navTo(4)} className="px-6 py-3 rounded-2xl bg-[#0F8387] text-white font-bold text-xs">
                 Play ${state.lastMap.name} →
               </button>
             </div>
@@ -493,10 +415,10 @@ function AeroCareClientApp() {
               ${state.maps.map(m => html`
                 <div key=${m.id} className="rounded-[32px] bg-white p-7 border border-slate-200/80 flex flex-col justify-between space-y-6 shadow-sm">
                   <div className="space-y-4">
-                    <div className="h-36 rounded-2xl flex items-center justify-center text-white font-bold text-xl" style=${{ backgroundColor: m.color }}>
+                    <div className="h-36 rounded-2xl flex items-center justify-center text-white font-bold text-xl" style=${solidStyle(m.color)}>
                       ${m.name}
                     </div>
-                    <div className="flex justify-between text-xs font-mono text-slate-400">
+                    <div className="flex justify-between text-xs font-mono text-slate-500">
                       <span>RESISTANCE: ${m.kpa} kPa</span>
                       <span>TARGET: ${m.targetL} L</span>
                     </div>
@@ -505,7 +427,7 @@ function AeroCareClientApp() {
                   <button
                     onClick=${() => handleSelectMap(m, true)}
                     className="w-full py-3.5 rounded-2xl text-white font-bold text-xs uppercase tracking-wider"
-                    style=${{ backgroundColor: m.color }}
+                    style=${solidStyle(m.color)}
                   >
                     Start Training on ${m.name}
                   </button>
@@ -515,40 +437,25 @@ function AeroCareClientApp() {
           </section>
         `}
 
-        <!-- ==================== PAGE 04: TRAINING GAME (FOREST LEVEL 1) ==================== -->
+        <!-- ==================== PAGE 04: TRAINING GAME (BREATH RUNNER ON THE .AI MAP) ==================== -->
         ${currentPage === 4 && html`
-          <section className="space-y-6 animate-page">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <span className="text-xs font-mono text-[#13A4A9] font-semibold">04 TRAINING GAME // INTERACTIVE BREATH RUNNER</span>
-                <h2 className="text-3xl font-bold text-slate-900">${state.lastMap.name} — Score: ${gameScore}</h2>
-              </div>
-              <div className="flex gap-3">
-                <button onClick=${() => setGameActive(!gameActive)} className="px-5 py-2.5 rounded-2xl bg-[#1E2432] text-white font-bold text-xs">
-                  ${gameActive ? '⏸ Pause Session' : '▶ Start Breath Game'}
-                </button>
-              </div>
-            </div>
-
-            <div className="rounded-[32px] bg-white p-5 border border-slate-200/80 shadow-sm space-y-4">
-              <canvas ref=${canvasRef} width="920" height="280" className="w-full h-[280px] rounded-2xl border border-slate-100"></canvas>
-              <div className="flex flex-wrap items-center justify-between gap-4 px-2">
-                <span className="text-xs text-slate-500">
-                  Hold the button below (or breathe into your paired trainer) to inhale, glide over cliffs, and collect gold coins.
-                </span>
-                <button
-                  onMouseDown=${() => { setGameActive(true); setInhaling(true); }}
-                  onMouseUp=${() => setInhaling(false)}
-                  onTouchStart=${() => { setGameActive(true); setInhaling(true); }}
-                  onTouchEnd=${() => setInhaling(false)}
-                  className="px-8 py-3.5 rounded-2xl text-white font-bold text-xs uppercase tracking-wider shadow-sm transition-transform active:scale-95"
-                  style=${{ backgroundColor: inhaling ? PDF_COLORS.purple : PDF_COLORS.teal }}
-                >
-                  ${inhaling ? '▲ Inhaling Deeply (395 L/min)...' : 'Hold to Inhale & Jump Cliffs'}
-                </button>
-              </div>
-            </div>
-          </section>
+          <${ForestRunnerStage}
+            map=${state.lastMap}
+            maps=${state.maps}
+            bleConnected=${state.bleConnected}
+            bleScanning=${state.bleScanning}
+            deviceName=${state.deviceName}
+            onToggleDevice=${() => {
+              if (state.bleConnected) {
+                handleBluetoothDisconnect();
+                notify('Trainer disconnected. Free trial mode: hold the screen or Space to breathe.');
+              } else {
+                handleBluetoothPair();
+              }
+            }}
+            onSelectMap=${m => handleSelectMap(m)}
+            notify=${notify}
+          />
         `}
 
         <!-- ==================== PAGE 05: SPIROMETRY LAB ==================== -->
@@ -556,7 +463,7 @@ function AeroCareClientApp() {
           <section className="space-y-6 animate-page">
             <div className="flex flex-wrap justify-between items-end gap-4">
               <div>
-                <span className="text-xs font-mono text-[#8E90C6] font-semibold">05 SPIROMETRY LAB // LUNG CAPACITY TEST</span>
+                <span className="text-xs font-mono text-[#5D5FA0] font-semibold">05 SPIROMETRY LAB // LUNG CAPACITY TEST</span>
                 <h2 className="text-3xl font-bold text-slate-900">Digital Lung-Capacity & Flow Analyzer</h2>
               </div>
               <button
@@ -571,7 +478,7 @@ function AeroCareClientApp() {
                   }, 800);
                 }}
                 className="px-6 py-3 rounded-2xl text-white font-bold text-xs"
-                style=${{ backgroundColor: PDF_COLORS.teal }}
+                style=${{ backgroundColor: PDF_COLORS.tealDeep }}
               >
                 ${testingBreath ? 'Measuring Airflow...' : '▶ Blow New Spirometry Test'}
               </button>
@@ -581,12 +488,12 @@ function AeroCareClientApp() {
               <div className="rounded-[32px] bg-white p-7 border border-slate-200/80 space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-5 rounded-2xl bg-[#13A4A9]/10">
-                    <div className="text-xs text-slate-500">Forced Vital Capacity (FVC)</div>
-                    <div className="text-3xl font-bold text-[#13A4A9] mt-1">${liveFvc} L</div>
+                    <div className="text-xs text-slate-600">Forced Vital Capacity (FVC)</div>
+                    <div className="text-3xl font-bold text-[#0B7377] mt-1">${liveFvc} L</div>
                   </div>
                   <div className="p-5 rounded-2xl bg-[#8E90C6]/15">
-                    <div className="text-xs text-slate-500">Peak Expiratory Flow (PEF)</div>
-                    <div className="text-3xl font-bold text-[#8E90C6] mt-1">${liveFlow} L/m</div>
+                    <div className="text-xs text-slate-600">Peak Expiratory Flow (PEF)</div>
+                    <div className="text-3xl font-bold text-[#5D5FA0] mt-1">${liveFlow} L/m</div>
                   </div>
                 </div>
                 <svg viewBox="0 0 500 150" className="w-full bg-slate-900 rounded-2xl p-4">
@@ -596,11 +503,11 @@ function AeroCareClientApp() {
               </div>
 
               <div className="rounded-[32px] bg-white p-7 border border-slate-200/80 space-y-3">
-                <div className="text-xs font-mono text-slate-400">RECENT SPIROMETRY LOGS</div>
+                <div className="text-xs font-mono text-slate-500">RECENT SPIROMETRY LOGS</div>
                 ${state.spirometryLogs.map(l => html`
                   <div key=${l.id} className="p-4 rounded-2xl bg-slate-50 flex justify-between items-center text-xs font-mono">
                     <span><strong>${l.id}</strong> (${l.date}) — FVC: ${l.fvc}L | FEV1: ${l.fev1}L</span>
-                    <span className="px-2.5 py-1 rounded-full bg-[#13A4A9]/15 text-[#13A4A9] font-bold">${l.ratio}</span>
+                    <span className="px-2.5 py-1 rounded-full bg-[#13A4A9]/15 text-[#0B7377] font-bold">${l.ratio}</span>
                   </div>
                 `)}
               </div>
@@ -614,14 +521,14 @@ function AeroCareClientApp() {
             <h2 className="text-3xl font-bold text-slate-900">06 Multiplayer Co-Op Breathing Arena</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="p-7 rounded-[32px] bg-white border border-slate-200/80 space-y-3">
-                <span className="px-3 py-1 rounded-full bg-[#13A4A9]/15 text-[#13A4A9] text-xs font-bold">PLAYER 1 • XIAOMING</span>
+                <span className="px-3 py-1 rounded-full bg-[#13A4A9]/15 text-[#0B7377] text-xs font-bold">PLAYER 1 • XIAOMING</span>
                 <div className="text-2xl font-bold">4,308 pts • FVC 3.89 L</div>
-                <div className="h-3 rounded-full bg-slate-100"><div className="h-full rounded-full bg-[#13A4A9] w-[86%]"></div></div>
+                <div className="h-3 rounded-full bg-slate-100"><div className="h-full rounded-full bg-[#0F8387] w-[86%]"></div></div>
               </div>
               <div className="p-7 rounded-[32px] bg-white border border-slate-200/80 space-y-3">
-                <span className="px-3 py-1 rounded-full bg-[#8E90C6]/20 text-[#8E90C6] text-xs font-bold">PLAYER 2 • ALI (ONLINE)</span>
+                <span className="px-3 py-1 rounded-full bg-[#8E90C6]/20 text-[#5D5FA0] text-xs font-bold">PLAYER 2 • ALI (ONLINE)</span>
                 <div className="text-2xl font-bold">4,120 pts • FVC 3.75 L</div>
-                <div className="h-3 rounded-full bg-slate-100"><div className="h-full rounded-full bg-[#8E90C6] w-[82%]"></div></div>
+                <div className="h-3 rounded-full bg-slate-100"><div className="h-full rounded-full bg-[#71739E] w-[82%]"></div></div>
               </div>
             </div>
           </section>
@@ -633,7 +540,7 @@ function AeroCareClientApp() {
             <h2 className="text-3xl font-bold text-slate-900">07 Community & Friends Data Ranking</h2>
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               <div className="lg:col-span-7 p-7 rounded-[32px] bg-white border border-slate-200/80 space-y-4">
-                <div className="text-xs font-mono text-slate-400">FRIENDS RANKING MULTI-SERIES CHART</div>
+                <div className="text-xs font-mono text-slate-500">FRIENDS RANKING MULTI-SERIES CHART</div>
                 <svg viewBox="0 0 520 200" className="w-full">
                   ${[60, 90, 125, 105, 145, 165, 150, 180].map((h, i) => html`
                     <g key=${i}>
@@ -645,7 +552,7 @@ function AeroCareClientApp() {
                 </svg>
               </div>
               <div className="lg:col-span-5 p-7 rounded-[32px] bg-white border border-slate-200/80 space-y-3">
-                <div className="text-xs font-mono text-slate-400">FRIENDS LEADERBOARD (A - Z)</div>
+                <div className="text-xs font-mono text-slate-500">FRIENDS LEADERBOARD (A - Z)</div>
                 ${[
                   { name: 'Ali', score: '4,308 pts', color: '#13A4A9' },
                   { name: 'Bage', score: '4,120 pts', color: '#8E90C6' },
@@ -654,7 +561,7 @@ function AeroCareClientApp() {
                 ].map((f, idx) => html`
                   <div key=${f.name} className="p-4 rounded-2xl bg-slate-50 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <span className="w-7 h-7 rounded-full text-white text-xs font-bold flex items-center justify-center" style=${{ backgroundColor: f.color }}>
+                      <span className="w-7 h-7 rounded-full text-white text-xs font-bold flex items-center justify-center" style=${solidStyle(f.color)}>
                         ${idx + 1}
                       </span>
                       <span className="font-bold text-sm">${f.name}</span>
@@ -680,7 +587,7 @@ function AeroCareClientApp() {
                   <circle cx="100" cy="100" r="26" fill="none" stroke="#F0A7AB" strokeWidth="12" strokeDasharray="110 500" strokeLinecap="round"/>
                 </svg>
                 <div className="space-y-2.5 w-full">
-                  <div className="text-xs font-mono text-slate-400">DISINFECTION NEEDS BY PART</div>
+                  <div className="text-xs font-mono text-slate-500">DISINFECTION NEEDS BY PART</div>
                   ${state.disinfectionParts.map(p => html`
                     <div key=${p.part} className="flex justify-between items-center text-xs">
                       <span className="font-bold flex items-center gap-2">
@@ -694,7 +601,7 @@ function AeroCareClientApp() {
               </div>
 
               <div className="lg:col-span-6 p-7 rounded-[32px] bg-white border border-slate-200/80 space-y-4">
-                <div className="text-xs font-mono text-slate-400">BOOK HOSPITAL DISINFECTION // APRIL</div>
+                <div className="text-xs font-mono text-slate-500">BOOK HOSPITAL DISINFECTION // APRIL</div>
                 <div className="grid grid-cols-7 gap-1.5 text-center font-mono text-xs">
                   ${Array.from({ length: 30 }, (_, i) => i + 1).map(d => {
                     const booked = state.bookedDays.includes(d);
@@ -705,7 +612,7 @@ function AeroCareClientApp() {
                           setState(p => ({ ...p, bookedDays: booked ? p.bookedDays.filter(x => x !== d) : [...p.bookedDays, d] }));
                           notify(`Updated April ${d} disinfection slot`);
                         }}
-                        className=${`py-2 rounded-xl font-bold ${booked ? 'bg-[#13A4A9] text-white' : 'bg-slate-50 hover:bg-slate-100'}`}
+                        className=${`py-2 rounded-xl font-bold ${booked ? 'bg-[#0F8387] text-white' : 'bg-slate-50 hover:bg-slate-100'}`}
                       >
                         ${d}
                       </button>
@@ -723,13 +630,13 @@ function AeroCareClientApp() {
             <h2 className="text-3xl font-bold text-slate-900">09 Shared Hospital Device Rental</h2>
             <div className="p-8 rounded-[32px] bg-white border border-slate-200/80 flex flex-wrap items-center justify-between gap-6">
               <div className="space-y-2">
-                <span className="px-3 py-1 rounded-full bg-[#96C7D2]/25 text-[#13A4A9] text-xs font-bold">ACTIVE LEASE • PEKING UNIV. HOSPITAL</span>
+                <span className="px-3 py-1 rounded-full bg-[#96C7D2]/25 text-[#0B7377] text-xs font-bold">ACTIVE LEASE • PEKING UNIV. HOSPITAL</span>
                 <div className="text-2xl font-bold">Day ${state.leaseUsedDays} of ${state.leaseQuotaDays} Days</div>
-                <p className="text-xs text-slate-500">Refundable Deposit Paid: ¥228.00 • Daily Shared Rate: ¥12.00/day</p>
+                <p className="text-xs text-slate-600">Refundable Deposit Paid: ¥228.00 • Daily Shared Rate: ¥12.00/day</p>
               </div>
               <button
                 onClick=${() => { setState(p => ({ ...p, leaseQuotaDays: p.leaseQuotaDays + 15 })); notify('Extended rental by +15 days'); }}
-                className="px-6 py-3.5 rounded-2xl bg-[#13A4A9] text-white font-bold text-xs"
+                className="px-6 py-3.5 rounded-2xl bg-[#0F8387] text-white font-bold text-xs"
               >
                 Extend Lease (+15 Days)
               </button>
@@ -745,7 +652,7 @@ function AeroCareClientApp() {
               ${state.regressionRuns.map(r => html`
                 <div key=${r.id} className="p-4 rounded-2xl bg-slate-50 flex justify-between items-center">
                   <span>${r.id} — ${r.target} (${r.steps} samples)</span>
-                  <span className="px-3 py-1 rounded-full bg-[#13A4A9]/15 text-[#13A4A9] font-bold">${r.status} (Drift: ${r.drift})</span>
+                  <span className="px-3 py-1 rounded-full bg-[#13A4A9]/15 text-[#0B7377] font-bold">${r.status} (Drift: ${r.drift})</span>
                 </div>
               `)}
             </div>
@@ -756,7 +663,7 @@ function AeroCareClientApp() {
         ${currentPage === 11 && html`
           <section className="space-y-6 animate-page">
             <div>
-              <span className="text-xs font-mono text-[#8E90C6] font-semibold">11 PATIENT RECOVERY JOURNEY & BEHAVIOR METRICS</span>
+              <span className="text-xs font-mono text-[#5D5FA0] font-semibold">11 PATIENT RECOVERY JOURNEY & BEHAVIOR METRICS</span>
               <h2 className="text-3xl font-bold text-slate-900 mt-1">Rehabilitation Journey & Emotion Curve</h2>
             </div>
 
@@ -767,7 +674,7 @@ function AeroCareClientApp() {
                   <div className="w-16 h-16 rounded-full bg-[#8E90C6]/25 flex items-center justify-center text-2xl">🧑‍⚕️</div>
                   <div>
                     <div className="font-bold text-lg">${state.userName} (38 yrs)</div>
-                    <div className="text-xs text-slate-500">Thoracic Post-Op Recovery • Home User</div>
+                    <div className="text-xs text-slate-600">Thoracic Post-Op Recovery • Home User</div>
                   </div>
                 </div>
                 <div className="p-4 rounded-2xl bg-[#8E90C6]/10 text-xs text-slate-700 italic">
@@ -777,7 +684,7 @@ function AeroCareClientApp() {
 
               <!-- Behavior Sliders -->
               <div className="lg:col-span-7 rounded-[32px] bg-white p-7 border border-slate-200/80 space-y-4">
-                <div className="text-xs font-mono uppercase text-slate-400">Pulmonary Behavior & Progress Indicators</div>
+                <div className="text-xs font-mono uppercase text-slate-500">Pulmonary Behavior & Progress Indicators</div>
                 ${[
                   { label: 'Inspiratory Volume (FVC)', left: '1.5L', right: '4.5L', pct: '82%', color: '#13A4A9' },
                   { label: 'Expiratory Flow Stability', left: 'Unsteady', right: 'Locked', pct: '76%', color: '#8E90C6' },
@@ -791,7 +698,7 @@ function AeroCareClientApp() {
                     <div className="h-2.5 rounded-full bg-slate-100 relative">
                       <div className="h-full rounded-full" style=${{ width: s.pct, backgroundColor: s.color }}></div>
                     </div>
-                    <div className="flex justify-between text-[10px] text-slate-400">
+                    <div className="flex justify-between text-[10px] text-slate-500">
                       <span>${s.left}</span>
                       <span>${s.right}</span>
                     </div>
@@ -804,7 +711,7 @@ function AeroCareClientApp() {
             <div className="rounded-[32px] bg-white p-8 border border-slate-200/80 space-y-4">
               <div className="flex justify-between items-center">
                 <span className="font-bold text-sm text-slate-800">5-Stage Post-Discharge Emotion & Lung Capacity Curve</span>
-                <span className="text-xs font-mono text-[#13A4A9]">Stage 1 → Stage 5</span>
+                <span className="text-xs font-mono text-[#0B7377]">Stage 1 → Stage 5</span>
               </div>
               <svg viewBox="0 0 800 180" className="w-full">
                 <defs>
@@ -838,7 +745,7 @@ function AeroCareClientApp() {
           <section className="rounded-[36px] overflow-hidden border border-slate-200/90 shadow-lg bg-[#EEF0F8] grid grid-cols-1 lg:grid-cols-12 animate-page">
             
             <!-- Left Purple Sidebar (Ref Image 2 Clara Martin Style using PDF #8E90C6) -->
-            <aside className="lg:col-span-3 p-7 text-white flex flex-col justify-between" style=${{ backgroundColor: PDF_COLORS.purple }}>
+            <aside className="lg:col-span-3 p-7 text-white flex flex-col justify-between" style=${{ backgroundColor: PDF_COLORS.purpleDeep }}>
               <div className="space-y-6">
                 <div>
                   <div className="text-xs opacity-80">Dashboard</div>
@@ -846,7 +753,7 @@ function AeroCareClientApp() {
                 </div>
 
                 <nav className="space-y-2 text-xs font-semibold">
-                  <div className="px-4 py-3 rounded-2xl bg-white text-[#8E90C6] flex items-center justify-between shadow-sm">
+                  <div className="px-4 py-3 rounded-2xl bg-white text-[#5D5FA0] flex items-center justify-between shadow-sm">
                     <span>👤 My Profile</span>
                     <span>●</span>
                   </div>
@@ -889,10 +796,10 @@ function AeroCareClientApp() {
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <h2 className="text-2xl font-bold text-slate-800">My Profile & Progress</h2>
                 <div className="flex items-center gap-3">
-                  <div className="px-4 py-2 rounded-full bg-white text-xs text-slate-400 border border-slate-200 flex items-center gap-2">
+                  <div className="px-4 py-2 rounded-full bg-white text-xs text-slate-500 border border-slate-200 flex items-center gap-2">
                     <span>🔍 Search records, badges...</span>
                   </div>
-                  <button onClick=${() => navTo(1)} className="px-4 py-2 rounded-full bg-[#13A4A9] text-white text-xs font-bold">
+                  <button onClick=${() => navTo(1)} className="px-4 py-2 rounded-full bg-[#0F8387] text-white text-xs font-bold">
                     ← Welcome Page
                   </button>
                 </div>
@@ -906,7 +813,7 @@ function AeroCareClientApp() {
                 <div className="space-y-2 flex-1 text-center sm:text-left">
                   <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
                     <h3 className="text-2xl font-bold text-slate-900">${state.userName}</h3>
-                    <span className="px-3 py-0.5 rounded-full bg-[#13A4A9]/15 text-[#13A4A9] text-xs font-bold">Activity Log: 4.3083</span>
+                    <span className="px-3 py-0.5 rounded-full bg-[#13A4A9]/15 text-[#0B7377] text-xs font-bold">Activity Log: 4.3083</span>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-xs text-slate-600">
                     <div>📅 Enrolled: ${state.enrolledDate}</div>
@@ -916,7 +823,7 @@ function AeroCareClientApp() {
                   </div>
                   <div className="pt-2 flex flex-wrap justify-center sm:justify-start gap-2">
                     ${['BLE 5.0', 'FVC 3.89L', '200 Min', 'Lv.1 Crown', 'Lv.2 Medal'].map(tag => html`
-                      <span key=${tag} className="px-3 py-1 rounded-full bg-[#8E90C6]/15 text-[#8E90C6] text-[11px] font-bold">
+                      <span key=${tag} className="px-3 py-1 rounded-full bg-[#8E90C6]/15 text-[#5D5FA0] text-[11px] font-bold">
                         ${tag}
                       </span>
                     `)}
@@ -931,7 +838,7 @@ function AeroCareClientApp() {
                 <div className="lg:col-span-7 rounded-3xl bg-white p-6 shadow-sm space-y-4">
                   <div className="flex justify-between items-center">
                     <h4 className="font-bold text-base text-slate-800">My Breathing Modules</h4>
-                    <span className="text-xs font-mono text-[#13A4A9]">Total: 200 min</span>
+                    <span className="text-xs font-mono text-[#0B7377]">Total: 200 min</span>
                   </div>
 
                   <div className="space-y-3 relative before:content-[''] before:w-0.5 before:bg-[#8E90C6]/40 before:top-4 before:bottom-4 before:left-3" style=${{ position: 'relative' }}>
@@ -943,7 +850,7 @@ function AeroCareClientApp() {
                       <div key=${mod.title} onClick=${() => navTo(4)} className="p-4 rounded-2xl bg-[#F4F6FA] hover:bg-[#8E90C6]/15 transition-colors cursor-pointer flex items-center justify-between">
                         <div>
                           <div className="font-bold text-sm text-slate-800">${mod.title}</div>
-                          <div className="text-xs text-slate-500">${mod.sub}</div>
+                          <div className="text-xs text-slate-600">${mod.sub}</div>
                         </div>
                         <span className="px-3 py-1 rounded-full text-white text-[10px] font-bold" style=${{ backgroundColor: mod.statusColor }}>
                           ${mod.status}
@@ -960,13 +867,13 @@ function AeroCareClientApp() {
                     <div className="p-3.5 rounded-2xl bg-slate-50 font-mono text-xs text-slate-600">
                       Hospital Lease Card •••• 9942 (Deposit ¥228)
                     </div>
-                    <div className="flex items-center justify-between text-xs text-slate-500">
+                    <div className="flex items-center justify-between text-xs text-slate-600">
                       <span>Day ${state.leaseUsedDays} / ${state.leaseQuotaDays}</span>
-                      <button onClick=${() => navTo(9)} className="font-bold text-[#13A4A9]">Manage Lease →</button>
+                      <button onClick=${() => navTo(9)} className="font-bold text-[#0B7377]">Manage Lease →</button>
                     </div>
                   </div>
 
-                  <div className="rounded-3xl p-6 text-white space-y-3 shadow-sm" style=${{ backgroundColor: PDF_COLORS.teal }}>
+                  <div className="rounded-3xl p-6 text-white space-y-3 shadow-sm" style=${{ backgroundColor: PDF_COLORS.tealDeep }}>
                     <h4 className="font-bold text-base">Hospital Telehealth Plan</h4>
                     <ul className="text-xs space-y-1.5 opacity-95">
                       <li>✓ Real-time 1,000Hz spirometry cloud sync</li>
@@ -989,15 +896,15 @@ function AeroCareClientApp() {
                 <div className="divide-y divide-slate-100 text-xs">
                   <div className="py-2.5 flex justify-between items-center">
                     <span>🫁 <strong>Spirometry FVC 3.89L</strong> recorded in Digital Lab</span>
-                    <span className="text-slate-400">Today • &gt;</span>
+                    <span className="text-slate-500">Today • &gt;</span>
                   </div>
                   <div className="py-2.5 flex justify-between items-center">
                     <span>🌲 <strong>Forest Level 1</strong> breath runner session completed (+320 coins)</span>
-                    <span className="text-slate-400">Yesterday • &gt;</span>
+                    <span className="text-slate-500">Yesterday • &gt;</span>
                   </div>
                   <div className="py-2.5 flex justify-between items-center">
                     <span>🏅 <strong>Lv.2 Endurance Medal</strong> unlocked (200 total training minutes)</span>
-                    <span className="text-slate-400">2 days ago • &gt;</span>
+                    <span className="text-slate-500">2 days ago • &gt;</span>
                   </div>
                 </div>
               </div>

@@ -18,14 +18,14 @@ export function HomePage({ sessions, onStartPattern, onNavigate }) {
         <div className="lg:col-span-7 p-8 lg:p-14 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-black/15">
           <div className="space-y-6">
             <h1 className="text-4xl lg:text-6xl font-light tracking-tight leading-[1.08]">
-              Breathe with <span className="font-serif italic font-normal text-[#13A4A9]">intention</span>, a few minutes a day.
+              Breathe with <span className="font-serif italic font-normal text-[#0B7377]">intention</span>, a few minutes a day.
             </h1>
             <p className="text-neutral-600 text-base lg:text-lg max-w-2xl leading-relaxed">
               Guided breathing patterns with a visual pacer, a small rhythm game, and a log that tracks your streak.
             </p>
           </div>
           <div className="pt-10 flex flex-wrap items-center gap-4">
-            <button onClick=${() => onStartPattern('box')} className="px-6 py-3.5 rounded-full bg-[#111315] text-white text-sm font-medium flex items-center gap-3 hover:bg-[#13A4A9] transition-colors">
+            <button onClick=${() => onStartPattern('box')} className="px-6 py-3.5 rounded-full bg-[#111315] text-white text-sm font-medium flex items-center gap-3 hover:bg-[#0F8387] transition-colors">
               <span>Start a session</span>
               <span className="w-6 h-6 rounded-full bg-[#D9F99D] text-black flex items-center justify-center font-mono text-xs">↗</span>
             </button>
@@ -39,15 +39,15 @@ export function HomePage({ sessions, onStartPattern, onNavigate }) {
           <div className="text-xs font-mono text-neutral-400 border-b border-black/10 pb-3">TODAY</div>
           <div className="grid grid-cols-2 gap-6">
             <div>
-              <div className="text-5xl font-light tracking-tight">${stats.todayMinutes}<span className="text-lg font-mono text-[#13A4A9] ml-1">min</span></div>
+              <div className="text-5xl font-light tracking-tight">${stats.todayMinutes}<span className="text-lg font-mono text-[#0B7377] ml-1">min</span></div>
               <div className="text-xs text-neutral-500 mt-1">practiced today</div>
             </div>
             <div>
-              <div className="text-5xl font-light tracking-tight">${stats.currentStreak}<span className="text-lg font-mono text-[#8E90C6] ml-1">${stats.currentStreak === 1 ? 'day' : 'days'}</span></div>
+              <div className="text-5xl font-light tracking-tight">${stats.currentStreak}<span className="text-lg font-mono text-[#5D5FA0] ml-1">${stats.currentStreak === 1 ? 'day' : 'days'}</span></div>
               <div className="text-xs text-neutral-500 mt-1">current streak</div>
             </div>
           </div>
-          <button onClick=${() => onNavigate('history')} className="self-start text-xs font-mono text-[#13A4A9] hover:underline">
+          <button onClick=${() => onNavigate('history')} className="self-start text-xs font-mono text-[#0B7377] hover:underline">
             View full history (${stats.totalSessions} sessions) ↗
           </button>
         </div>
