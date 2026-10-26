@@ -22,7 +22,11 @@ async function request(path, options = {}) {
   return res.status === 204 ? null : res.json();
 }
 
+/** Static hosts that only serve files: there is never an API to find, so don't probe (no 404 in the console). */
+const STATIC_ONLY_HOST = /\.github\.io$/;
+
 export async function detectBackend() {
+  if (STATIC_ONLY_HOST.test(window.location.hostname)) return 'local';
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 800);
