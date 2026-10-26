@@ -19,21 +19,6 @@ const SOLIDS = {
 export const solid = color => SOLIDS[color] || { bg: color, fg: '#FFFFFF' };
 export const solidStyle = color => ({ backgroundColor: solid(color).bg, color: solid(color).fg });
 
-export const PAGES_META = [
-  { id: 1, code: '01', name: 'Welcome & Today', subtitle: 'Resume session, pick map & inline Bluetooth pair', badge: '#13A4A9' },
-  { id: 2, code: '02', name: 'Today\'s Schedule', subtitle: 'Taskly-inspired daily rehab routine & weekly pins', badge: '#F0C754' },
-  { id: 3, code: '03', name: 'Choose a Map', subtitle: 'Select Forest, Canyon, or Glacier resistance scenes', badge: '#96C7D2' },
-  { id: 4, code: '04', name: 'Training Game', subtitle: 'Forest Level 1 interactive breath runner game', badge: '#13A4A9' },
-  { id: 5, code: '05', name: 'Spirometry Lab', subtitle: 'Real-time 1,000Hz lung capacity (FVC / FEV1) test', badge: '#8E90C6' },
-  { id: 6, code: '06', name: 'Multiplayer Co-Op', subtitle: 'Live 2-player synchronized breathing arena', badge: '#F0A7AB' },
-  { id: 7, code: '07', name: 'Community Ranking', subtitle: 'Friends leaderboard (Ali, Bage, Ms. Bai) & trends', badge: '#F0C754' },
-  { id: 8, code: '08', name: 'Hygiene & Booking', subtitle: '4-part disinfection ring & April sterilization calendar', badge: '#13A4A9' },
-  { id: 9, code: '09', name: 'Device Rental', subtitle: 'Hospital shared trainer lease & cloud telemetry', badge: '#96C7D2' },
-  { id: 10, code: '10', name: 'Doctor & CI Pipeline', subtitle: 'Thoracic physician guidance & automated trace checks', badge: '#8E90C6' },
-  { id: 11, code: '11', name: 'Recovery Journey', subtitle: 'Emotion curve & pulmonary behavior sliders', badge: '#F0A7AB' },
-  { id: 12, code: '12', name: 'My Profile', subtitle: 'User profile, training modules, rental card & badges', badge: '#8E90C6' }
-];
-
 export const INITIAL_SIM_STATE = {
   userName: 'Xiaoming',
   userRole: 'Post-Op Thoracic Recovery Patient',

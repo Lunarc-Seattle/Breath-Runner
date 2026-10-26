@@ -2,19 +2,19 @@
  * Renders the Forest Runner on top of the pic/background.ai illustration.
  *  - The exported .ai artwork is an <img> panned by a CSS transform (GPU, stays crisp).
  *  - A canvas on top draws everything that moves: runner, pacer arrow, coins, mist, birds, particles.
- * Game rules live in src/core/forestRunner.js; this file only animates what the state says.
+ * Game rules live in src/core/forestRunner.ts; this file only animates what the state says.
  */
 import { FOREST_MAP } from './forestMap.js';
-import { RUNNER_CONFIG, createRunnerState, stepRunner, groundAt, syncPct } from '../core/forestRunner.js';
-import { getLevel } from '../core/forestLevels.js';
+import { RUNNER_CONFIG, createRunnerState, stepRunner, groundAt, syncPct } from '../core/forestRunner.ts';
+import { getLevel } from '../core/forestLevels.ts';
 
-const ASSET_BASE = new URL('../../assets/forest/', import.meta.url).href;
+const ASSET_BASE = `${import.meta.env.BASE_URL}assets/forest/`;
 const HUD_INTERVAL_MS = 120;
 const RUNNER_W = FOREST_MAP.runner.w;
 const RUNNER_H = FOREST_MAP.runner.h;
 
 // Per-map look: the Forest art is the .ai as drawn; other scenes re-grade it until their own art exists.
-// Difficulty (coin layout, pace, lung size) lives in src/core/forestLevels.js.
+// Difficulty (coin layout, pace, lung size) lives in src/core/forestLevels.ts.
 export const MAP_THEMES = {
   'MAP-FOREST-01': { filter: 'none', mist: 'rgba(246,233,223,0.32)' },
   'MAP-CANYON-02': { filter: 'sepia(0.55) saturate(1.7) hue-rotate(-30deg) brightness(1.03)', mist: 'rgba(255,214,170,0.3)' },
@@ -48,6 +48,43 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
   let last = performance.now();
   let lastHud = 0;
   let landSquash = 0;
+
+  // Reduced motion: ambient scenery (mist, birds, sparks) holds still and coins don't spin.
+  // Gameplay (runner, arrow, coins, particles) is unchanged.
+  const motionQuery = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+  let reducedMotion = !!motionQuery?.matches;
+  const onMotionChange = e => { reducedMotion = e.matches; };
+  motionQuery?.addEventListener?.('change', onMotionChange);
+
+  // Gradients are built once at the origin and positioned with translate.
+  const glowCache = new Map(); // coin size -> radial gradient
+  const mistCache = new Map(); // mist width -> radial gradient (for the current theme)
+  function coinGlow(size) {
+    let g = glowCache.get(size);
+    if (!g) {
+      g = ctx.createRadialGradient(0, 0, 2, 0, 0, size);
+      g.addColorStop(0, 'rgba(253,224,71,0.5)');
+      g.addColorStop(1, 'rgba(253,224,71,0)');
+      glowCache.set(size, g);
+    }
+    return g;
+  }
+  function mistGradient(w) {
+    let g = mistCache.get(w);
+    if (!g) {
+      g = ctx.createRadialGradient(0, 0, 0, 0, 0, w / 2);
+      g.addColorStop(0, theme.mist);
+      g.addColorStop(1, 'rgba(255,255,255,0)');
+      mistCache.set(w, g);
+    }
+    return g;
+  }
+  function applyTheme(next) {
+    theme = next;
+    mistCache.clear();
+    background.style.filter = theme.filter;
+  }
+  applyTheme(theme);
 
   const particles = [];
   const dust = [];
@@ -138,9 +175,11 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
     camX += (target - camX) * Math.min(1, dt * 4);
     if (Math.abs(target - camX) > visW) camX = target; // lap restart: cut, don't sweep back
 
-    mist.forEach(m => { m.x += m.v * dt; if (m.x > W + m.w) m.x = -m.w; });
-    birds.forEach(b => { b.x += b.v * dt; if (b.x > W + 80) b.x = -80; });
-    sparks.forEach(s => { s.y -= s.v * dt; if (s.y < 480) { s.y = 1100; s.x = Math.random() * W; } });
+    if (!reducedMotion) {
+      mist.forEach(m => { m.x += m.v * dt; if (m.x > W + m.w) m.x = -m.w; });
+      birds.forEach(b => { b.x += b.v * dt; if (b.x > W + 80) b.x = -80; });
+      sparks.forEach(s => { s.y -= s.v * dt; if (s.y < 480) { s.y = 1100; s.x = Math.random() * W; } });
+    }
     for (let i = particles.length - 1; i >= 0; i--) {
       const p = particles[i];
       p.x += p.vx * dt; p.y += p.vy * dt; p.vy += (p.text ? 0 : 300) * dt; p.life -= dt * 1.5;
@@ -156,18 +195,13 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
   /* ------------------------------ drawing ------------------------------ */
 
   function drawMist() {
-    ctx.fillStyle = theme.mist;
     mist.forEach(m => {
-      const g = ctx.createRadialGradient(m.x, m.y, 0, m.x, m.y, m.w / 2);
-      g.addColorStop(0, theme.mist);
-      g.addColorStop(1, 'rgba(255,255,255,0)');
-      ctx.fillStyle = g;
+      ctx.fillStyle = mistGradient(m.w);
       ctx.save();
       ctx.translate(m.x, m.y);
       ctx.scale(1, m.h / (m.w / 2));
-      ctx.translate(-m.x, -m.y);
       ctx.beginPath();
-      ctx.arc(m.x, m.y, m.w / 2, 0, Math.PI * 2);
+      ctx.arc(0, 0, m.w / 2, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     });
@@ -175,8 +209,8 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
 
   function drawBirds() {
     birds.forEach(b => {
-      const flap = Math.sin(time * 7 + b.p);
-      const y = b.y + Math.sin(time * 1.6 + b.p) * 10;
+      const flap = reducedMotion ? 0.5 : Math.sin(time * 7 + b.p);
+      const y = reducedMotion ? b.y : b.y + Math.sin(time * 1.6 + b.p) * 10;
       ctx.save();
       ctx.translate(b.x, y);
       ctx.scale(b.s, b.s);
@@ -200,14 +234,11 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
     level.map.coins.forEach((c, i) => {
       if (state.taken[i]) return;
       const bob = Math.sin(time * 3 + i * 0.7) * 5;
-      const spin = Math.cos(time * 3.6 + i * 0.5);
+      const spin = reducedMotion ? 1 : Math.cos(time * 3.6 + i * 0.5);
       const size = c.r * 2;
       ctx.save();
       ctx.translate(c.x, c.y + bob);
-      const glow = ctx.createRadialGradient(0, 0, 2, 0, 0, size);
-      glow.addColorStop(0, 'rgba(253,224,71,0.5)');
-      glow.addColorStop(1, 'rgba(253,224,71,0)');
-      ctx.fillStyle = glow;
+      ctx.fillStyle = coinGlow(size);
       ctx.beginPath();
       ctx.arc(0, 0, size, 0, Math.PI * 2);
       ctx.fill();
@@ -293,10 +324,11 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
 
   function drawEffects() {
     sparks.forEach(s => {
-      ctx.globalAlpha = 0.25 + (Math.sin(time * 3 + s.p) * 0.5 + 0.5) * 0.55;
+      const t = reducedMotion ? 0 : time;
+      ctx.globalAlpha = 0.25 + (Math.sin(t * 3 + s.p) * 0.5 + 0.5) * 0.55;
       ctx.fillStyle = '#fdf6b2';
       ctx.beginPath();
-      ctx.arc(s.x + Math.sin(time + s.p) * 10, s.y, s.r, 0, Math.PI * 2);
+      ctx.arc(s.x + Math.sin(t + s.p) * 10, s.y, s.r, 0, Math.PI * 2);
       ctx.fill();
     });
     particles.forEach(p => {
@@ -322,7 +354,6 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
   function render() {
     const { scale, offY, dpr } = view;
     background.style.transform = `translate3d(${-camX * scale}px, ${offY}px, 0)`;
-    background.style.filter = theme.filter;
 
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -348,12 +379,25 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
   }
   raf = requestAnimationFrame(frame);
 
+  // Hidden tab: stop the loop entirely; resume without a time jump when it's visible again.
+  function onVisibility() {
+    if (document.hidden) {
+      cancelAnimationFrame(raf);
+      raf = 0;
+    } else if (!raf) {
+      last = performance.now();
+      raf = requestAnimationFrame(frame);
+    }
+  }
+  document.addEventListener('visibilitychange', onVisibility);
+
   return {
     setHolding(value) { holding = value; },
     setRunning(value) { running = value; if (onHud) onHud(snapshot()); },
     setSpeed(value) { speedMul = value; },
     setMap(id) {
-      theme = MAP_THEMES[id] || MAP_THEMES['MAP-FOREST-01'];
+      const nextTheme = MAP_THEMES[id] || MAP_THEMES['MAP-FOREST-01'];
+      if (nextTheme !== theme) applyTheme(nextTheme);
       const nextLevel = getLevel(id);
       if (nextLevel !== level) {
         level = nextLevel;
@@ -369,6 +413,9 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
     snapshot,
     destroy() {
       cancelAnimationFrame(raf);
+      raf = 0;
+      document.removeEventListener('visibilitychange', onVisibility);
+      motionQuery?.removeEventListener?.('change', onMotionChange);
       resizeObserver.disconnect();
     }
   };

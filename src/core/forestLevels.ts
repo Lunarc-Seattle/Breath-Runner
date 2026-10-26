@@ -8,12 +8,47 @@
  * and collecting them all means reproducing that rhythm: more breaths per lap, longer glides,
  * a smaller lung, a faster pace and a tighter pickup radius.
  */
-import { FOREST_MAP } from '../animation/forestMap.js';
-import { RUNNER_CONFIG, createRunnerState, stepRunner } from './forestRunner.js';
+import { FOREST_MAP as GENERATED_MAP } from '../animation/forestMap.js';
+import { RUNNER_CONFIG, createRunnerState, stepRunner } from './forestRunner.ts';
+import type { BreathCue, Coin, ForestMap, RunnerConfig } from './forestRunner.ts';
+
+/** The generated map is plain JS; this is where it gets its type. */
+const FOREST_MAP: ForestMap = GENERATED_MAP;
+
+export type LevelId = 'MAP-FOREST-01' | 'MAP-CANYON-02' | 'MAP-GLACIER-03';
+
+/** How a level differs from the base runner: pace, lung size and pickup radius. */
+interface BaseLevelSpec {
+  speed: number;
+  lungSec: number;
+  coinReach: number;
+}
+
+/** Level 1: plays the coins exactly as placed in the .ai. */
+export interface FixedLevelSpec extends BaseLevelSpec {
+  script?: undefined;
+  spacing?: undefined;
+}
+
+/** Levels 2 and 3: coins generated along a breath script, at least `spacing` px apart. */
+export interface ScriptedLevelSpec extends BaseLevelSpec {
+  script: BreathCue[];
+  spacing: number;
+}
+
+export type LevelSpec = FixedLevelSpec | ScriptedLevelSpec;
+
+export interface Level {
+  id: LevelId;
+  /** Multiplier on RUNNER_CONFIG.runSpeed. */
+  speed: number;
+  config: RunnerConfig;
+  map: ForestMap;
+}
 
 const DT = 1 / 60;
 
-const LEVEL_SPECS = {
+const LEVEL_SPECS: Record<LevelId, LevelSpec> = {
   'MAP-FOREST-01': { speed: 1, lungSec: 2.4, coinReach: 52 },
   'MAP-CANYON-02': {
     speed: 1.1, lungSec: 2.2, coinReach: 44, spacing: 58,
@@ -26,14 +61,18 @@ const LEVEL_SPECS = {
 };
 
 /** Simulate a breath script and place coins along its airborne arcs. */
-export function coinsFromScript(script, { speed, lungSec, spacing }, map = FOREST_MAP) {
-  const cfg = { ...RUNNER_CONFIG, lungSec };
-  const empty = { ...map, coins: [] };
+export function coinsFromScript(
+  script: BreathCue[],
+  { speed, lungSec, spacing }: Pick<ScriptedLevelSpec, 'speed' | 'lungSec' | 'spacing'>,
+  map: ForestMap = FOREST_MAP
+): Coin[] {
+  const cfg: RunnerConfig = { ...RUNNER_CONFIG, lungSec };
+  const empty: ForestMap = { ...map, coins: [] };
   let s = createRunnerState(empty);
   let next = 0;
   let holdLeft = 0;
   let lastCoinX = -Infinity;
-  const coins = [];
+  const coins: Coin[] = [];
   for (let t = 0; t < 60 && s.lap === 1; t += DT) {
     if (s.onGround && next < script.length && s.x >= script[next][0]) holdLeft = script[next++][1];
     s = stepRunner(s, DT, holdLeft > 0, empty, cfg, speed);
@@ -47,7 +86,7 @@ export function coinsFromScript(script, { speed, lungSec, spacing }, map = FORES
   return coins;
 }
 
-function buildLevel(id) {
+function buildLevel(id: LevelId): Level {
   const spec = LEVEL_SPECS[id];
   return {
     id,
@@ -57,8 +96,11 @@ function buildLevel(id) {
   };
 }
 
-export const FOREST_LEVELS = Object.fromEntries(Object.keys(LEVEL_SPECS).map(id => [id, buildLevel(id)]));
+export const FOREST_LEVELS = Object.fromEntries(
+  (Object.keys(LEVEL_SPECS) as LevelId[]).map(id => [id, buildLevel(id)])
+) as Record<LevelId, Level>;
 
-export function getLevel(id) {
-  return FOREST_LEVELS[id] || FOREST_LEVELS['MAP-FOREST-01'];
+/** Level for a map id; unknown ids fall back to the first level. */
+export function getLevel(id: string | null | undefined): Level {
+  return FOREST_LEVELS[id as LevelId] || FOREST_LEVELS['MAP-FOREST-01'];
 }

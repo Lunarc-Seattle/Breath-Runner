@@ -25,10 +25,10 @@ export function createApp({ repository, serveStatic = true }) {
   });
 
   if (serveStatic) {
-    // Serve only the browser app, never server code or local data.
-    app.get('/', (req, res) => res.sendFile(resolve(ROOT_DIR, 'index.html')));
-    app.use('/src', express.static(resolve(ROOT_DIR, 'src')));
-    app.use('/assets', express.static(resolve(ROOT_DIR, 'assets')));
+    // Serve only the built browser app (npm run build -> dist/), never server code or local data.
+    const distDir = resolve(ROOT_DIR, 'dist');
+    app.use(express.static(distDir));
+    app.get('/', (req, res, next) => res.sendFile(resolve(distDir, 'index.html'), err => err && next()));
   }
 
   app.use((err, req, res, next) => {

@@ -7,7 +7,7 @@
  */
 import * as nodeFs from 'node:fs/promises';
 import { dirname } from 'node:path';
-import { normalizeSession } from '../../src/core/session.js';
+import { normalizeSession } from '../../src/core/session.ts';
 
 export async function createSessionRepository({ filePath = null, fs = nodeFs } = {}) {
   let sessions = [];

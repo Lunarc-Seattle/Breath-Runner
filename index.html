@@ -9,78 +9,12 @@
   <meta property="og:title" content="Breath Runner — AeroCare Breathing Trainer" />
   <meta property="og:description" content="Inhale to jump, keep inhaling to glide. A breathing-rehab game drawn and built by Jie (Fia) Yin." />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2313A4A9'/%3E%3Cpath d='M6 16 16 8l10 8M9 14v10h14V14' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
-  <link rel="stylesheet" href="./assets/app.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --pdf-teal: #13A4A9;
-      --pdf-purple: #8E90C6;
-      --pdf-yellow: #F0C754;
-      --pdf-pink: #F0A7AB;
-      --pdf-blue: #96C7D2;
-    }
-    body {
-      background-color: #F4F6FA;
-      color: #1E2432;
-      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-    }
-    .font-mono {
-      font-family: 'JetBrains Mono', monospace;
-    }
-    /* Hover-reveal navigation drawer (src/components/NavDrawer.js) */
-    .nav-drawer {
-      opacity: 0;
-      transform: translateX(-28px) scale(0.985);
-      filter: blur(6px);
-      pointer-events: none;
-      transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1),
-                  transform 0.65s cubic-bezier(0.16, 1, 0.3, 1),
-                  filter 0.55s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .nav-drawer.is-open {
-      opacity: 1;
-      transform: none;
-      filter: none;
-      pointer-events: auto;
-    }
-    .nav-item {
-      opacity: 0;
-      transform: translateX(-14px);
-      transition: opacity 0.45s ease var(--d, 0ms),
-                  transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) var(--d, 0ms),
-                  background-color 0.2s ease;
-    }
-    .nav-drawer.is-open .nav-item {
-      opacity: 1;
-      transform: none;
-    }
-    .nav-scrim {
-      background: rgba(30, 36, 50, 0.08);
-      backdrop-filter: blur(2px);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.5s ease;
-    }
-    .nav-scrim.is-open {
-      opacity: 1;
-      pointer-events: auto;
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .nav-drawer, .nav-item { transform: none !important; filter: none !important; transition: opacity 0.2s ease !important; }
-    }
-    @keyframes fadeSlideUp {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .animate-page {
-      animation: fadeSlideUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-  </style>
 </head>
 <body>
   <div id="root"></div>
-  <script type="module" src="./src/app.js"></script>
+  <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>

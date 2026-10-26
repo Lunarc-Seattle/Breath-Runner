@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { PATTERNS, cycleSeconds, createCustomPattern, validatePattern, getPattern } from '../src/core/patterns.js';
+import { PATTERNS, cycleSeconds, createCustomPattern, validatePattern, getPattern } from '../src/core/patterns.ts';
 
 test('all built-in patterns are valid', () => {
   for (const p of PATTERNS) assert.equal(validatePattern(p), true, p.id);

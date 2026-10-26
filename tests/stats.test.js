@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { summarize, currentStreak, lastNDays, formatDuration, dateKey } from '../src/core/stats.js';
+import { summarize, currentStreak, lastNDays, formatDuration, dateKey } from '../src/core/stats.ts';
 
 const now = new Date(2026, 9, 25, 18, 0); // Oct 25 2026, local time
 const at = (day, hour = 9) => new Date(2026, 9, day, hour).toISOString();

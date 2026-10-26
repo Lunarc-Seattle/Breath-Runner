@@ -6,7 +6,7 @@
  * The API is resolved relative to the page, so the same build works in both places.
  */
 import { LocalStore } from '../data/localStore.js';
-import { normalizeSession } from '../core/session.js';
+import { normalizeSession } from '../core/session.ts';
 
 const API_BASE = new URL('./api/v1', window.location.href).href.replace(/\/$/, '');
 

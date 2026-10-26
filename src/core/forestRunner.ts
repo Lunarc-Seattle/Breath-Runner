@@ -5,7 +5,105 @@
  * Pure state + step function, all in .ai design units (2436 x 1125 artboard).
  */
 
-export const RUNNER_CONFIG = {
+/** One cliff: surface heights sampled every `profileStep` px from x0; null where there is no ground. */
+export interface Cliff {
+  x0: number;
+  tops: (number | null)[];
+}
+
+export interface Coin {
+  x: number;
+  y: number;
+  r: number;
+}
+
+/** A sprite's placement on the artboard; `bottom` is its lowest y (the runner's feet). */
+export interface SpriteBox {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  bottom: number;
+}
+
+/** The playable map exported from the .ai file (see src/animation/forestMap.js). */
+export interface ForestMap {
+  width: number;
+  height: number;
+  profileStep: number;
+  cliffs: Cliff[];
+  coins: Coin[];
+  runner: SpriteBox;
+  arrow: SpriteBox;
+}
+
+/** A scripted breath: [x where the jump starts, seconds to keep inhaling]. */
+export type BreathCue = [x: number, holdSec: number];
+
+export type Cue = 'inhale' | 'exhale';
+
+export interface RunnerConfig {
+  runSpeed: number;
+  gravity: number;
+  floatGravity: number;
+  glideVy: number;
+  jumpVy: number;
+  lungSec: number;
+  refillSec: number;
+  stepUp: number;
+  fallY: number;
+  bodyOffset: number;
+  coinReach: number;
+  cueLeadPx: number;
+  respawnPauseSec: number;
+  respawnInset: number;
+  endPad: number;
+  /** Scripted levels only: cue the player along these breaths instead of reading the terrain. */
+  breathCues?: BreathCue[] | null;
+}
+
+export type RunnerEvent =
+  | { type: 'jump' }
+  | { type: 'land' }
+  | { type: 'fall'; x: number; y: number }
+  | { type: 'coin'; i: number; x: number; y: number }
+  | { type: 'lap'; lap: number; coins: number; sec: number; total: number };
+
+export type RunnerEventType = RunnerEvent['type'];
+
+export interface RunnerState {
+  x: number;
+  y: number;
+  vy: number;
+  onGround: boolean;
+  wasHolding: boolean;
+  /** Breath left for floating, 0..1. */
+  lung: number;
+  cue: Cue;
+  /** Coins taken this lap, by index into map.coins. */
+  taken: boolean[];
+  coins: number;
+  lapCoins: number;
+  combo: number;
+  bestCombo: number;
+  falls: number;
+  lap: number;
+  elapsed: number;
+  lapElapsed: number;
+  /** Seconds the player's breath matched the cue. */
+  syncSec: number;
+  safeX: number;
+  safeY: number;
+  respawnSec: number;
+  events: RunnerEvent[];
+}
+
+export interface Point {
+  x: number;
+  y: number;
+}
+
+export const RUNNER_CONFIG: RunnerConfig = {
   runSpeed: 165,          // design px / s
   gravity: 1700,
   floatGravity: 420,      // while inhaling in the air
@@ -24,14 +122,14 @@ export const RUNNER_CONFIG = {
 };
 
 /** Cliff-top y at x for one cliff, or null when x is outside it. */
-function cliffTop(cliff, x, step) {
+function cliffTop(cliff: Cliff, x: number, step: number): number | null {
   const i = Math.round((x - cliff.x0) / step);
   return i >= 0 && i < cliff.tops.length ? cliff.tops[i] : null;
 }
 
 /** Highest cliff surface at x that is not above fromY - reach (i.e. one we can land on or step onto). */
-export function groundAt(map, x, fromY, reach = 0) {
-  let best = null;
+export function groundAt(map: ForestMap, x: number, fromY: number, reach = 0): number | null {
+  let best: number | null = null;
   for (const c of map.cliffs) {
     const y = cliffTop(c, x, map.profileStep);
     if (y !== null && y >= fromY - reach && (best === null || y < best)) best = y;
@@ -40,7 +138,7 @@ export function groundAt(map, x, fromY, reach = 0) {
 }
 
 /** Distance to where the ground ahead falls away (a gap between cliffs), or Infinity within maxPx. */
-export function edgeDistance(map, x, feetY, maxPx, cfg = RUNNER_CONFIG) {
+export function edgeDistance(map: ForestMap, x: number, feetY: number, maxPx: number, cfg: RunnerConfig = RUNNER_CONFIG): number {
   for (let dx = 4; dx <= maxPx; dx += 4) {
     const g = groundAt(map, x + dx, feetY, cfg.stepUp);
     if (g === null || g > cfg.fallY || g - feetY > 60) return dx;
@@ -52,25 +150,28 @@ export function edgeDistance(map, x, feetY, maxPx, cfg = RUNNER_CONFIG) {
  * Where to put the runner back after a fall: the start of the flat top of the cliff she last
  * stood on, so there is a whole cliff of runway to get ready for the next breath.
  */
-export function respawnPoint(map, safeX, safeY, cfg = RUNNER_CONFIG) {
+export function respawnPoint(map: ForestMap, safeX: number, safeY: number, cfg: RunnerConfig = RUNNER_CONFIG): Point {
   const step = map.profileStep;
   const cliff = map.cliffs.find(c => {
     const top = cliffTop(c, safeX, step);
     return top !== null && Math.abs(top - safeY) < 3;
   });
   if (cliff) {
-    const tops = cliff.tops.filter(t => t !== null);
+    const tops = cliff.tops.filter((t): t is number => t !== null);
     const flat = Math.min(...tops) + 40;
     const i = cliff.tops.findIndex(t => t !== null && t <= flat);
     const x = Math.max(map.runner.x, cliff.x0 + i * step + cfg.respawnInset);
-    return { x, y: cliffTop(cliff, x, step) };
+    // x lies on this cliff's flat top, so it has a surface there.
+    return { x, y: cliffTop(cliff, x, step)! };
   }
-  return { x: map.runner.x, y: groundAt(map, map.runner.x, map.runner.bottom - 40) };
+  // The start position always stands on the first cliff.
+  return { x: map.runner.x, y: groundAt(map, map.runner.x, map.runner.bottom - 40)! };
 }
 
-export function createRunnerState(map) {
+export function createRunnerState(map: ForestMap): RunnerState {
   const startX = map.runner.x;
-  const startY = groundAt(map, startX, map.runner.bottom - 40);
+  // The .ai places the runner standing on the first cliff, so there is ground under her.
+  const startY = groundAt(map, startX, map.runner.bottom - 40)!;
   return {
     x: startX,
     y: startY,
@@ -96,13 +197,20 @@ export function createRunnerState(map) {
   };
 }
 
-export function syncPct(state) {
+export function syncPct(state: Pick<RunnerState, 'elapsed' | 'syncSec'>): number {
   return state.elapsed > 0 ? Math.round((state.syncSec / state.elapsed) * 100) : 100;
 }
 
 /** Advance by dt seconds. Returns a new state; `events` lists what happened this step. */
-export function stepRunner(prev, dt, holding, map, cfg = RUNNER_CONFIG, speedMul = 1) {
-  const s = { ...prev, events: [] };
+export function stepRunner(
+  prev: RunnerState,
+  dt: number,
+  holding: boolean,
+  map: ForestMap,
+  cfg: RunnerConfig = RUNNER_CONFIG,
+  speedMul = 1
+): RunnerState {
+  const s: RunnerState = { ...prev, events: [] };
   s.elapsed += dt;
   s.lapElapsed += dt;
 
@@ -187,7 +295,7 @@ export function stepRunner(prev, dt, holding, map, cfg = RUNNER_CONFIG, speedMul
   });
 
   // In the air, keep inhaling while there is still a gap below.
-  const overGap = () => {
+  const overGap = (): boolean => {
     const g = groundAt(map, s.x, s.y, 2);
     return g === null || g > cfg.fallY;
   };

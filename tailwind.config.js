@@ -1,6 +1,6 @@
-/** Tailwind is precompiled to assets/app.css (npm run build:css), so the site needs no CDN script. */
+/** @type {import('tailwindcss').Config} */
 export default {
-  content: ['./index.html', './src/**/*.js'],
+  content: ['./index.html', './src/**/*.{js,jsx,ts,tsx}'],
   theme: { extend: {} },
   plugins: []
 };

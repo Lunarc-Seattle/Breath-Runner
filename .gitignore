@@ -10,3 +10,4 @@ server/data/
 *.MP4
 *.m4v
 *.webm
+dist/

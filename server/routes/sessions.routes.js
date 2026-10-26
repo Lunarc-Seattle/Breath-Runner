@@ -1,7 +1,7 @@
 import express from 'express';
-import { PATTERNS } from '../../src/core/patterns.js';
-import { summarize } from '../../src/core/stats.js';
-import { ValidationError } from '../../src/core/session.js';
+import { PATTERNS } from '../../src/core/patterns.ts';
+import { summarize } from '../../src/core/stats.ts';
+import { ValidationError } from '../../src/core/session.ts';
 
 export function createSessionsRouter(repository) {
   const router = express.Router();

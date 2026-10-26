@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { FOREST_MAP } from '../src/animation/forestMap.js';
-import { createRunnerState, stepRunner, groundAt, edgeDistance } from '../src/core/forestRunner.js';
-import { FOREST_LEVELS } from '../src/core/forestLevels.js';
+import { createRunnerState, stepRunner, groundAt, edgeDistance } from '../src/core/forestRunner.ts';
+import { FOREST_LEVELS } from '../src/core/forestLevels.ts';
 
 const DT = 1 / 60;
 
