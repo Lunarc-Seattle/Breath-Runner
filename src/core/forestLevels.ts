@@ -126,6 +126,7 @@ export const FOREST_LEVELS = Object.fromEntries(
 ) as Record<LevelId, Level>;
 
 /** Level for a map id; unknown ids fall back to the first level. */
+/** Own keys only, so ids like 'toString' fall back instead of hitting Object.prototype. */
 export function getLevel(id: string | null | undefined): Level {
-  return FOREST_LEVELS[id as LevelId] || FOREST_LEVELS['MAP-FOREST-01'];
+  return id && Object.hasOwn(FOREST_LEVELS, id) ? FOREST_LEVELS[id as LevelId] : FOREST_LEVELS['MAP-FOREST-01'];
 }

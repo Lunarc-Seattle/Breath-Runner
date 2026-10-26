@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { FOREST_MAP } from '../src/animation/forestMap.js';
 import { createRunnerState, stepRunner, groundAt, edgeDistance } from '../src/core/forestRunner.ts';
-import { FOREST_LEVELS } from '../src/core/forestLevels.ts';
+import { FOREST_LEVELS, getLevel } from '../src/core/forestLevels.ts';
 
 const DT = 1 / 60;
 
@@ -105,4 +105,10 @@ test('never breathing cannot loop falls faster than once per cliff run', () => {
   let s = createRunnerState(map);
   for (let i = 0; i < 30 / DT; i++) s = stepRunner(s, DT, false, map, config, speed);
   assert.ok(s.falls <= 30 / 2, `falls=${s.falls}`); // pause + a run to the edge, every time
+});
+
+test('unknown or prototype level ids fall back to Forest · Level 1', () => {
+  for (const id of ['toString', '__proto__', 'constructor', 'nope', '', null, undefined]) {
+    assert.equal(getLevel(id).id, 'MAP-FOREST-01', String(id));
+  }
 });

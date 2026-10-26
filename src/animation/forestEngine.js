@@ -3,10 +3,93 @@
  *  - The exported .ai artwork is an <img> panned by a CSS transform (GPU, stays crisp).
  *  - A canvas on top draws everything that moves: runner, pacer arrow, coins, mist, birds, particles.
  * Game rules live in src/core/forestRunner.ts; this file only animates what the state says.
+ *
+ * Type-checked via JSDoc (`@ts-check`). The typedefs below are exported, e.g. for a consumer:
+ *   @import { ForestStage, HudSnapshot, StageEvent } from '../animation/forestEngine.js'
+ * inside a JSDoc comment, or `import('../animation/forestEngine.js').ForestStage` in a type.
  */
+// @ts-check
 import { FOREST_MAP } from './forestMap.js';
 import { RUNNER_CONFIG, createRunnerState, stepRunner, groundAt, syncPct } from '../core/forestRunner.ts';
 import { getLevel } from '../core/forestLevels.ts';
+
+/* ------------------------------- types ------------------------------- */
+
+/** @typedef {import('../core/forestRunner.ts').RunnerState} RunnerState */
+/** @typedef {import('../core/forestRunner.ts').RunnerEvent} RunnerEvent */
+/** @typedef {import('../core/forestRunner.ts').Cue} Cue */
+/** @typedef {import('../core/forestLevels.ts').Level} Level */
+/** @typedef {import('../core/forestLevels.ts').LevelId} LevelId */
+
+/**
+ * Per-map look applied on top of the shared artwork.
+ * @typedef {object} MapTheme
+ * @property {string} filter CSS `filter` for the background image.
+ * @property {string} mist Inner colour of the drifting mist gradients.
+ */
+
+/**
+ * What the HUD shows; sent to `onHud` and alongside every `onEvent`.
+ * @typedef {object} HudSnapshot
+ * @property {boolean} running
+ * @property {number} coins
+ * @property {number} lapCoins
+ * @property {number} totalCoins Coins on the current level's map.
+ * @property {number} combo
+ * @property {number} bestCombo
+ * @property {number} lap
+ * @property {number} falls
+ * @property {number} sync Percent of time the breath matched the cue, 0..100.
+ * @property {number} lung Breath left for floating, 0..1.
+ * @property {Cue} cue
+ * @property {boolean} onGround
+ * @property {boolean} respawning
+ * @property {number} elapsed Seconds run so far.
+ * @property {number} progress Lap progress, 0..1.
+ */
+
+/**
+ * The engine's own event: the tab was hidden mid-run, so the page should show its paused state.
+ * @typedef {{ type: 'hidden' }} HiddenEvent
+ */
+
+/**
+ * Everything `onEvent` can receive: the core runner events plus the engine's own.
+ * @typedef {RunnerEvent | HiddenEvent} StageEvent
+ */
+
+/**
+ * @typedef {object} ForestStageOptions
+ * @property {HTMLElement} stage Element whose size the canvas fills.
+ * @property {HTMLElement} background The artwork `<img>`, panned with a CSS transform.
+ * @property {HTMLCanvasElement} canvas Overlay canvas for everything that moves.
+ * @property {(hud: HudSnapshot) => void} [onHud] Called every HUD_INTERVAL_MS and on state changes.
+ * @property {(event: StageEvent, hud: HudSnapshot) => void} [onEvent] Called once per event.
+ */
+
+/**
+ * The handle returned by `createForestStage`.
+ * @typedef {object} ForestStage
+ * @property {(value: boolean) => void} setHolding Whether the player is inhaling.
+ * @property {(value: boolean) => void} setRunning
+ * @property {(value: number) => void} setSpeed Multiplier on the level's pace.
+ * @property {(id: string) => void} setMap Switch level (unknown ids fall back to the first); restarts on change.
+ * @property {() => void} restart
+ * @property {() => HudSnapshot} snapshot
+ * @property {() => void} destroy Stop the loop and remove every listener and observer.
+ */
+
+/**
+ * A coin-burst or fall particle (`color`), or a floating score label (`text`).
+ * @typedef {{ x: number, y: number, vx: number, vy: number, life: number, color: string, text?: undefined }
+ *   | { x: number, y: number, vx: number, vy: number, life: number, text: string, color?: undefined }} Particle
+ */
+
+/** @typedef {{ x: number, y: number, vx: number, vy: number, life: number }} Dust */
+/** @typedef {{ x: number, y: number, w: number, h: number, v: number }} MistBand */
+/** @typedef {{ x: number, y: number, s: number, v: number, p: number }} Bird */
+/** @typedef {{ x: number, y: number, r: number, v: number, p: number }} Spark */
+/** @typedef {{ w: number, h: number, scale: number, offY: number, dpr: number }} View */
 
 const ASSET_BASE = `${import.meta.env.BASE_URL}assets/forest/`;
 const HUD_INTERVAL_MS = 120;
@@ -15,6 +98,7 @@ const RUNNER_H = FOREST_MAP.runner.h;
 
 // Per-map look: the Forest art is the .ai as drawn; other scenes re-grade it until their own art exists.
 // Difficulty (coin layout, pace, lung size) lives in src/core/forestLevels.ts.
+/** @type {Record<LevelId, MapTheme>} */
 export const MAP_THEMES = {
   'MAP-FOREST-01': { filter: 'none', mist: 'rgba(246,233,223,0.32)' },
   'MAP-CANYON-02': {
@@ -24,6 +108,29 @@ export const MAP_THEMES = {
   'MAP-GLACIER-03': { filter: 'saturate(0.5) brightness(1.14) hue-rotate(14deg)', mist: 'rgba(235,245,255,0.42)' }
 };
 
+/**
+ * Theme for a map id; unknown ids fall back to the first map (mirrors getLevel).
+ * @param {string} id
+ * @returns {MapTheme}
+ */
+function themeFor(id) {
+  // Same lookup as getLevel in src/core/forestLevels.ts: own keys only, anything else falls back.
+  return Object.hasOwn(MAP_THEMES, id) ? MAP_THEMES[/** @type {LevelId} */ (id)] : MAP_THEMES['MAP-FOREST-01'];
+}
+
+/**
+ * The canvas's 2D context. getContext('2d') is null only when the canvas already holds another
+ * context type or the browser has no 2D canvas; fail loudly here rather than on the first draw.
+ * @param {HTMLCanvasElement} canvas
+ * @returns {CanvasRenderingContext2D}
+ */
+function get2dContext(canvas) {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Forest Runner: 2D canvas context unavailable');
+  return ctx;
+}
+
+/** @param {string} name */
 function loadImage(name) {
   const img = new Image();
   img.src = ASSET_BASE + name;
@@ -32,8 +139,12 @@ function loadImage(name) {
 
 export const FOREST_BACKGROUND_URL = ASSET_BASE + 'background.jpg';
 
+/**
+ * @param {ForestStageOptions} options
+ * @returns {ForestStage}
+ */
 export function createForestStage({ stage, background, canvas, onHud, onEvent }) {
-  const ctx = canvas.getContext('2d');
+  const ctx = get2dContext(canvas);
   const sprites = { runner: loadImage('runner.png'), arrow: loadImage('arrow.png'), coin: loadImage('coin.png') };
   const W = FOREST_MAP.width;
   const H = FOREST_MAP.height;
@@ -46,6 +157,7 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
   let theme = MAP_THEMES['MAP-FOREST-01'];
   let time = 0;
   let camX = 0;
+  /** @type {View} */
   let view = { w: 0, h: 0, scale: 1, offY: 0, dpr: 1 };
   let raf = 0;
   let last = performance.now();
@@ -56,14 +168,18 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
   // Gameplay (runner, arrow, coins, particles) is unchanged.
   const motionQuery = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
   let reducedMotion = !!motionQuery?.matches;
+  /** @param {MediaQueryListEvent} e */
   const onMotionChange = e => {
     reducedMotion = e.matches;
   };
   motionQuery?.addEventListener?.('change', onMotionChange);
 
   // Gradients are built once at the origin and positioned with translate.
+  /** @type {Map<number, CanvasGradient>} */
   const glowCache = new Map(); // coin size -> radial gradient
+  /** @type {Map<number, CanvasGradient>} */
   const mistCache = new Map(); // mist width -> radial gradient (for the current theme)
+  /** @param {number} size */
   function coinGlow(size) {
     let g = glowCache.get(size);
     if (!g) {
@@ -74,6 +190,7 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
     }
     return g;
   }
+  /** @param {number} w */
   function mistGradient(w) {
     let g = mistCache.get(w);
     if (!g) {
@@ -84,6 +201,7 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
     }
     return g;
   }
+  /** @param {MapTheme} next */
   function applyTheme(next) {
     theme = next;
     mistCache.clear();
@@ -91,8 +209,11 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
   }
   applyTheme(theme);
 
+  /** @type {Particle[]} */
   const particles = [];
+  /** @type {Dust[]} */
   const dust = [];
+  /** @type {MistBand[]} */
   const mist = Array.from({ length: 6 }, (_, i) => ({
     x: (i / 6) * W,
     y: 380 + (i % 3) * 120,
@@ -100,11 +221,13 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
     h: 46 + (i % 3) * 18,
     v: 8 + (i % 3) * 5
   }));
+  /** @type {Bird[]} */
   const birds = [
     { x: 300, y: 250, s: 0.9, v: 34, p: 0 },
     { x: 1300, y: 170, s: 0.7, v: 26, p: 1.7 },
     { x: 2000, y: 300, s: 0.6, v: 30, p: 3.1 }
   ];
+  /** @type {Spark[]} */
   const sparks = Array.from({ length: 36 }, () => ({
     x: Math.random() * W,
     y: 520 + Math.random() * 520,
@@ -128,6 +251,10 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
   resizeObserver.observe(stage);
   resize();
 
+  /**
+   * @param {number} x
+   * @param {number} y
+   */
   function spawnCoinBurst(x, y) {
     for (let k = 0; k < 14; k++) {
       const a = (Math.PI * 2 * k) / 14;
@@ -144,6 +271,7 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
     particles.push({ x, y: y - 20, vx: 0, vy: -70, life: 1.2, text: '+1' });
   }
 
+  /** @param {RunnerEvent[]} events */
   function handleEvents(events) {
     for (const e of events) {
       if (e.type === 'coin') spawnCoinBurst(e.x, e.y);
@@ -173,6 +301,7 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
     }
   }
 
+  /** @returns {HudSnapshot} */
   function snapshot() {
     return {
       running,
@@ -193,6 +322,7 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
     };
   }
 
+  /** @param {number} dt Seconds since the last frame. */
   function update(dt) {
     time += dt;
     if (running) {
@@ -391,7 +521,8 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
     });
     particles.forEach(p => {
       ctx.globalAlpha = Math.max(0, Math.min(1, p.life));
-      if (p.text) {
+      // Discriminate on presence (labels are never empty), so the else branch is a coloured dot.
+      if (p.text !== undefined) {
         ctx.fillStyle = '#fde047';
         ctx.strokeStyle = 'rgba(4,33,75,0.6)';
         ctx.lineWidth = 4;
@@ -424,6 +555,7 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
     drawEffects();
   }
 
+  /** @param {DOMHighResTimeStamp} now */
   function frame(now) {
     const dt = Math.min(0.05, (now - last) / 1000); // clamp after tab switches
     last = now;
@@ -451,7 +583,8 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
   }
   document.addEventListener('visibilitychange', onVisibility);
 
-  return {
+  /** @type {ForestStage} */
+  const api = {
     setHolding(value) {
       holding = value;
     },
@@ -463,7 +596,7 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
       speedMul = value;
     },
     setMap(id) {
-      const nextTheme = MAP_THEMES[id] || MAP_THEMES['MAP-FOREST-01'];
+      const nextTheme = themeFor(id);
       if (nextTheme !== theme) applyTheme(nextTheme);
       const nextLevel = getLevel(id);
       if (nextLevel !== level) {
@@ -486,4 +619,5 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
       resizeObserver.disconnect();
     }
   };
+  return api;
 }
