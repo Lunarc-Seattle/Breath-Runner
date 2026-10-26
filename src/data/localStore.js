@@ -4,38 +4,33 @@
  */
 
 const KEYS = {
-  sessions: 'breath-trainer:sessions:v1',
-  gameBest: 'breath-trainer:game-best:v1',
-  prefs: 'breath-trainer:prefs:v1'
+  sessions: 'breath-trainer:sessions:v1'
 };
 
 function read(key, fallback) {
   try {
     const raw = window.localStorage.getItem(key);
     return raw === null ? fallback : JSON.parse(raw);
-  } catch (_) {
+  } catch {
     return fallback;
   }
 }
 
+/** Returns false when storage is unavailable or full, so callers can tell the user. */
 function write(key, value) {
   try {
     window.localStorage.setItem(key, JSON.stringify(value));
-  } catch (_) {
-    // Storage unavailable or full; in-memory state still works for this visit.
+    return true;
+  } catch {
+    return false;
   }
 }
 
 export const LocalStore = {
   loadSessions: () => {
     const list = read(KEYS.sessions, []);
-    return Array.isArray(list) ? list : [];
+    // Ignore anything that isn't a saved run (hand-edited or corrupted storage).
+    return Array.isArray(list) ? list.filter(s => s && typeof s === 'object' && typeof s.completedAt === 'string') : [];
   },
-  saveSessions: sessions => write(KEYS.sessions, sessions),
-
-  loadGameBest: () => Number(read(KEYS.gameBest, 0)) || 0,
-  saveGameBest: score => write(KEYS.gameBest, score),
-
-  loadPrefs: () => ({ sound: true, ...read(KEYS.prefs, {}) }),
-  savePrefs: prefs => write(KEYS.prefs, prefs)
+  saveSessions: sessions => write(KEYS.sessions, sessions)
 };

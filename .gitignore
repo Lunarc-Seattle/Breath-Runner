@@ -10,3 +10,9 @@ server/data/
 *.MP4
 *.m4v
 *.webm
+dist/
+playwright-report/
+test-results/
+coverage/
+lighthouse-report/
+.lighthouseci/

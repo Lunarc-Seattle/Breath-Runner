@@ -15,7 +15,8 @@ export function bluetoothSupport() {
 
 export const SUPPORT_MESSAGES = {
   insecure: 'Bluetooth needs a secure page. Open the app over https or on localhost.',
-  unsupported: 'This browser can\'t use Bluetooth. Open the app in Chrome or Edge on a computer or Android phone. You can still play Forest · Level 1 in free-trial mode.'
+  unsupported:
+    "This browser can't use Bluetooth. Open the app in Chrome or Edge on a computer or Android phone. You can still play Forest · Level 1 in free-trial mode."
 };
 
 /** Turn a Web Bluetooth error into something a patient can act on. */
@@ -27,7 +28,7 @@ export function describePairError(err) {
     case 'SecurityError':
       return 'Bluetooth access is blocked. Allow Bluetooth for this site in your browser settings, then try again.';
     case 'NetworkError':
-      return 'Found the trainer but couldn\'t connect. Restart the trainer and try again.';
+      return "Found the trainer but couldn't connect. Restart the trainer and try again.";
     default:
       return `Couldn't connect to the trainer${err && err.message ? `: ${err.message}` : '.'}`;
   }
@@ -50,13 +51,15 @@ export async function pairTrainer({ onDisconnect } = {}) {
     const service = await server.getPrimaryService('battery_service');
     const level = await service.getCharacteristic('battery_level');
     battery = (await level.readValue()).getUint8(0);
-  } catch (_) {
+  } catch {
     // Battery service is optional.
   }
 
   return {
     name: device.name || 'AeroCare Trainer',
     battery,
-    disconnect: () => { if (device.gatt.connected) device.gatt.disconnect(); }
+    disconnect: () => {
+      if (device.gatt.connected) device.gatt.disconnect();
+    }
   };
 }

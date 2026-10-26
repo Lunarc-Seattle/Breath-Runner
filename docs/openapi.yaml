@@ -1,0 +1,333 @@
+openapi: 3.1.0
+info:
+  title: Breath Runner API
+  version: 2.5.0
+  description: |
+    Session storage for Breath Runner. There are no user accounts yet: every client
+    shares one store. Write routes (POST and DELETE) are rate limited per client IP
+    (30 requests per minute by default).
+servers:
+  - url: /api/v1
+paths:
+  /health:
+    get:
+      summary: Liveness and storage check
+      operationId: getHealth
+      responses:
+        '200':
+          description: The API is up and its storage is writable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+        '503':
+          description: The API is up but its storage is not writable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+  /patterns:
+    get:
+      summary: Built-in breathing patterns
+      operationId: listPatterns
+      responses:
+        '200':
+          description: The patterns.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [patterns]
+                properties:
+                  patterns:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Pattern'
+  /sessions:
+    get:
+      summary: List sessions, newest first
+      description: |
+        Ordered by (completedAt desc, id desc). Follow `nextCursor` to read the next page;
+        it is null on the last page.
+      operationId: listSessions
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+        - name: cursor
+          in: query
+          required: false
+          description: Opaque value from a previous response's `nextCursor`.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: One page of sessions.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      summary: Save a session
+      description: The server generates `id`; a client-supplied id is ignored.
+      operationId: createSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionInput'
+      responses:
+        '201':
+          description: The stored session.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [session]
+                properties:
+                  session:
+                    $ref: '#/components/schemas/Session'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '413':
+          $ref: '#/components/responses/TooLarge'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    delete:
+      summary: Delete every session
+      operationId: clearSessions
+      responses:
+        '204':
+          description: All sessions were deleted.
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /stats:
+    get:
+      summary: Summary statistics over all sessions
+      operationId: getStats
+      responses:
+        '200':
+          description: The summary.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [stats]
+                properties:
+                  stats:
+                    $ref: '#/components/schemas/Stats'
+  /openapi.yaml:
+    get:
+      summary: This document
+      operationId: getOpenApi
+      responses:
+        '200':
+          description: The OpenAPI document.
+          content:
+            application/yaml:
+              schema:
+                type: string
+components:
+  responses:
+    BadRequest:
+      description: Invalid input (body, limit or cursor).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    TooLarge:
+      description: The request body is larger than 16 KB.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    TooManyRequests:
+      description: The client exceeded the write rate limit.
+      headers:
+        RateLimit:
+          description: Remaining quota and reset time (IETF draft 7).
+          schema:
+            type: string
+        RateLimit-Policy:
+          schema:
+            type: string
+        Retry-After:
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+    Health:
+      type: object
+      required: [status, storage]
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded]
+        storage:
+          type: string
+          enum: [ok, error]
+        service:
+          type: string
+        time:
+          type: string
+          format: date-time
+    Phase:
+      type: object
+      required: [type, seconds]
+      properties:
+        type:
+          type: string
+          enum: [inhale, hold, exhale]
+        seconds:
+          type: number
+        label:
+          type: string
+        to:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Target lung level at the end of the phase.
+    Pattern:
+      type: object
+      required: [id, name, tagline, description, color, defaultRounds, phases]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        tagline:
+          type: string
+        description:
+          type: string
+        color:
+          type: string
+        defaultRounds:
+          type: integer
+        phases:
+          type: array
+          items:
+            $ref: '#/components/schemas/Phase'
+    GameResult:
+      type: object
+      properties:
+        coins:
+          type: integer
+          minimum: 0
+          maximum: 100000
+          description: Cannot exceed totalCoins x max(1, rounds + 1).
+        totalCoins:
+          type: integer
+          minimum: 0
+          maximum: 1000
+        syncPct:
+          type: integer
+          minimum: 0
+          maximum: 100
+        falls:
+          type: integer
+          minimum: 0
+          maximum: 1000
+    SessionInput:
+      allOf:
+        - $ref: '#/components/schemas/GameResult'
+        - type: object
+          required: [patternId, patternName, rounds, durationSec]
+          properties:
+            patternId:
+              type: string
+              minLength: 1
+              maxLength: 40
+            patternName:
+              type: string
+              minLength: 1
+              maxLength: 80
+            rounds:
+              type: integer
+              minimum: 0
+              maximum: 200
+            durationSec:
+              type: number
+              exclusiveMinimum: 0
+              maximum: 10800
+            completed:
+              type: boolean
+            completedAt:
+              description: ISO 8601 timestamp; defaults to now and may be at most 5 minutes in the future.
+              type: [string, 'null']
+              format: date-time
+    Session:
+      allOf:
+        - $ref: '#/components/schemas/GameResult'
+        - type: object
+          required: [id, patternId, patternName, rounds, durationSec, completed, completedAt]
+          properties:
+            id:
+              type: string
+            patternId:
+              type: string
+            patternName:
+              type: string
+            rounds:
+              type: integer
+            durationSec:
+              type: integer
+            completed:
+              type: boolean
+            completedAt:
+              type: string
+              format: date-time
+    SessionPage:
+      type: object
+      required: [sessions, nextCursor]
+      properties:
+        sessions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Session'
+        nextCursor:
+          type: [string, 'null']
+    Stats:
+      type: object
+      required: [totalSessions, completedSessions, totalMinutes, todayMinutes, currentStreak, favoritePattern, last7]
+      properties:
+        totalSessions:
+          type: integer
+        completedSessions:
+          type: integer
+        totalMinutes:
+          type: number
+        todayMinutes:
+          type: number
+        currentStreak:
+          type: integer
+        favoritePattern:
+          type: [string, 'null']
+        last7:
+          type: array
+          items:
+            type: object
+            required: [dateKey, label, minutes]
+            properties:
+              dateKey:
+                type: string
+              label:
+                type: string
+              minutes:
+                type: number

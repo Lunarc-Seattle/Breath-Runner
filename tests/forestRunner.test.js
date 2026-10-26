@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { FOREST_MAP } from '../src/animation/forestMap.js';
-import { createRunnerState, stepRunner, groundAt, edgeDistance } from '../src/core/forestRunner.js';
-import { FOREST_LEVELS } from '../src/core/forestLevels.js';
+import { createRunnerState, stepRunner, groundAt, edgeDistance } from '../src/core/forestRunner.ts';
+import { FOREST_LEVELS, getLevel } from '../src/core/forestLevels.ts';
 
 const DT = 1 / 60;
 
@@ -56,14 +56,15 @@ test('each level is harder than the one before', () => {
   assert.ok(l2.config.breathCues.length < l3.config.breathCues.length);
 });
 
-test('following a scripted level\'s breath cues collects every coin without falling', () => {
+test("following a scripted level's breath cues collects every coin without falling", () => {
   for (const id of ['MAP-CANYON-02', 'MAP-GLACIER-03']) {
     const { map, config, speed } = FOREST_LEVELS[id];
     let s = createRunnerState(map);
     let next = 0;
     let holdLeft = 0;
     while (s.lap === 1 && s.elapsed < 60) {
-      if (s.onGround && next < config.breathCues.length && s.x >= config.breathCues[next][0]) holdLeft = config.breathCues[next++][1];
+      if (s.onGround && next < config.breathCues.length && s.x >= config.breathCues[next][0])
+        holdLeft = config.breathCues[next++][1];
       s = stepRunner(s, DT, holdLeft > 0, map, config, speed);
       holdLeft -= DT;
     }
@@ -104,4 +105,10 @@ test('never breathing cannot loop falls faster than once per cliff run', () => {
   let s = createRunnerState(map);
   for (let i = 0; i < 30 / DT; i++) s = stepRunner(s, DT, false, map, config, speed);
   assert.ok(s.falls <= 30 / 2, `falls=${s.falls}`); // pause + a run to the edge, every time
+});
+
+test('unknown or prototype level ids fall back to Forest · Level 1', () => {
+  for (const id of ['toString', '__proto__', 'constructor', 'nope', '', null, undefined]) {
+    assert.equal(getLevel(id).id, 'MAP-FOREST-01', String(id));
+  }
 });

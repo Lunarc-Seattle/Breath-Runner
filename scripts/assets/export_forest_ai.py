@@ -1,14 +1,14 @@
 """
 Export pic/background.ai into web assets for the Forest · Level 1 game stage.
 
-  assets/forest/background.jpg   full illustration with the interactive sprites removed
-  assets/forest/runner.png       runner sprite (from the .ai)
-  assets/forest/arrow.png        golden pacer arrow (from the .ai)
-  assets/forest/coin.png         coin sprite (from the .ai)
-  src/animation/forestMap.js     cliff-top profiles + coin / runner / arrow positions
+  public/assets/forest/background.jpg   full illustration with the interactive sprites removed
+  public/assets/forest/runner.png       runner sprite (from the .ai)
+  public/assets/forest/arrow.png        golden pacer arrow (from the .ai)
+  public/assets/forest/coin.png         coin sprite (from the .ai)
+  src/animation/forestMap.js            cliff-top profiles + coin / runner / arrow positions
 
 The .ai is a PDF-compatible file, so PyMuPDF can read it directly:
-  python3 -m pip install pymupdf
+  python3 -m pip install -r scripts/assets/requirements.txt
   python3 scripts/assets/export_forest_ai.py
 """
 import json
@@ -18,7 +18,7 @@ import pymupdf
 
 ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / 'pic' / 'background.ai'
-OUT = ROOT / 'assets' / 'forest'
+OUT = ROOT / 'public' / 'assets' / 'forest'
 MAP_JS = ROOT / 'src' / 'animation' / 'forestMap.js'
 
 BG_SCALE = 1.6          # 2436x1125 artboard -> ~3900px wide background
