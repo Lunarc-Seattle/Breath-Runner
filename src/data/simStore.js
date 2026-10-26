@@ -1,10 +1,23 @@
 export const PDF_COLORS = {
   teal: '#13A4A9',
+  tealInk: '#0B7377', // teal dark enough for small text on light backgrounds (WCAG AA)
+  tealDeep: '#0F8387', // filled teal that carries white text (WCAG AA)
+  purpleDeep: '#71739E', // filled purple that carries white text (WCAG AA)
   purple: '#8E90C6',
   yellow: '#F0C754',
   pink: '#F0A7AB',
   blue: '#96C7D2'
 };
+
+// Filled brand surfaces and the text color that stays readable on them (WCAG AA, 4.5:1).
+const SOLIDS = {
+  '#13A4A9': { bg: '#0F8387', fg: '#FFFFFF' },
+  '#8E90C6': { bg: '#71739E', fg: '#FFFFFF' },
+  '#F0C754': { bg: '#F0C754', fg: '#1E2432' },
+  '#F0A7AB': { bg: '#F0A7AB', fg: '#1E2432' }
+};
+export const solid = color => SOLIDS[color] || { bg: color, fg: '#FFFFFF' };
+export const solidStyle = color => ({ backgroundColor: solid(color).bg, color: solid(color).fg });
 
 export const PAGES_META = [
   { id: 1, code: '01', name: 'Welcome & Today', subtitle: 'Resume session, pick map & inline Bluetooth pair', badge: '#13A4A9' },
@@ -29,10 +42,12 @@ export const INITIAL_SIM_STATE = {
   birthDate: '16/12/1992',
   email: 'xiaoming.rehab@pku-hospital.org',
   phone: '+86 138 0013 8000',
-  bleConnected: true,
+  // No trainer is paired until the user pairs one over Web Bluetooth.
+  bleConnected: false,
   bleScanning: false,
-  batteryPct: 70,
-  deviceName: 'AeroCare Trainer #AC-9942',
+  bleError: null,
+  batteryPct: null,
+  deviceName: null,
   lastMap: {
     id: 'MAP-FOREST-01',
     name: 'Forest · Level 1',

@@ -45,7 +45,7 @@ export function HistoryPage({ sessions, onClear, onPractice }) {
     <section className="space-y-8 animate-fadeIn">
       <div className="flex flex-wrap items-end justify-between gap-4 border-b border-black/15 pb-6">
         <div>
-          <span className="text-xs font-mono text-[#13A4A9]">HISTORY & PROGRESS</span>
+          <span className="text-xs font-mono text-[#0B7377]">HISTORY & PROGRESS</span>
           <h2 className="text-4xl font-light tracking-tight mt-1">
             Your <span className="font-serif italic">practice</span> log
           </h2>
@@ -65,7 +65,7 @@ export function HistoryPage({ sessions, onClear, onPractice }) {
           <div key=${t.label} className="p-6">
             <div className="text-xs font-mono text-neutral-500">${t.label}</div>
             <div className=${`${t.small ? 'text-xl' : 'text-4xl'} font-light tracking-tight mt-4 truncate`}>
-              ${t.value}<span className="text-sm font-mono text-[#13A4A9] ml-1">${t.unit}</span>
+              ${t.value}<span className="text-sm font-mono text-[#0B7377] ml-1">${t.unit}</span>
             </div>
           </div>
         `)}

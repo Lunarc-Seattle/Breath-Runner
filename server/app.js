@@ -28,6 +28,7 @@ export function createApp({ repository, serveStatic = true }) {
     // Serve only the browser app, never server code or local data.
     app.get('/', (req, res) => res.sendFile(resolve(ROOT_DIR, 'index.html')));
     app.use('/src', express.static(resolve(ROOT_DIR, 'src')));
+    app.use('/assets', express.static(resolve(ROOT_DIR, 'assets')));
   }
 
   app.use((err, req, res, next) => {

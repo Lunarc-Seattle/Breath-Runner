@@ -117,7 +117,7 @@ export function PracticePage({ initialPatternId, soundOn, onToggleSound, onSessi
     <section className="space-y-8 animate-fadeIn">
       <div className="flex flex-wrap items-end justify-between gap-4 border-b border-black/15 pb-6">
         <div>
-          <span className="text-xs font-mono text-[#13A4A9]">GUIDED PRACTICE</span>
+          <span className="text-xs font-mono text-[#0B7377]">GUIDED PRACTICE</span>
           <h2 className="text-4xl font-light tracking-tight mt-1">
             Follow the <span className="font-serif italic">circle</span>
           </h2>
@@ -155,7 +155,7 @@ export function PracticePage({ initialPatternId, soundOn, onToggleSound, onSessi
             <button
               onClick=${startOrPause}
               disabled=${!pattern}
-              className="px-8 py-3.5 rounded-full bg-[#111315] text-white font-mono text-sm hover:bg-[#13A4A9] transition-colors disabled:opacity-40"
+              className="px-8 py-3.5 rounded-full bg-[#111315] text-white font-mono text-sm hover:bg-[#0F8387] transition-colors disabled:opacity-40"
             >
               ${status === 'running' ? 'Pause' : status === 'paused' ? 'Resume' : status === 'done' ? 'Again' : 'Start'}
             </button>
@@ -167,7 +167,7 @@ export function PracticePage({ initialPatternId, soundOn, onToggleSound, onSessi
           </div>
           <p className="text-[11px] font-mono text-neutral-400">Space: start / pause · Esc: stop</p>
           ${status === 'done' && html`
-            <p className="text-sm text-[#13A4A9] font-medium">Session complete: ${rounds} rounds, ${formatDuration(totalSec)}. Saved to history.</p>
+            <p className="text-sm text-[#0B7377] font-medium">Session complete: ${rounds} rounds, ${formatDuration(totalSec)}. Saved to history.</p>
           `}
         </div>
 

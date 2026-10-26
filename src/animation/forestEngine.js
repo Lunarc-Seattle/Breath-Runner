@@ -1,231 +1,375 @@
-export function mountAiForestStage(container) {
-  if (!container || container.dataset.forestMounted === 'true') return;
-  container.dataset.forestMounted = 'true';
+/**
+ * Renders the Forest Runner on top of the pic/background.ai illustration.
+ *  - The exported .ai artwork is an <img> panned by a CSS transform (GPU, stays crisp).
+ *  - A canvas on top draws everything that moves: runner, pacer arrow, coins, mist, birds, particles.
+ * Game rules live in src/core/forestRunner.js; this file only animates what the state says.
+ */
+import { FOREST_MAP } from './forestMap.js';
+import { RUNNER_CONFIG, createRunnerState, stepRunner, groundAt, syncPct } from '../core/forestRunner.js';
+import { getLevel } from '../core/forestLevels.js';
 
-  container.innerHTML = `
-    <div style="font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;margin:12px 0;">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;background:linear-gradient(95deg,#04214b,#164863,#1b5e3c);color:#fff;padding:14px 22px;border-radius:20px;margin-bottom:16px;box-shadow:0 10px 26px rgba(4,33,75,0.16);">
-        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-          <span id="forestDevBadge" style="display:inline-flex;align-items:center;gap:8px;background:rgba(241,90,36,0.25);border:1px solid #ff8a65;color:#ffccbc;padding:5px 14px;border-radius:999px;font-size:12.5px;font-weight:700;">
-            <span style="width:8px;height:8px;border-radius:50%;background:#ff7043;display:inline-block;"></span>
-            <span id="forestDevStatus">未连接硬件设备</span>
-          </span>
-          <span style="font-size:15.5px;font-weight:700;">
-            你还没有连接设备，但可以试玩 <span style="color:#d9e021;text-decoration:underline;text-underline-offset:4px;">【地图1 - 森林·荧光秘境】</span>
-          </span>
-        </div>
-        <div style="display:flex;gap:10px;">
-          <button id="forestToggleDevBtn" style="border:none;border-radius:999px;padding:9px 18px;font-weight:700;font-size:13px;cursor:pointer;background:rgba(255,255,255,0.16);color:#fff;">模拟连接设备</button>
-          <button id="forestSyncBtn" style="border:none;border-radius:999px;padding:9px 18px;font-weight:700;font-size:13px;cursor:pointer;background:linear-gradient(135deg,#f15a24,#fbb03b);color:#fff;">保存试玩成绩</button>
-        </div>
-      </div>
+const ASSET_BASE = new URL('../../assets/forest/', import.meta.url).href;
+const HUD_INTERVAL_MS = 120;
+const RUNNER_W = FOREST_MAP.runner.w;
+const RUNNER_H = FOREST_MAP.runner.h;
 
-      <div style="position:relative;background:#04214b;border-radius:26px;overflow:hidden;box-shadow:0 18px 42px rgba(4,33,75,0.18);border:4px solid #ffffff;">
-        <div style="position:absolute;top:16px;left:16px;right:16px;display:flex;justify-content:space-between;pointer-events:none;gap:12px;z-index:2;">
-          <div style="pointer-events:auto;background:rgba(255,255,255,0.88);backdrop-filter:blur(10px);border-radius:18px;padding:10px 16px;color:#04214b;box-shadow:0 8px 20px rgba(4,33,75,0.12);">
-            <div style="font-size:11.5px;color:#5c718a;font-weight:700;">当前试玩章节 (.ai 底图还原)</div>
-            <div style="font-size:15px;font-weight:800;">地图1 - 森林·荧光秘境</div>
-            <div id="forestBreathText" style="font-size:12px;color:#009245;font-weight:700;margin-top:2px;">节律：吸气 INHALE (4s)</div>
-          </div>
-          <div style="pointer-events:auto;background:rgba(255,255,255,0.88);backdrop-filter:blur(10px);border-radius:18px;padding:10px 16px;color:#04214b;text-align:right;box-shadow:0 8px 20px rgba(4,33,75,0.12);">
-            <div style="font-size:11.5px;color:#5c718a;font-weight:700;">收集 '$' 金币得分</div>
-            <div style="font-size:22px;font-weight:900;color:#f15a24;">$<span id="forestScore">12</span> <span style="font-size:12px;color:#04214b;">Combo x<span id="forestCombo">3</span></span></div>
-          </div>
-        </div>
+// Per-map look: the Forest art is the .ai as drawn; other scenes re-grade it until their own art exists.
+// Difficulty (coin layout, pace, lung size) lives in src/core/forestLevels.js.
+export const MAP_THEMES = {
+  'MAP-FOREST-01': { filter: 'none', mist: 'rgba(246,233,223,0.32)' },
+  'MAP-CANYON-02': { filter: 'sepia(0.55) saturate(1.7) hue-rotate(-30deg) brightness(1.03)', mist: 'rgba(255,214,170,0.3)' },
+  'MAP-GLACIER-03': { filter: 'saturate(0.5) brightness(1.14) hue-rotate(14deg)', mist: 'rgba(235,245,255,0.42)' }
+};
 
-        <canvas id="aiForestStageCanvas" style="width:100%;height:460px;display:block;cursor:pointer;"></canvas>
+function loadImage(name) {
+  const img = new Image();
+  img.src = ASSET_BASE + name;
+  return img;
+}
 
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:14px 20px;background:#ffffff;color:#04214b;">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <button id="forestJumpBtn" style="border:none;border-radius:999px;padding:10px 20px;font-weight:700;font-size:13.5px;cursor:pointer;background:linear-gradient(135deg,#f15a24,#fbb03b);color:#fff;">跳跃收集 '$' 金币 (Space / 点击画面)</button>
-            <span id="forestSyncToast" style="font-size:13px;color:#5c718a;font-weight:600;">沿着 .ai 乳白山径奔跑，跟随金色箭头跳跃</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;">
-            <span>动画速率</span>
-            <input id="forestSpeed" type="range" min="0.5" max="2.0" step="0.1" value="1.0" />
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
+export const FOREST_BACKGROUND_URL = ASSET_BASE + 'background.jpg';
 
-  const canvas = container.querySelector('#aiForestStageCanvas');
+export function createForestStage({ stage, background, canvas, onHud, onEvent }) {
   const ctx = canvas.getContext('2d');
-  let time = 0, speedMul = 1.0, score = 12, combo = 3, devConnected = false;
-  const runner = { yOffset: 0, vy: 0, jumping: false };
-  const coins = [
-    { x: 280, yLift: -65, taken: false },
-    { x: 580, yLift: -95, taken: false },
-    { x: 880, yLift: -58, taken: false }
+  const sprites = { runner: loadImage('runner.png'), arrow: loadImage('arrow.png'), coin: loadImage('coin.png') };
+  const W = FOREST_MAP.width;
+  const H = FOREST_MAP.height;
+
+  let level = getLevel('MAP-FOREST-01');
+  let state = createRunnerState(level.map);
+  let running = false;
+  let holding = false;
+  let speedMul = 1;
+  let theme = MAP_THEMES['MAP-FOREST-01'];
+  let time = 0;
+  let camX = 0;
+  let view = { w: 0, h: 0, scale: 1, offY: 0, dpr: 1 };
+  let raf = 0;
+  let last = performance.now();
+  let lastHud = 0;
+  let landSquash = 0;
+
+  const particles = [];
+  const dust = [];
+  const mist = Array.from({ length: 6 }, (_, i) => ({
+    x: (i / 6) * W, y: 380 + (i % 3) * 120, w: 520 + (i % 2) * 260, h: 46 + (i % 3) * 18, v: 8 + (i % 3) * 5
+  }));
+  const birds = [
+    { x: 300, y: 250, s: 0.9, v: 34, p: 0 },
+    { x: 1300, y: 170, s: 0.7, v: 26, p: 1.7 },
+    { x: 2000, y: 300, s: 0.6, v: 30, p: 3.1 }
   ];
-  const spores = Array.from({ length: 30 }, () => ({
-    x: Math.random(), y: Math.random(), r: 2 + Math.random() * 3, s: 0.0005 + Math.random() * 0.0006, p: Math.random() * 6.28
+  const sparks = Array.from({ length: 36 }, () => ({
+    x: Math.random() * W, y: 520 + Math.random() * 520, r: 1.6 + Math.random() * 2.6,
+    v: 6 + Math.random() * 14, p: Math.random() * Math.PI * 2
   }));
 
   function resize() {
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = (rect.width || 820) * dpr;
-    canvas.height = (rect.height || 460) * dpr;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const rect = stage.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    // Fill the stage height; on very wide stages fill the width and keep the cliffs (bottom) in view.
+    const scale = Math.max(rect.height / H, rect.width / W);
+    view = { w: rect.width, h: rect.height, scale, offY: rect.height - H * scale, dpr };
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    background.style.width = `${W * scale}px`;
+    background.style.height = `${H * scale}px`;
   }
-  window.addEventListener('resize', resize);
+  const resizeObserver = new ResizeObserver(resize);
+  resizeObserver.observe(stage);
   resize();
 
-  const getPathY = (x, w, h) => h * 0.79 - Math.sin((x / w) * Math.PI * 1.15 - 0.25) * (h * 0.14);
-
-  function drawFrame() {
-    if (!document.body.contains(canvas)) return;
-    const rect = canvas.getBoundingClientRect();
-    const w = rect.width || 820, h = rect.height || 460;
-    time += 0.045 * speedMul;
-
-    if (runner.jumping || runner.yOffset < 0) {
-      runner.yOffset += runner.vy * speedMul;
-      runner.vy += 0.58 * speedMul;
-      if (runner.yOffset >= 0) { runner.yOffset = 0; runner.vy = 0; runner.jumping = false; }
+  function spawnCoinBurst(x, y) {
+    for (let k = 0; k < 14; k++) {
+      const a = (Math.PI * 2 * k) / 14;
+      const v = 90 + Math.random() * 120;
+      particles.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 40, life: 1, color: k % 2 ? '#fbb03b' : '#fde047' });
     }
+    particles.push({ x, y: y - 20, vx: 0, vy: -70, life: 1.2, text: '+1' });
+  }
 
-    const sky = ctx.createLinearGradient(0, 0, w, h);
-    sky.addColorStop(0, '#957eb8');
-    sky.addColorStop(0.54, '#7accf3');
-    sky.addColorStop(1, '#d9e021');
-    ctx.fillStyle = sky;
-    ctx.fillRect(0, 0, w, h);
-
-    const mx = w * 0.81, my = h * 0.24, pulse = Math.sin(time * 0.6) * 7;
-    [130, 96, 64, 36].forEach((r, i) => {
-      ctx.beginPath();
-      ctx.arc(mx, my, r + pulse * (i * 0.25 + 0.4), 0, Math.PI * 2);
-      ctx.fillStyle = i === 3 ? 'rgba(252,238,33,0.94)' : `rgba(251,176,59,${0.14 + i * 0.08})`;
-      ctx.fill();
-    });
-
-    [[0.56, '#83bac8', 0.12, 40], [0.68, '#006837', 0.24, 32], [0.78, '#04214b', 0.38, 24]].forEach(([br, col, sp, amp]) => {
-      ctx.beginPath();
-      ctx.moveTo(0, h);
-      const shift = time * 16 * sp;
-      for (let x = 0; x <= w; x += 16) {
-        ctx.lineTo(x, h * br + Math.sin((x + shift) * 0.0042) * amp + Math.cos((x + shift * 0.65) * 0.0085) * (amp * 0.5));
+  function handleEvents(events) {
+    for (const e of events) {
+      if (e.type === 'coin') spawnCoinBurst(e.x, e.y);
+      if (e.type === 'land') {
+        landSquash = 1;
+        for (let k = 0; k < 6; k++) dust.push({ x: state.x - 10 + k * 4, y: state.y, vx: -40 - Math.random() * 60, vy: -20 - Math.random() * 30, life: 0.7 });
       }
-      ctx.lineTo(w, h);
-      ctx.closePath();
-      ctx.fillStyle = col;
-      ctx.fill();
-    });
+      if (e.type === 'fall') {
+        for (let k = 0; k < 18; k++) particles.push({ x: e.x, y: e.y - 60, vx: (Math.random() - 0.5) * 220, vy: -Math.random() * 200, life: 1, color: '#7accf3' });
+      }
+      if (onEvent) onEvent(e, snapshot());
+    }
+  }
 
-    ctx.beginPath();
-    ctx.moveTo(0, h);
-    for (let x = 0; x <= w; x += 16) ctx.lineTo(x, getPathY(x, w, h));
-    ctx.lineTo(w, h);
-    ctx.closePath();
-    ctx.fillStyle = '#f6e9df';
-    ctx.fill();
+  function snapshot() {
+    return {
+      running,
+      coins: state.coins,
+      lapCoins: state.lapCoins,
+      totalCoins: level.map.coins.length,
+      combo: state.combo,
+      bestCombo: state.bestCombo,
+      lap: state.lap,
+      falls: state.falls,
+      sync: syncPct(state),
+      lung: state.lung,
+      cue: state.cue,
+      onGround: state.onGround,
+      respawning: state.respawnSec > 0,
+      elapsed: state.elapsed,
+      progress: Math.min(1, (state.x - FOREST_MAP.runner.x) / (W - RUNNER_CONFIG.endPad - FOREST_MAP.runner.x))
+    };
+  }
 
-    [0.15, 0.46, 0.78].forEach((pos, idx) => {
-      const span = w + 240;
-      const tx = ((pos * w - time * 20 * (0.8 + idx * 0.15)) % span + span) % span - 120;
-      const ty = getPathY(tx, w, h) + 8;
-      const sway = Math.sin(time * 0.85 + idx * 1.7) * 5;
+  function update(dt) {
+    time += dt;
+    if (running) {
+      state = stepRunner(state, dt, holding, level.map, level.config, speedMul * level.speed);
+      handleEvents(state.events);
+      if (state.onGround && !state.respawnSec && Math.random() < dt * 9) {
+        dust.push({ x: state.x - 18, y: state.y, vx: -30 - Math.random() * 40, vy: -10 - Math.random() * 20, life: 0.5 });
+      }
+    }
+    landSquash = Math.max(0, landSquash - dt * 4);
+
+    const visW = view.w / view.scale;
+    const target = Math.min(Math.max(0, state.x - visW * 0.32), Math.max(0, W - visW));
+    camX += (target - camX) * Math.min(1, dt * 4);
+    if (Math.abs(target - camX) > visW) camX = target; // lap restart: cut, don't sweep back
+
+    mist.forEach(m => { m.x += m.v * dt; if (m.x > W + m.w) m.x = -m.w; });
+    birds.forEach(b => { b.x += b.v * dt; if (b.x > W + 80) b.x = -80; });
+    sparks.forEach(s => { s.y -= s.v * dt; if (s.y < 480) { s.y = 1100; s.x = Math.random() * W; } });
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx * dt; p.y += p.vy * dt; p.vy += (p.text ? 0 : 300) * dt; p.life -= dt * 1.5;
+      if (p.life <= 0) particles.splice(i, 1);
+    }
+    for (let i = dust.length - 1; i >= 0; i--) {
+      const d = dust[i];
+      d.x += d.vx * dt; d.y += d.vy * dt; d.life -= dt * 1.6;
+      if (d.life <= 0) dust.splice(i, 1);
+    }
+  }
+
+  /* ------------------------------ drawing ------------------------------ */
+
+  function drawMist() {
+    ctx.fillStyle = theme.mist;
+    mist.forEach(m => {
+      const g = ctx.createRadialGradient(m.x, m.y, 0, m.x, m.y, m.w / 2);
+      g.addColorStop(0, theme.mist);
+      g.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = g;
       ctx.save();
-      ctx.translate(tx, ty);
-      [[-36 + sway * 0.5, -120, 45, 'rgba(4,33,75,0.88)'], [34 + sway * 0.5, -114, 42, 'rgba(0,146,69,0.82)'], [sway * 0.8, -148, 52, 'rgba(140,198,63,0.85)']].forEach(([cx, cy, r, c]) => {
-        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fillStyle = c; ctx.fill();
-      });
-      ctx.strokeStyle = '#f6e9df'; ctx.lineCap = 'round'; ctx.lineWidth = 11;
-      ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(sway * 0.25, -54, sway * 0.5, -104); ctx.stroke();
-      ctx.lineWidth = 6;
+      ctx.translate(m.x, m.y);
+      ctx.scale(1, m.h / (m.w / 2));
+      ctx.translate(-m.x, -m.y);
       ctx.beginPath();
-      ctx.moveTo(sway * 0.35, -66); ctx.quadraticCurveTo(-22 + sway, -92, -32 + sway, -118);
-      ctx.moveTo(sway * 0.42, -76); ctx.quadraticCurveTo(22 + sway, -96, 30 + sway, -114);
-      ctx.stroke();
+      ctx.arc(m.x, m.y, m.w / 2, 0, Math.PI * 2);
+      ctx.fill();
       ctx.restore();
     });
+  }
 
-    const rx = w * 0.26, gy = getPathY(rx, w, h), ry = gy + runner.yOffset;
-
-    coins.forEach(c => {
-      c.x -= 3.2 * speedMul;
-      if (c.x < -50) { c.x = w + 100 + Math.random() * 120; c.taken = false; }
-      const cy = getPathY(c.x, w, h) + c.yLift + Math.sin(time * 2 + c.x * 0.01) * 6;
-      if (!c.taken && Math.hypot(c.x - rx, cy - (ry - 48)) < 52) {
-        c.taken = true; score++; combo++;
-        container.querySelector('#forestScore').textContent = score;
-        container.querySelector('#forestCombo').textContent = combo;
-      }
-      if (!c.taken) {
-        ctx.save();
-        ctx.translate(c.x, cy);
-        ctx.scale(Math.max(0.25, Math.abs(Math.cos(time * 2.2 + c.x * 0.02))), 1);
-        ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI * 2); ctx.fillStyle = '#fcee21'; ctx.fill();
-        ctx.lineWidth = 2.5; ctx.strokeStyle = '#d48b00'; ctx.stroke();
-        ctx.fillStyle = '#8c5800'; ctx.font = 'bold 18px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText('$', 0, 1);
-        ctx.restore();
-      }
+  function drawBirds() {
+    birds.forEach(b => {
+      const flap = Math.sin(time * 7 + b.p);
+      const y = b.y + Math.sin(time * 1.6 + b.p) * 10;
+      ctx.save();
+      ctx.translate(b.x, y);
+      ctx.scale(b.s, b.s);
+      const g = ctx.createLinearGradient(-26, 0, 26, 0);
+      g.addColorStop(0, '#9fd3f2');
+      g.addColorStop(1, '#6f8fd8');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.moveTo(-26, -12 * flap);
+      ctx.quadraticCurveTo(-10, -16 - 9 * flap, 0, 0);
+      ctx.quadraticCurveTo(10, -18 - 9 * flap, 28, -10 * flap);
+      ctx.quadraticCurveTo(12, -4 - 4 * flap, 2, 6);
+      ctx.quadraticCurveTo(-10, -4 - 4 * flap, -26, -12 * flap);
+      ctx.fill();
+      ctx.restore();
     });
+  }
 
-    const ax = rx + 108 + Math.sin(time * 1.4) * 10, ay = gy - 60 + Math.cos(time * 1.8) * 8;
+  function drawCoins() {
+    const img = sprites.coin;
+    level.map.coins.forEach((c, i) => {
+      if (state.taken[i]) return;
+      const bob = Math.sin(time * 3 + i * 0.7) * 5;
+      const spin = Math.cos(time * 3.6 + i * 0.5);
+      const size = c.r * 2;
+      ctx.save();
+      ctx.translate(c.x, c.y + bob);
+      const glow = ctx.createRadialGradient(0, 0, 2, 0, 0, size);
+      glow.addColorStop(0, 'rgba(253,224,71,0.5)');
+      glow.addColorStop(1, 'rgba(253,224,71,0)');
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(0, 0, size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.scale(Math.max(0.18, Math.abs(spin)), 1);
+      if (img.complete && img.naturalWidth) ctx.drawImage(img, -size / 2, -size / 2, size, size);
+      ctx.restore();
+    });
+  }
+
+  function drawArrow() {
+    const ax = state.x + 150;
+    const ground = groundAt(FOREST_MAP, ax, state.y - 40, 60) ?? state.y;
+    const inhale = state.cue === 'inhale';
+    const breath = Math.sin(time * 2.4) * 10;
+    const ay = Math.min(ground, state.y) - 150 + breath - (inhale ? 40 : 0);
+    const angle = inhale ? -0.45 : 0.08 + Math.sin(time * 2.4) * 0.05;
+    const size = FOREST_MAP.arrow.w * (1 + Math.sin(time * 4) * 0.05) * (inhale ? 1.15 : 1);
+
+    // Dotted golden guide from runner to arrow.
+    ctx.strokeStyle = inhale ? 'rgba(253,224,71,0.85)' : 'rgba(253,224,71,0.45)';
+    ctx.lineWidth = 3;
+    ctx.setLineDash([8, 9]);
+    ctx.lineDashOffset = -time * 40;
+    ctx.beginPath();
+    ctx.moveTo(state.x + 30, state.y - 110);
+    ctx.quadraticCurveTo((state.x + ax) / 2, ay - 30, ax - 26, ay);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
     ctx.save();
     ctx.translate(ax, ay);
-    ctx.rotate(Math.sin(time * 1.4) * 0.08);
-    ctx.beginPath(); ctx.moveTo(-22, -18); ctx.lineTo(24, 0); ctx.lineTo(-22, 18); ctx.lineTo(-8, 0); ctx.closePath();
-    ctx.fillStyle = '#fff200'; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = '#111'; ctx.stroke();
+    ctx.rotate(angle);
+    ctx.shadowColor = 'rgba(250,204,21,0.9)';
+    ctx.shadowBlur = inhale ? 26 : 14;
+    if (sprites.arrow.complete && sprites.arrow.naturalWidth) ctx.drawImage(sprites.arrow, -size / 2, -size / 2, size, size);
     ctx.restore();
+  }
 
-    const stride = runner.jumping ? 0.85 : Math.sin(time * 2.5);
-    const bounce = runner.jumping ? 0 : Math.abs(Math.cos(time * 2.5)) * 5.5;
-    ctx.save();
-    ctx.translate(rx, ry - 54 - bounce);
-    ctx.strokeStyle = '#eae59b'; ctx.lineWidth = 17; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(-4, 6); ctx.lineTo(-4 - stride * 18, 36); ctx.stroke();
-    ctx.strokeStyle = '#f5f2be';
-    ctx.beginPath(); ctx.moveTo(4, 6); ctx.lineTo(4 + stride * 18, 38); ctx.stroke();
-    ctx.fillStyle = '#f15a24'; ctx.beginPath(); ctx.roundRect(-15, -26, 30, 24, 9); ctx.fill();
-    ctx.fillStyle = '#0a2547'; ctx.beginPath(); ctx.arc(0, -40, 13, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#ffbfb0'; ctx.beginPath(); ctx.arc(4, -39, 10, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.arc(-4, -36, 3.4, 0, Math.PI * 2); ctx.stroke();
-    ctx.restore();
+  function drawRunner() {
+    const img = sprites.runner;
+    const ground = groundAt(FOREST_MAP, state.x, state.y, 2);
+    if (ground !== null && ground < RUNNER_CONFIG.fallY) {
+      const lift = Math.max(0, ground - state.y);
+      const k = Math.max(0.3, 1 - lift / 260);
+      ctx.fillStyle = `rgba(4,33,75,${0.28 * k})`;
+      ctx.beginPath();
+      ctx.ellipse(state.x, ground + 2, 34 * k, 8 * k, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
-    spores.forEach(s => {
-      s.x = (s.x - s.s * speedMul + 1) % 1;
-      ctx.beginPath(); ctx.arc(s.x * w, s.y * h + Math.sin(time + s.p) * 8, s.r, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(252,238,33,0.7)'; ctx.fill();
+    dust.forEach(d => {
+      ctx.fillStyle = `rgba(246,233,223,${d.life * 0.8})`;
+      ctx.beginPath();
+      ctx.arc(d.x, d.y, 4 + (1 - d.life) * 8, 0, Math.PI * 2);
+      ctx.fill();
     });
 
-    requestAnimationFrame(drawFrame);
+    const runPhase = state.elapsed * 11 * speedMul;
+    const bounce = state.onGround && running && !state.respawnSec ? Math.abs(Math.sin(runPhase)) * 7 : 0;
+    const lean = state.onGround ? 0.05 + Math.sin(runPhase) * 0.035 : state.vy < 0 ? -0.12 : 0.1;
+    const squashY = 1 - landSquash * 0.12 + (!state.onGround && state.vy < 0 ? 0.05 : 0);
+    const squashX = 1 + landSquash * 0.1;
+
+    ctx.save();
+    ctx.translate(state.x, state.y - bounce);
+    ctx.rotate(lean);
+    ctx.scale(squashX, squashY);
+    if (holding && !state.onGround && state.lung > 0) {
+      // Inhale glide: a soft breath aura around the runner.
+      const aura = ctx.createRadialGradient(0, -RUNNER_H / 2, 10, 0, -RUNNER_H / 2, RUNNER_H * 0.75);
+      aura.addColorStop(0, 'rgba(122,204,243,0.35)');
+      aura.addColorStop(1, 'rgba(122,204,243,0)');
+      ctx.fillStyle = aura;
+      ctx.beginPath();
+      ctx.arc(0, -RUNNER_H / 2, RUNNER_H * 0.75, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    if (state.respawnSec > 0) ctx.globalAlpha = Math.sin(time * 18) > 0 ? 1 : 0.3; // "get ready" blink
+    if (img.complete && img.naturalWidth) ctx.drawImage(img, -RUNNER_W / 2, -RUNNER_H, RUNNER_W, RUNNER_H);
+    ctx.globalAlpha = 1;
+    ctx.restore();
   }
-  requestAnimationFrame(drawFrame);
 
-  const jump = () => { if (!runner.jumping) { runner.vy = -12.2; runner.jumping = true; } };
-  canvas.addEventListener('pointerdown', jump);
-  container.querySelector('#forestJumpBtn').addEventListener('click', jump);
-  window.addEventListener('keydown', e => { if (e.code === 'Space') jump(); });
-  container.querySelector('#forestSpeed').addEventListener('input', e => { speedMul = parseFloat(e.target.value); });
+  function drawEffects() {
+    sparks.forEach(s => {
+      ctx.globalAlpha = 0.25 + (Math.sin(time * 3 + s.p) * 0.5 + 0.5) * 0.55;
+      ctx.fillStyle = '#fdf6b2';
+      ctx.beginPath();
+      ctx.arc(s.x + Math.sin(time + s.p) * 10, s.y, s.r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    particles.forEach(p => {
+      ctx.globalAlpha = Math.max(0, Math.min(1, p.life));
+      if (p.text) {
+        ctx.fillStyle = '#fde047';
+        ctx.strokeStyle = 'rgba(4,33,75,0.6)';
+        ctx.lineWidth = 4;
+        ctx.font = '800 34px "Plus Jakarta Sans", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.strokeText(p.text, p.x, p.y);
+        ctx.fillText(p.text, p.x, p.y);
+      } else {
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 5 * p.life, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    });
+    ctx.globalAlpha = 1;
+  }
 
-  container.querySelector('#forestToggleDevBtn').addEventListener('click', () => {
-    devConnected = !devConnected;
-    container.querySelector('#forestDevStatus').textContent = devConnected ? '蓝牙呼吸设备已连接' : '未连接硬件设备';
-  });
+  function render() {
+    const { scale, offY, dpr } = view;
+    background.style.transform = `translate3d(${-camX * scale}px, ${offY}px, 0)`;
+    background.style.filter = theme.filter;
 
-  container.querySelector('#forestSyncBtn').addEventListener('click', async () => {
-    container.querySelector('#forestSyncToast').textContent = '已同步成绩 $' + score + ' 至后端 /api/sessions！';
-    try {
-      await fetch('/api/sessions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mapName: '地图1 - 森林·荧光秘境', score, combo })
-      });
-    } catch (e) {}
-  });
-}
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, -camX * scale * dpr, offY * dpr);
+    drawMist();
+    drawBirds();
+    drawCoins();
+    drawArrow();
+    drawRunner();
+    drawEffects();
+  }
 
-const observer = new MutationObserver(() => {
-  const candidates = document.querySelectorAll('[data-forest-game-page], .game-page, #game-page, #gameView, [data-page="game"]');
-  candidates.forEach(el => mountAiForestStage(el));
-});
-if (typeof document !== 'undefined') {
-  window.addEventListener('DOMContentLoaded', () => {
-    observer.observe(document.body, { childList: true, subtree: true });
-  });
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); // clamp after tab switches
+    last = now;
+    update(dt);
+    render();
+    if (onHud && now - lastHud > HUD_INTERVAL_MS) {
+      lastHud = now;
+      onHud(snapshot());
+    }
+    raf = requestAnimationFrame(frame);
+  }
+  raf = requestAnimationFrame(frame);
+
+  return {
+    setHolding(value) { holding = value; },
+    setRunning(value) { running = value; if (onHud) onHud(snapshot()); },
+    setSpeed(value) { speedMul = value; },
+    setMap(id) {
+      theme = MAP_THEMES[id] || MAP_THEMES['MAP-FOREST-01'];
+      const nextLevel = getLevel(id);
+      if (nextLevel !== level) {
+        level = nextLevel;
+        this.restart();
+      }
+    },
+    restart() {
+      state = createRunnerState(level.map);
+      camX = 0;
+      particles.length = 0;
+      if (onHud) onHud(snapshot());
+    },
+    snapshot,
+    destroy() {
+      cancelAnimationFrame(raf);
+      resizeObserver.disconnect();
+    }
+  };
 }
