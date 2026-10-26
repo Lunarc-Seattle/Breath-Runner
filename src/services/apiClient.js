@@ -35,6 +35,24 @@ export async function detectBackend() {
   return 'local';
 }
 
+const PAGE_LIMIT = 200;
+const MAX_PAGES = 50; // 10,000 runs; a guard against a server that never stops paging
+
+/** Every stored run, following the API's nextCursor until the last page. */
+async function listAllSessions() {
+  const all = [];
+  let cursor = null;
+  for (let page = 0; page < MAX_PAGES; page++) {
+    const query = new URLSearchParams({ limit: String(PAGE_LIMIT) });
+    if (cursor) query.set('cursor', cursor);
+    const { sessions, nextCursor } = await request(`/sessions?${query}`);
+    all.push(...sessions);
+    if (!nextCursor) break;
+    cursor = nextCursor;
+  }
+  return all;
+}
+
 let repositoryPromise = null;
 
 /**
@@ -55,7 +73,7 @@ export function createSessionRepository(mode) {
   if (mode === 'server') {
     return {
       mode,
-      list: async () => (await request('/sessions')).sessions,
+      list: listAllSessions,
       add: async session => (await request('/sessions', { method: 'POST', body: JSON.stringify(session) })).session,
       clear: async () => {
         await request('/sessions', { method: 'DELETE' });

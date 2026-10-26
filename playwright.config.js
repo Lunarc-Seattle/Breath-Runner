@@ -30,6 +30,7 @@ export default defineConfig({
     url: `${BASE_URL}/api/v1/health`,
     reuseExistingServer: !CI,
     timeout: 120_000,
-    env: { PORT: String(PORT), DATA_FILE: process.env.E2E_DATA_FILE }
+    // High write limit: repeated local runs reuse one server within the same minute.
+    env: { PORT: String(PORT), DATA_FILE: process.env.E2E_DATA_FILE, RATE_LIMIT_PER_MIN: '1000', LOG_LEVEL: 'warn' }
   }
 });

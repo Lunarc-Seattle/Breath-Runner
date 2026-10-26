@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import pino from 'pino';
 import { createApp } from '../server/app.js';
 import { createSessionRepository } from '../server/models/sessionRepository.js';
 
@@ -12,7 +13,7 @@ before(async () => {
   dir = await mkdtemp(join(tmpdir(), 'breath-api-'));
   filePath = join(dir, 'sessions.json');
   const repository = await createSessionRepository({ filePath });
-  server = createApp({ repository, serveStatic: false }).listen(0);
+  server = createApp({ repository, serveStatic: false, logger: pino({ level: 'silent' }), rateLimit: false }).listen(0);
   await new Promise(r => server.once('listening', r));
   base = `http://127.0.0.1:${server.address().port}/api/v1`;
 });
@@ -32,7 +33,9 @@ const post = body =>
 test('health endpoint', async () => {
   const res = await fetch(`${base}/health`);
   assert.equal(res.status, 200);
-  assert.equal((await res.json()).status, 'ok');
+  const body = await res.json();
+  assert.equal(body.status, 'ok');
+  assert.equal(body.storage, 'ok');
 });
 
 test('creates, lists, persists and clears sessions', async () => {

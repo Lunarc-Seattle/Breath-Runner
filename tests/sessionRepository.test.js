@@ -120,3 +120,122 @@ test('a failed clear keeps rows added while it was in flight', async () => {
   assert.equal(repo.list().length, 2);
   assert.equal(JSON.parse(fs.files.get('/data/sessions.json')).length, 2);
 });
+
+test('list orders newest first and breaks completedAt ties by id desc', async () => {
+  const fs = fakeFs();
+  const t = '2026-10-01T10:00:00.000Z';
+  const row = (id, completedAt = t) => ({
+    id,
+    patternId: 'p',
+    patternName: 'P',
+    rounds: 1,
+    durationSec: 10,
+    completedAt
+  });
+  fs.files.set(
+    '/data/sessions.json',
+    JSON.stringify([
+      row('b'),
+      row('a'),
+      row('c'),
+      row('z', '2026-09-01T00:00:00.000Z'),
+      row('b2', '2026-10-01T10:00:00Z')
+    ])
+  );
+  const repo = await createSessionRepository({ filePath: '/data/sessions.json', fs });
+  // '...Z' and '...000Z' are the same instant, so they tie and sort by id.
+  assert.deepEqual(
+    repo.list().map(s => s.id),
+    ['c', 'b2', 'b', 'a', 'z']
+  );
+  const first = repo.listPage({ limit: 2 });
+  assert.deepEqual(
+    first.sessions.map(s => s.id),
+    ['c', 'b2']
+  );
+  assert.equal(first.hasMore, true);
+  const next = repo.listPage({ limit: 10, after: first.sessions[1] });
+  assert.deepEqual(
+    next.sessions.map(s => s.id),
+    ['b', 'a', 'z']
+  );
+  assert.equal(next.hasMore, false);
+});
+
+test('flush waits for every queued write, including ones queued while waiting', async () => {
+  const fs = fakeFs();
+  let release;
+  const gate = new Promise(r => (release = r));
+  const writeFile = fs.writeFile;
+  fs.writeFile = async (p, d) => {
+    await gate;
+    return writeFile(p, d);
+  };
+  const repo = await createSessionRepository({ filePath: '/data/sessions.json', fs });
+  const adds = [repo.add(run)];
+  let flushed = false;
+  const flushing = repo.flush().then(() => (flushed = true));
+  adds.push(repo.add(run));
+  await new Promise(r => setTimeout(r, 10));
+  assert.equal(flushed, false, 'flush must wait for pending writes');
+  release();
+  await flushing;
+  assert.equal(JSON.parse(fs.files.get('/data/sessions.json')).length, 2);
+  await Promise.all(adds);
+});
+
+test('flush resolves even when a queued write failed, and on an in-memory repo', async () => {
+  const fs = fakeFs();
+  const repo = await createSessionRepository({ filePath: '/data/sessions.json', fs });
+  fs.failNext = 1;
+  const failing = repo.add(run).catch(err => err);
+  await repo.flush();
+  assert.match((await failing).message, /disk full/);
+  await (await createSessionRepository()).flush();
+});
+
+test('health: in-memory is always ok; a file store checks its directory is writable', async () => {
+  assert.deepEqual(await (await createSessionRepository()).health(), { storage: 'ok' });
+
+  const fs = fakeFs();
+  const repo = await createSessionRepository({ filePath: '/data/sessions.json', fs });
+  const deny = code => async () => {
+    throw Object.assign(new Error(code), { code });
+  };
+
+  fs.access = async () => {};
+  assert.deepEqual(await repo.health(), { storage: 'ok' });
+
+  fs.access = deny('EACCES');
+  assert.deepEqual(await repo.health(), { storage: 'error' });
+
+  // Missing directory: created on demand, then checked.
+  let created = false;
+  fs.mkdir = async () => {
+    created = true;
+  };
+  fs.access = async () => {
+    if (!created) throw Object.assign(new Error('ENOENT'), { code: 'ENOENT' });
+  };
+  assert.deepEqual(await repo.health(), { storage: 'ok' });
+
+  created = false;
+  fs.mkdir = deny('EROFS');
+  assert.deepEqual(await repo.health(), { storage: 'error' });
+});
+
+test('health reports a real read-only directory as an error', { skip: process.getuid?.() === 0 }, async () => {
+  const { mkdtemp, chmod, rm } = await import('node:fs/promises');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const dir = await mkdtemp(join(tmpdir(), 'breath-health-'));
+  try {
+    const repo = await createSessionRepository({ filePath: join(dir, 'sessions.json') });
+    assert.deepEqual(await repo.health(), { storage: 'ok' });
+    await chmod(dir, 0o500);
+    assert.deepEqual(await repo.health(), { storage: 'error' });
+  } finally {
+    await chmod(dir, 0o700);
+    await rm(dir, { recursive: true, force: true });
+  }
+});
