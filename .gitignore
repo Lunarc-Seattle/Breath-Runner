@@ -11,3 +11,6 @@ server/data/
 *.m4v
 *.webm
 dist/
+playwright-report/
+test-results/
+coverage/
