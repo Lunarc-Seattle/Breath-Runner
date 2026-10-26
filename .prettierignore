@@ -14,3 +14,6 @@ package-lock.json
 
 # Generated
 src/animation/forestMap.js
+
+# Local agent worktrees (other checkouts of this repo)
+.claude/
