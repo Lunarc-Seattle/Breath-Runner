@@ -76,3 +76,29 @@ test('serves built-in patterns', async () => {
   const { patterns } = await (await fetch(`${base}/patterns`)).json();
   assert.ok(patterns.some(p => p.id === 'box'));
 });
+
+test('server generates ids: a client id cannot overwrite another record', async () => {
+  const body = { patternId: 'box', patternName: 'Box', rounds: 1, durationSec: 10 };
+  const first = (await (await post(body)).json()).session;
+  const second = (await (await post({ ...body, id: first.id, rounds: 9 })).json()).session;
+  assert.notEqual(second.id, first.id);
+  const { sessions } = await (await fetch(`${base}/sessions`)).json();
+  assert.equal(sessions.find(s => s.id === first.id).rounds, 1);
+  await fetch(`${base}/sessions`, { method: 'DELETE' });
+});
+
+test('stores Breath Runner results and rejects impossible ones', async () => {
+  const run = { patternId: 'MAP-FOREST-01', patternName: 'Forest · Level 1', rounds: 1, durationSec: 30, coins: 24, totalCoins: 30, syncPct: 71, falls: 2 };
+  const { session } = await (await post(run)).json();
+  assert.equal(session.coins, 24);
+  assert.equal(session.syncPct, 71);
+  for (const bad of [{ syncPct: 140 }, { falls: -1 }, { coins: 500, totalCoins: 30 }, { completedAt: new Date(Date.now() + 864e5).toISOString() }]) {
+    assert.equal((await post({ ...run, ...bad })).status, 400, JSON.stringify(bad));
+  }
+  await fetch(`${base}/sessions`, { method: 'DELETE' });
+});
+
+test('an oversized body is a 413, not a 500', async () => {
+  const res = await post({ patternId: 'x'.repeat(20000) });
+  assert.equal(res.status, 413);
+});

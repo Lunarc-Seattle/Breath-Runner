@@ -2,18 +2,20 @@
  * Session storage for the API.
  * Keeps sessions in memory and, when a file path is given, persists them as JSON.
  * Writes are serialized through a promise chain so concurrent POSTs can't interleave.
+ * A failed write is reported to that caller and rolled back in memory, and never
+ * blocks the writes queued after it.
  */
-import { readFile, writeFile, mkdir, rename } from 'node:fs/promises';
+import * as nodeFs from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { normalizeSession } from '../../src/core/session.js';
 
-export async function createSessionRepository({ filePath = null } = {}) {
+export async function createSessionRepository({ filePath = null, fs = nodeFs } = {}) {
   let sessions = [];
   let writeChain = Promise.resolve();
 
   if (filePath) {
     try {
-      const parsed = JSON.parse(await readFile(filePath, 'utf8'));
+      const parsed = JSON.parse(await fs.readFile(filePath, 'utf8'));
       if (Array.isArray(parsed)) sessions = parsed;
     } catch (err) {
       if (err.code !== 'ENOENT') throw err;
@@ -23,14 +25,15 @@ export async function createSessionRepository({ filePath = null } = {}) {
   function persist() {
     if (!filePath) return Promise.resolve();
     const snapshot = JSON.stringify(sessions, null, 2);
-    writeChain = writeChain.then(async () => {
-      await mkdir(dirname(filePath), { recursive: true });
+    const write = writeChain.then(async () => {
+      await fs.mkdir(dirname(filePath), { recursive: true });
       // Write-then-rename so a crash never leaves a half-written file.
       const tmp = `${filePath}.tmp`;
-      await writeFile(tmp, snapshot);
-      await rename(tmp, filePath);
+      await fs.writeFile(tmp, snapshot);
+      await fs.rename(tmp, filePath);
     });
-    return writeChain;
+    writeChain = write.catch(() => {}); // keep the queue alive for the next write
+    return write;
   }
 
   return {
@@ -39,13 +42,24 @@ export async function createSessionRepository({ filePath = null } = {}) {
     },
     async add(input) {
       const session = normalizeSession(input);
-      sessions = [session, ...sessions.filter(s => s.id !== session.id)];
-      await persist();
+      sessions = [session, ...sessions];
+      try {
+        await persist();
+      } catch (err) {
+        sessions = sessions.filter(s => s !== session);
+        throw err;
+      }
       return session;
     },
     async clear() {
+      const previous = sessions;
       sessions = [];
-      await persist();
+      try {
+        await persist();
+      } catch (err) {
+        sessions = previous;
+        throw err;
+      }
     }
   };
 }

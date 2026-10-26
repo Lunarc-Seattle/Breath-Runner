@@ -1,6 +1,6 @@
 import { html, useState, useEffect, useRef } from '../lib/react.js';
 import { createForestStage, FOREST_BACKGROUND_URL } from '../animation/forestEngine.js';
-import { detectBackend, createSessionRepository } from '../services/apiClient.js';
+import { getSessionRepository } from '../services/apiClient.js';
 import { playChime, playCoin, unlockAudio } from '../lib/audio.js';
 import { getLevel } from '../core/forestLevels.js';
 import { solidStyle } from '../data/simStore.js';
@@ -187,12 +187,17 @@ export function ForestRunnerStage({ map, maps, bleConnected, bleScanning, device
       return;
     }
     try {
-      const repo = createSessionRepository(await detectBackend());
+      const repo = await getSessionRepository();
       await repo.add({
         patternId: map.id,
         patternName: `${map.name} · Breath Runner`,
         rounds: Math.max(0, snap.lap - 1),
-        durationSec: Math.max(1, Math.round(snap.elapsed))
+        durationSec: Math.max(1, Math.round(snap.elapsed)),
+        completed: snap.lap > 1,
+        coins: snap.coins,
+        totalCoins: snap.totalCoins,
+        syncPct: snap.sync,
+        falls: snap.falls
       });
       notify(`Saved ${map.name}: ${snap.coins} coins, ${snap.sync}% breath sync`);
     } catch (err) {

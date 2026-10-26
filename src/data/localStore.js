@@ -4,9 +4,7 @@
  */
 
 const KEYS = {
-  sessions: 'breath-trainer:sessions:v1',
-  gameBest: 'breath-trainer:game-best:v1',
-  prefs: 'breath-trainer:prefs:v1'
+  sessions: 'breath-trainer:sessions:v1'
 };
 
 function read(key, fallback) {
@@ -31,11 +29,5 @@ export const LocalStore = {
     const list = read(KEYS.sessions, []);
     return Array.isArray(list) ? list : [];
   },
-  saveSessions: sessions => write(KEYS.sessions, sessions),
-
-  loadGameBest: () => Number(read(KEYS.gameBest, 0)) || 0,
-  saveGameBest: score => write(KEYS.gameBest, score),
-
-  loadPrefs: () => ({ sound: true, ...read(KEYS.prefs, {}) }),
-  savePrefs: prefs => write(KEYS.prefs, prefs)
+  saveSessions: sessions => write(KEYS.sessions, sessions)
 };

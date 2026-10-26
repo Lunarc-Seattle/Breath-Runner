@@ -74,7 +74,7 @@ export function NavDrawer({ pages, currentPage, onNavigate }) {
         onClick=${() => go(p.id)}
         style=${{ '--d': `${delay}ms` }}
         className=${`nav-item w-full text-left px-3 py-2.5 rounded-2xl flex items-center gap-3 ${
-          isActive ? 'bg-[#13A4A9]/12 text-[#0B7377]' : 'text-slate-700 hover:bg-slate-100'
+          isActive ? 'bg-[#13A4A9]/10 text-[#0B7377]' : 'text-slate-700 hover:bg-slate-100'
         }`}
       >
         <span className="w-7 h-7 shrink-0 rounded-lg flex items-center justify-center font-mono text-[11px] text-white font-bold" style=${{ backgroundColor: p.badge }}>
@@ -129,7 +129,7 @@ export function NavDrawer({ pages, currentPage, onNavigate }) {
         onClick=${() => go(1)}
         style=${{ '--d': open ? '30ms' : '0ms' }}
         className=${`nav-item w-full text-left p-3 rounded-2xl flex items-center gap-3 ${
-          currentPage === 1 ? 'bg-gradient-to-r from-[#13A4A9] to-[#5fc0c4] text-white' : 'bg-[#13A4A9]/8 text-[#0B7377] hover:bg-[#13A4A9]/15'
+          currentPage === 1 ? 'bg-gradient-to-r from-[#13A4A9] to-[#5fc0c4] text-white' : 'bg-[#13A4A9]/5 text-[#0B7377] hover:bg-[#13A4A9]/15'
         }`}
       >
         <span className=${`w-9 h-9 rounded-xl flex items-center justify-center ${currentPage === 1 ? 'bg-white/20' : 'bg-[#0F8387] text-white'}`}>

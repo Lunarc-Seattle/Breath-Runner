@@ -18,17 +18,25 @@ export function createSessionId() {
   return `s-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+/** Clock skew we tolerate between a client and the server for completedAt. */
+export const MAX_CLOCK_SKEW_MS = 5 * 60 * 1000;
+
+// Optional Breath Runner results, validated when present: [field, max].
+const GAME_FIELDS = [['coins', 1000], ['totalCoins', 1000], ['syncPct', 100], ['falls', 1000]];
+
 /**
  * Returns a clean session object or throws with a message suitable for a 400 response.
+ * The id is always generated here, never taken from the client, so a request can't
+ * overwrite someone else's record.
  */
-export function normalizeSession(input) {
+export function normalizeSession(input, now = new Date()) {
   if (!input || typeof input !== 'object') throw new ValidationError('Session body must be an object');
 
   const patternId = String(input.patternId || '').trim();
   const patternName = String(input.patternName || '').trim();
   const rounds = Number(input.rounds);
   const durationSec = Number(input.durationSec);
-  const completedAt = input.completedAt ? new Date(input.completedAt) : new Date();
+  const completedAt = input.completedAt ? new Date(input.completedAt) : now;
 
   if (!patternId || patternId.length > 40) throw new ValidationError('patternId is required (max 40 chars)');
   if (!patternName || patternName.length > 80) throw new ValidationError('patternName is required (max 80 chars)');
@@ -37,14 +45,31 @@ export function normalizeSession(input) {
     throw new ValidationError(`durationSec must be between 0 and ${MAX_SESSION_SEC}`);
   }
   if (Number.isNaN(completedAt.getTime())) throw new ValidationError('completedAt must be a valid date');
+  if (completedAt.getTime() > now.getTime() + MAX_CLOCK_SKEW_MS) {
+    throw new ValidationError('completedAt cannot be in the future');
+  }
+
+  const game = {};
+  for (const [field, max] of GAME_FIELDS) {
+    if (input[field] === undefined || input[field] === null) continue;
+    const value = Number(input[field]);
+    if (!Number.isInteger(value) || value < 0 || value > max) {
+      throw new ValidationError(`${field} must be an integer 0-${max}`);
+    }
+    game[field] = value;
+  }
+  if (game.coins !== undefined && game.totalCoins !== undefined && game.coins > game.totalCoins * Math.max(1, rounds + 1)) {
+    throw new ValidationError('coins cannot exceed the coins available in the run');
+  }
 
   return {
-    id: typeof input.id === 'string' && input.id ? input.id.slice(0, 64) : createSessionId(),
+    id: createSessionId(),
     patternId,
     patternName,
     rounds,
     durationSec: Math.round(durationSec),
     completed: Boolean(input.completed),
-    completedAt: completedAt.toISOString()
+    completedAt: completedAt.toISOString(),
+    ...game
   };
 }

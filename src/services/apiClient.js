@@ -35,6 +35,14 @@ export async function detectBackend() {
   return 'local';
 }
 
+let repositoryPromise = null;
+
+/** The session repository for this page, resolved once (the health probe can take up to 800ms). */
+export function getSessionRepository() {
+  if (!repositoryPromise) repositoryPromise = detectBackend().then(createSessionRepository);
+  return repositoryPromise;
+}
+
 export function createSessionRepository(mode) {
   if (mode === 'server') {
     return {

@@ -15,7 +15,7 @@ export function createApp({ repository, serveStatic = true }) {
   app.use(express.json({ limit: '16kb' }));
 
   app.get('/api/v1/health', (req, res) => {
-    res.json({ status: 'ok', service: 'breath-trainer-api', time: new Date().toISOString() });
+    res.json({ status: 'ok', service: 'breath-runner-api', time: new Date().toISOString() });
   });
 
   app.use('/api/v1', createSessionsRouter(repository));
@@ -33,6 +33,9 @@ export function createApp({ repository, serveStatic = true }) {
 
   app.use((err, req, res, next) => {
     if (err.type === 'entity.parse.failed') return res.status(400).json({ error: 'Invalid JSON body' });
+    if (err.type === 'entity.too.large') return res.status(413).json({ error: 'Request body too large' });
+    // Other client errors from body-parser (bad charset, etc.) keep their 4xx status.
+    if (err.status >= 400 && err.status < 500) return res.status(err.status).json({ error: err.expose ? err.message : 'Bad request' });
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
   });
