@@ -1,18 +1,23 @@
 {
-  "name": "aerocare-smart-breathing-trainer-web",
+  "name": "breath-runner",
   "version": "2.5.0",
-  "description": "Full-Stack Gamified Breathing Training & Lung Recovery Platform by Jie (Fia) Yin",
+  "private": true,
+  "description": "Breath Runner: a gamified breathing-training web app for post-surgery lung recovery, by Jie (Fia) Yin",
   "type": "module",
   "author": "Jie (Fia) Yin",
-  "license": "MIT",
+  "license": "UNLICENSED",
   "scripts": {
     "server": "node server/server.js",
-    "regression": "python3 scripts/automation/run_regression.py"
+    "build:css": "tailwindcss -i styles/tailwind.css -o assets/app.css --minify",
+    "test": "node --test tests/*.test.js"
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "express": "^4.19.2",
-    "cors": "^2.8.5"
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "tailwindcss": "3.4.17"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

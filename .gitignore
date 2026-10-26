@@ -2,3 +2,11 @@ node_modules/
 .DS_Store
 .idea/
 server/data/
+
+# Screen recordings / bug videos: never commit
+*.mov
+*.MOV
+*.mp4
+*.MP4
+*.m4v
+*.webm
