@@ -18,12 +18,16 @@ export default defineConfig({
   workers: 1,
   forbidOnly: CI,
   retries: CI ? 1 : 0,
-  reporter: CI ? [['html', { open: 'never' }]] : 'list',
+  // CI keeps an HTML report (published on the quality page) and a JSON summary for its numbers.
+  reporter: CI
+    ? [['html', { open: 'never' }], ['json', { outputFile: 'e2e-results/results.json' }], ['github']]
+    : 'list',
   use: {
     baseURL: BASE_URL,
     trace: 'on-first-retry'
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  // On CI use the Google Chrome preinstalled on GitHub's Ubuntu runners: no browser download.
+  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'], ...(CI ? { channel: 'chrome' } : {}) } }],
   webServer: {
     // CI downloads the dist/ artifact from the build job, so only the server needs starting.
     command: CI ? 'node server/server.js' : 'npm run build && node server/server.js',

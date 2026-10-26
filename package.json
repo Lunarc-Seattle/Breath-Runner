@@ -19,7 +19,9 @@
     "test": "node --test tests/*.test.js",
     "test:coverage": "node --test --experimental-test-coverage --test-coverage-include='src/core/**' --test-coverage-include='src/lib/**' --test-coverage-include='server/**' --test-coverage-lines=85 --test-coverage-branches=75 --test-coverage-functions=85 tests/*.test.js",
     "test:e2e": "playwright test",
-    "check": "npm run lint && npm run format:check && npm run typecheck && npm run test:coverage"
+    "check": "npm run lint && npm run format:check && npm run typecheck && npm run test:coverage",
+    "test:ci": "mkdir -p coverage && node --test --experimental-test-coverage --test-coverage-include='src/core/**' --test-coverage-include='src/lib/**' --test-coverage-include='server/**' --test-coverage-lines=85 --test-coverage-branches=75 --test-coverage-functions=85 --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info --test-reporter=junit --test-reporter-destination=coverage/junit.xml tests/*.test.js",
+    "quality-report": "node scripts/ci/quality-report.mjs"
   },
   "dependencies": {
     "@fontsource/jetbrains-mono": "5.3.0",

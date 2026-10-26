@@ -71,7 +71,7 @@ export default tseslint.config(
 
   // Node code: server, scripts, unit tests and root config files.
   {
-    files: ['server/**/*.js', 'scripts/**/*.js', 'tests/**/*.js', '*.{js,mjs,cjs}'],
+    files: ['server/**/*.js', 'scripts/**/*.{js,mjs}', 'tests/**/*.js', '*.{js,mjs,cjs}'],
     languageOptions: { globals: { ...globals.node } }
   },
 
