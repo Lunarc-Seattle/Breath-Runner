@@ -1,4 +1,5 @@
 import { useApp } from '../app/AppContext.jsx';
+import { brand } from '../styles/tokens.js';
 
 const APRIL_DAYS = Array.from({ length: 30 }, (_, i) => i + 1);
 
@@ -21,7 +22,7 @@ export default function HygienePage() {
               cy="100"
               r="80"
               fill="none"
-              stroke="#13A4A9"
+              stroke={brand.teal.DEFAULT}
               strokeWidth="12"
               strokeDasharray="410 500"
               strokeLinecap="round"
@@ -31,7 +32,7 @@ export default function HygienePage() {
               cy="100"
               r="62"
               fill="none"
-              stroke="#8E90C6"
+              stroke={brand.purple.DEFAULT}
               strokeWidth="12"
               strokeDasharray="280 500"
               strokeLinecap="round"
@@ -41,7 +42,7 @@ export default function HygienePage() {
               cy="100"
               r="44"
               fill="none"
-              stroke="#F0C754"
+              stroke={brand.yellow.DEFAULT}
               strokeWidth="12"
               strokeDasharray="190 500"
               strokeLinecap="round"
@@ -51,7 +52,7 @@ export default function HygienePage() {
               cy="100"
               r="26"
               fill="none"
-              stroke="#F0A7AB"
+              stroke={brand.pink.DEFAULT}
               strokeWidth="12"
               strokeDasharray="110 500"
               strokeLinecap="round"
@@ -89,7 +90,7 @@ export default function HygienePage() {
                   aria-pressed={booked}
                   aria-label={`April ${d}${booked ? ' (booked)' : ''}`}
                   onClick={() => toggleDay(d, booked)}
-                  className={`py-2 rounded-xl font-bold ${booked ? 'bg-[#0F8387] text-white' : 'bg-slate-50 hover:bg-slate-100'}`}
+                  className={`py-2 rounded-xl font-bold ${booked ? 'bg-brand-teal-deep text-white' : 'bg-slate-50 hover:bg-slate-100'}`}
                 >
                   {d}
                 </button>

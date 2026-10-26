@@ -32,9 +32,9 @@ function HomeMark({ active, onClick }) {
       onClick={onClick}
       title="Home"
       aria-current={active ? 'page' : undefined}
-      className={`group flex items-center gap-2.5 pl-1.5 pr-3 py-1.5 rounded-2xl transition-colors ${active ? 'bg-[#13A4A9]/10' : 'hover:bg-slate-100'}`}
+      className={`group flex items-center gap-2.5 pl-1.5 pr-3 py-1.5 rounded-2xl transition-colors ${active ? 'bg-brand-teal/10' : 'hover:bg-slate-100'}`}
     >
-      <span className="relative w-8 h-8 rounded-xl bg-gradient-to-br from-[#13A4A9] to-[#96C7D2] flex items-center justify-center shadow-sm">
+      <span className="relative w-8 h-8 rounded-xl bg-gradient-to-br from-brand-teal to-brand-blue flex items-center justify-center shadow-sm">
         <HouseIcon className="w-[18px] h-[18px] text-white" />
       </span>
       {/* Accessible name = the visible "AeroCare HOME"; screen-reader-only text covers phones, where it's hidden. */}
@@ -42,7 +42,7 @@ function HomeMark({ active, onClick }) {
       <span className="hidden sm:flex flex-col items-start leading-none">
         <span className="text-sm font-bold text-slate-900">AeroCare</span>{' '}
         <span
-          className={`text-[10px] font-mono mt-0.5 transition-colors ${active ? 'text-[#0B7377]' : 'text-slate-500 group-hover:text-[#0B7377]'}`}
+          className={`text-[10px] font-mono mt-0.5 transition-colors ${active ? 'text-brand-teal-ink' : 'text-slate-500 group-hover:text-brand-teal-ink'}`}
         >
           HOME
         </span>
@@ -107,7 +107,7 @@ export function NavDrawer({ routes, currentSlug, onNavigate }) {
         aria-current={isActive ? 'page' : undefined}
         style={{ '--d': `${delay}ms` }}
         className={`nav-item w-full text-left px-3 py-2.5 rounded-2xl flex items-center gap-3 ${
-          isActive ? 'bg-[#13A4A9]/10 text-[#0B7377]' : 'text-slate-700 hover:bg-slate-100'
+          isActive ? 'bg-brand-teal/10 text-brand-teal-ink' : 'text-slate-700 hover:bg-slate-100'
         }`}
       >
         <span
@@ -153,12 +153,14 @@ export function NavDrawer({ routes, currentSlug, onNavigate }) {
           aria-expanded={open}
           aria-controls="nav-drawer"
           className={`flex items-center gap-2.5 px-3.5 py-2 rounded-2xl text-sm transition-colors ${
-            open ? 'bg-[#1E2432] text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200/80'
+            open ? 'bg-ink text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200/80'
           }`}
         >
           <span className="w-2 h-2 rounded-full" style={{ backgroundColor: active.badge }} aria-hidden="true"></span>
           <span className="sr-only">Pages menu, current page </span>
-          <span className={`font-mono text-xs ${open ? 'text-[#F0C754]' : 'text-slate-600'}`}>{active.code}</span>{' '}
+          <span className={`font-mono text-xs ${open ? 'text-brand-yellow' : 'text-slate-600'}`}>
+            {active.code}
+          </span>{' '}
           <span className="font-semibold hidden sm:inline">{active.name}</span>
           <span className="sr-only sm:hidden">{active.name}</span>
           <svg
@@ -184,7 +186,7 @@ export function NavDrawer({ routes, currentSlug, onNavigate }) {
             aria-hidden="true"
           >
             <span
-              className={`ml-1 w-1 h-14 rounded-full bg-slate-400/40 transition-all duration-500 group-hover:h-24 group-hover:bg-[#13A4A9]/70 ${open ? 'opacity-0' : ''}`}
+              className={`ml-1 w-1 h-14 rounded-full bg-slate-400/40 transition-all duration-500 group-hover:h-24 group-hover:bg-brand-teal/70 ${open ? 'opacity-0' : ''}`}
             ></span>
           </div>
 
@@ -210,12 +212,12 @@ export function NavDrawer({ routes, currentSlug, onNavigate }) {
               style={{ '--d': open ? '30ms' : '0ms' }}
               className={`nav-item w-full text-left p-3 rounded-2xl flex items-center gap-3 ${
                 onHome
-                  ? 'bg-gradient-to-r from-[#13A4A9] to-[#5fc0c4] text-white'
-                  : 'bg-[#13A4A9]/5 text-[#0B7377] hover:bg-[#13A4A9]/15'
+                  ? 'bg-gradient-to-r from-brand-teal to-brand-teal-light text-white'
+                  : 'bg-brand-teal/5 text-brand-teal-ink hover:bg-brand-teal/15'
               }`}
             >
               <span
-                className={`w-9 h-9 rounded-xl flex items-center justify-center ${onHome ? 'bg-white/20' : 'bg-[#0F8387] text-white'}`}
+                className={`w-9 h-9 rounded-xl flex items-center justify-center ${onHome ? 'bg-white/20' : 'bg-brand-teal-deep text-white'}`}
               >
                 <HouseIcon className="w-[18px] h-[18px]" />
               </span>

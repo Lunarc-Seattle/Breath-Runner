@@ -8,7 +8,7 @@ import { startMicBreath, describeMicError } from '../lib/micBreath.js';
 
 const COIN_ICON_URL = `${import.meta.env.BASE_URL}assets/forest/coin.png`;
 const GLASS =
-  'bg-[#04214b]/60 backdrop-blur-md border border-white/20 text-white shadow-[0_12px_32px_rgba(4,33,75,0.28)]';
+  'bg-game-navy/60 backdrop-blur-md border border-white/20 text-white shadow-[0_12px_32px_rgba(4,33,75,0.28)]';
 
 function Stat({ label, value, tone }) {
   return (
@@ -282,7 +282,7 @@ export function ForestRunnerStage({
     <section className="animate-page space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <span className="text-xs font-mono text-[#0B7377] font-semibold">04 TRAINING GAME // BREATH RUNNER</span>
+          <span className="text-xs font-mono text-brand-teal-ink font-semibold">04 TRAINING GAME // BREATH RUNNER</span>
           <h2 className="text-2xl md:text-3xl font-bold text-slate-900">{map.name}</h2>
         </div>
         <div className="flex gap-2 overflow-x-auto max-w-full pb-1">
@@ -309,7 +309,7 @@ export function ForestRunnerStage({
       <div className="relative">
         <div
           ref={stageRef}
-          className="relative w-full h-[min(62vh,780px)] md:h-[min(70vh,760px)] min-h-[420px] rounded-[32px] overflow-hidden bg-[#cfdfe0] select-none touch-none cursor-pointer shadow-[0_24px_60px_rgba(4,33,75,0.18)]"
+          className="relative w-full h-[min(62vh,780px)] md:h-[min(70vh,760px)] min-h-[420px] rounded-[32px] overflow-hidden bg-game-mist select-none touch-none cursor-pointer shadow-[0_24px_60px_rgba(4,33,75,0.18)]"
           onPointerDown={pressStart}
           onPointerUp={stopHold}
           onPointerLeave={stopHold}
@@ -333,13 +333,13 @@ export function ForestRunnerStage({
             <div className={`${GLASS} rounded-2xl px-4 py-3 flex items-center gap-4 md:gap-5`}>
               <div className="flex items-center gap-2.5">
                 <img src={COIN_ICON_URL} alt="" className="w-9 h-9" />
-                <Stat label="Coins" value={h.coins} tone="text-[#fde047]" />
+                <Stat label="Coins" value={h.coins} tone="text-game-coin" />
               </div>
               <div className="w-px h-8 bg-white/20"></div>
-              <Stat label="Breath sync" value={`${h.sync}%`} tone="text-[#a7f3d0]" />
+              <Stat label="Breath sync" value={`${h.sync}%`} tone="text-game-mint" />
               <div className="w-px h-8 bg-white/20 hidden sm:block"></div>
               <div className="hidden sm:block">
-                <Stat label="Combo" value={`x${h.combo}`} tone="text-[#7accf3]" />
+                <Stat label="Combo" value={`x${h.combo}`} tone="text-game-sky" />
               </div>
               <div className="w-px h-8 bg-white/20 hidden md:block"></div>
               <div className="hidden md:block">
@@ -352,19 +352,19 @@ export function ForestRunnerStage({
                 type="button"
                 onPointerDown={keepPointer}
                 onClick={onToggleDevice}
-                className={`${GLASS} pointer-events-auto rounded-full pl-3 pr-4 py-2 flex items-center gap-2 text-xs font-semibold hover:bg-[#04214b]/75 transition-colors ${
-                  bleConnected ? '' : 'ring-2 ring-[#F0C754]/70'
+                className={`${GLASS} pointer-events-auto rounded-full pl-3 pr-4 py-2 flex items-center gap-2 text-xs font-semibold hover:bg-game-navy/75 transition-colors ${
+                  bleConnected ? '' : 'ring-2 ring-brand-yellow/70'
                 }`}
               >
                 <span className="relative flex w-2.5 h-2.5" aria-hidden="true">
                   {!bleConnected && (
-                    <span className="absolute inset-0 rounded-full bg-[#F0C754] animate-ping opacity-75"></span>
+                    <span className="absolute inset-0 rounded-full bg-brand-yellow animate-ping opacity-75"></span>
                   )}
                   <span
-                    className={`relative w-2.5 h-2.5 rounded-full ${bleConnected ? 'bg-[#34d399]' : 'bg-[#F0C754]'}`}
+                    className={`relative w-2.5 h-2.5 rounded-full ${bleConnected ? 'bg-game-go' : 'bg-brand-yellow'}`}
                   ></span>
                 </span>
-                <span className={bleConnected ? 'text-[#a7f3d0]' : 'text-[#fde68a]'}>
+                <span className={bleConnected ? 'text-game-mint' : 'text-game-coin-soft'}>
                   {bleScanning
                     ? 'Pairing trainer…'
                     : bleConnected
@@ -377,7 +377,7 @@ export function ForestRunnerStage({
                 <span className="text-white/60">ROUTE</span>
                 <div className="w-28 md:w-40 h-1.5 rounded-full bg-white/20 overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-[#a7f3d0] via-[#7accf3] to-[#fde047]"
+                    className="h-full bg-gradient-to-r from-game-mint via-game-sky to-game-coin"
                     style={{ width: `${Math.round(h.progress * 100)}%` }}
                   ></div>
                 </div>
@@ -396,7 +396,7 @@ export function ForestRunnerStage({
             }`}
           >
             <div className={`${GLASS} rounded-2xl px-5 py-3 text-center max-w-xs`}>
-              <div className="text-sm font-bold text-[#fde047]">Almost! Back to the start of this cliff</div>
+              <div className="text-sm font-bold text-game-coin">Almost! Back to the start of this cliff</div>
               <div className="text-xs text-white/85 mt-1">
                 When the arrow tilts up, take one long, steady inhale and keep it going over the gap.
               </div>
@@ -409,12 +409,12 @@ export function ForestRunnerStage({
 
           {/* Start overlay */}
           {!started && (
-            <div className="absolute inset-0 flex items-center justify-center p-4 bg-[#04214b]/25 backdrop-blur-[2px]">
+            <div className="absolute inset-0 flex items-center justify-center p-4 bg-game-navy/25 backdrop-blur-[2px]">
               <div
                 className={`${GLASS} rounded-3xl max-w-md w-full p-6 md:p-7 text-center pointer-events-auto`}
                 onPointerDown={keepPointer}
               >
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F0C754]/20 text-[#fde68a] text-[11px] font-mono font-semibold">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-yellow/20 text-game-coin-soft text-[11px] font-mono font-semibold">
                   {map.valveKpa} kPa valve · target {map.targetL} L
                 </div>
                 <h3 className="text-2xl font-bold mt-3">{map.name}</h3>
@@ -425,14 +425,14 @@ export function ForestRunnerStage({
                     [`${level.speed}×`, 'pace']
                   ].map(([v, k]) => (
                     <div key={k} className="rounded-xl bg-white/10 py-2">
-                      <div className="text-base font-bold font-mono text-[#fde047]">{v}</div>
+                      <div className="text-base font-bold font-mono text-game-coin">{v}</div>
                       <div className="text-[10px] uppercase tracking-wider text-white/60">{k}</div>
                     </div>
                   ))}
                 </div>
                 <p className="text-sm text-white/80 mt-2 leading-relaxed">
                   She runs on her own. When the golden arrow tilts up,{' '}
-                  <strong className="text-[#fde047]">start a long, steady inhale</strong> to jump. Keep inhaling to
+                  <strong className="text-game-coin">start a long, steady inhale</strong> to jump. Keep inhaling to
                   glide across the gap, then exhale to land.
                 </p>
                 <div className="mt-4 grid grid-cols-3 gap-2 text-[11px] font-mono text-white/75">
@@ -443,7 +443,7 @@ export function ForestRunnerStage({
                     onClick={toggleMic}
                     aria-pressed={micStatus !== 'off'}
                     title="Breathe audibly near the microphone to inhale"
-                    className={`rounded-xl py-2 transition-colors ${micStatus === 'off' ? 'bg-white/10 hover:bg-white/20' : 'bg-[#7accf3]/30 text-white'}`}
+                    className={`rounded-xl py-2 transition-colors ${micStatus === 'off' ? 'bg-white/10 hover:bg-white/20' : 'bg-game-sky/30 text-white'}`}
                   >
                     {micStatus === 'off' ? 'or 🎙 mic' : micLabel}
                   </button>
@@ -452,7 +452,7 @@ export function ForestRunnerStage({
                   ref={startButtonRef}
                   type="button"
                   onClick={begin}
-                  className="mt-5 w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#13A4A9] to-[#7accf3] text-[#04214b] font-bold text-sm hover:brightness-110 transition"
+                  className="mt-5 w-full py-3.5 rounded-2xl bg-gradient-to-r from-brand-teal to-game-sky text-game-navy font-bold text-sm hover:brightness-110 transition"
                 >
                   ▶ Start running
                 </button>
@@ -462,13 +462,13 @@ export function ForestRunnerStage({
 
           {/* Lap result */}
           {lapResult && (
-            <div className="absolute inset-0 flex items-center justify-center p-4 bg-[#04214b]/30 backdrop-blur-[2px]">
+            <div className="absolute inset-0 flex items-center justify-center p-4 bg-game-navy/30 backdrop-blur-[2px]">
               <div
                 className={`${GLASS} rounded-3xl max-w-sm w-full p-6 text-center pointer-events-auto`}
                 onPointerDown={keepPointer}
               >
-                <div className="text-[11px] font-mono text-[#a7f3d0]">LAP {lapResult.lap} COMPLETE</div>
-                <div className="text-4xl font-bold mt-2 text-[#fde047]">
+                <div className="text-[11px] font-mono text-game-mint">LAP {lapResult.lap} COMPLETE</div>
+                <div className="text-4xl font-bold mt-2 text-game-coin">
                   {lapResult.coins}
                   <span className="text-lg text-white/60"> / {lapResult.total} coins</span>
                 </div>
@@ -487,7 +487,7 @@ export function ForestRunnerStage({
                     ref={nextLapButtonRef}
                     type="button"
                     onClick={begin}
-                    className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-[#f15a24] to-[#fbb03b] text-xs font-bold"
+                    className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-game-ember to-game-ember-amber text-xs font-bold"
                   >
                     Next lap →
                   </button>
@@ -499,25 +499,25 @@ export function ForestRunnerStage({
 
         {/* Bottom breath dock */}
         <div className="mt-3">
-          <div className="bg-[#0b2a4f] text-white shadow-[0_12px_32px_rgba(4,33,75,0.22)] rounded-3xl px-4 py-3 flex flex-wrap md:flex-nowrap items-center gap-3 md:gap-5">
+          <div className="bg-game-navy-panel text-white shadow-[0_12px_32px_rgba(4,33,75,0.22)] rounded-3xl px-4 py-3 flex flex-wrap md:flex-nowrap items-center gap-3 md:gap-5">
             <div className="flex items-center gap-3 min-w-[150px]">
               <div
                 aria-hidden="true"
                 className={`w-11 h-11 rounded-2xl flex items-center justify-center text-xl font-bold transition-colors ${
-                  inhaleCue ? 'bg-[#fde047] text-[#04214b]' : 'bg-white/15 text-white'
+                  inhaleCue ? 'bg-game-coin text-game-navy' : 'bg-white/15 text-white'
                 }`}
               >
                 {inhaleCue ? '↑' : '↓'}
               </div>
               <div>
-                <div aria-live="polite" className={`text-sm font-bold ${inhaleCue ? 'text-[#fde047]' : 'text-white'}`}>
+                <div aria-live="polite" className={`text-sm font-bold ${inhaleCue ? 'text-game-coin' : 'text-white'}`}>
                   {inhaleCue ? 'Inhale — jump & glide' : 'Exhale — relax & run'}
                 </div>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-[10px] font-mono text-white/60">LUNG</span>
                   <div className="w-24 h-1.5 rounded-full bg-white/20 overflow-hidden">
                     <div
-                      className="h-full bg-[#7accf3] transition-[width] duration-100"
+                      className="h-full bg-game-sky transition-[width] duration-100"
                       style={{ width: `${Math.round(h.lung * 100)}%` }}
                     ></div>
                   </div>
@@ -537,8 +537,8 @@ export function ForestRunnerStage({
               onPointerCancel={stopHold}
               className={`pointer-events-auto flex-1 py-3.5 rounded-2xl font-bold text-sm transition-all touch-none ${
                 holding
-                  ? 'bg-[#7accf3] text-[#04214b] scale-[0.98]'
-                  : 'bg-gradient-to-r from-[#f15a24] to-[#fbb03b] text-white'
+                  ? 'bg-game-sky text-game-navy scale-[0.98]'
+                  : 'bg-gradient-to-r from-game-ember to-game-ember-amber text-white'
               }`}
             >
               {holding ? '▲ Inhaling…' : started ? 'Hold to inhale' : 'Hold to start'}
@@ -560,11 +560,11 @@ export function ForestRunnerStage({
                 onClick={toggleMic}
                 aria-pressed={micStatus !== 'off'}
                 title="Breathe audibly near the microphone to inhale"
-                className={`relative h-10 px-3 rounded-xl text-xs font-bold overflow-hidden ${micStatus === 'off' ? 'bg-white/15 hover:bg-white/25' : 'bg-[#7accf3]/25 ring-1 ring-[#7accf3]/70'}`}
+                className={`relative h-10 px-3 rounded-xl text-xs font-bold overflow-hidden ${micStatus === 'off' ? 'bg-white/15 hover:bg-white/25' : 'bg-game-sky/25 ring-1 ring-game-sky/70'}`}
               >
                 <span
                   ref={micMeterRef}
-                  className="absolute inset-y-0 left-0 w-full bg-[#7accf3]/35 origin-left"
+                  className="absolute inset-y-0 left-0 w-full bg-game-sky/35 origin-left"
                   style={{ transform: 'scaleX(0)' }}
                   aria-hidden="true"
                 ></span>
@@ -589,14 +589,14 @@ export function ForestRunnerStage({
                   step="0.1"
                   value={speed}
                   onChange={e => setSpeed(parseFloat(e.target.value))}
-                  className="w-20 accent-[#7accf3]"
+                  className="w-20 accent-game-sky"
                 />
                 <span className="w-8">{speed.toFixed(1)}x</span>
               </label>
               <button
                 type="button"
                 onClick={saveRun}
-                className="px-3.5 h-10 rounded-xl bg-[#0F8387] hover:bg-[#0f8f94] text-xs font-bold whitespace-nowrap"
+                className="px-3.5 h-10 rounded-xl bg-brand-teal-deep hover:bg-brand-teal-hover text-xs font-bold whitespace-nowrap"
               >
                 Save run
               </button>

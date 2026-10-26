@@ -1,5 +1,6 @@
 import { useApp } from '../app/AppContext.jsx';
 import { PDF_COLORS, solidStyle } from '../data/simStore.js';
+import { brand, ink, status, withAlpha } from '../styles/tokens.js';
 
 /** 01 Home: greeting, resume / pick a map, and inline Bluetooth trainer pairing. */
 export default function HomePage() {
@@ -26,7 +27,7 @@ export default function HomePage() {
           <div className="space-y-4 relative z-10">
             <div
               className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold"
-              style={{ backgroundColor: '#13A4A918', color: PDF_COLORS.tealInk }}
+              style={{ backgroundColor: withAlpha(brand.teal.DEFAULT, 0x18), color: PDF_COLORS.tealInk }}
             >
               <span>🌿 Daily Lung Recovery Companion</span>
               <span aria-hidden="true">•</span>
@@ -62,16 +63,16 @@ export default function HomePage() {
               <button
                 type="button"
                 onClick={() => navigate('play')}
-                className="mt-5 w-full py-3 rounded-2xl bg-white text-[#0B7377] font-bold text-xs uppercase tracking-wider hover:bg-opacity-95 transition-all flex items-center justify-center gap-2"
+                className="mt-5 w-full py-3 rounded-2xl bg-white text-brand-teal-ink font-bold text-xs uppercase tracking-wider hover:bg-opacity-95 transition-all flex items-center justify-center gap-2"
               >
                 <span>▶ Resume {state.lastMap.name}</span>
               </button>
             </div>
 
             {/* Option B: QuickSpirometry or Schedule */}
-            <div className="p-5 rounded-3xl bg-[#8E90C6]/15 border border-[#8E90C6]/30 flex flex-col justify-between">
+            <div className="p-5 rounded-3xl bg-brand-purple/15 border border-brand-purple/30 flex flex-col justify-between">
               <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs font-mono text-[#5D5FA0] font-semibold">
+                <div className="flex items-center justify-between text-xs font-mono text-brand-purple-ink font-semibold">
                   <span>TODAY&apos;S CHECKUP</span>
                   <span>PEAK: 3.89 L</span>
                 </div>
@@ -109,8 +110,12 @@ export default function HomePage() {
               <span
                 className="px-3 py-1 rounded-full text-xs font-bold"
                 style={{
-                  backgroundColor: state.bleConnected ? '#13A4A918' : state.bleScanning ? '#8E90C620' : '#F0A7AB30',
-                  color: state.bleConnected ? PDF_COLORS.tealInk : state.bleScanning ? '#5D5FA0' : '#B23A26'
+                  backgroundColor: state.bleConnected
+                    ? withAlpha(brand.teal.DEFAULT, 0x18)
+                    : state.bleScanning
+                      ? withAlpha(brand.purple.DEFAULT, 0x20)
+                      : withAlpha(brand.pink.DEFAULT, 0x30),
+                  color: state.bleConnected ? PDF_COLORS.tealInk : state.bleScanning ? brand.purple.ink : status.error
                 }}
               >
                 {state.bleScanning ? 'SEARCHING…' : state.bleConnected ? '● CONNECTED' : 'NOT CONNECTED'}
@@ -120,15 +125,15 @@ export default function HomePage() {
             {/* Rhino Coral-Pink Breathing Trainer Illustration */}
             <div className="py-3 flex justify-center">
               <svg viewBox="0 0 240 165" className="w-48 h-36" aria-hidden="true">
-                <circle cx="120" cy="82" r="68" fill="#8E90C6" fillOpacity="0.18" />
-                <circle cx="165" cy="115" r="35" fill="#F0C754" fillOpacity="0.35" />
+                <circle cx="120" cy="82" r="68" fill={brand.purple.DEFAULT} fillOpacity="0.18" />
+                <circle cx="165" cy="115" r="35" fill={brand.yellow.DEFAULT} fillOpacity="0.35" />
                 <path
                   d="M85 60 C85 42 145 42 160 60 L182 60 L182 82 L158 85 L138 142 C134 154 110 154 108 140 L102 88 L85 78 Z"
-                  fill="#F0A7AB"
-                  stroke="#1E2432"
+                  fill={brand.pink.DEFAULT}
+                  stroke={ink}
                   strokeWidth="1.5"
                 />
-                <rect x="178" y="64" width="16" height="14" rx="3" fill="#13A4A9" />
+                <rect x="178" y="64" width="16" height="14" rx="3" fill={brand.teal.DEFAULT} />
               </svg>
             </div>
 
@@ -139,22 +144,24 @@ export default function HomePage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-600">Battery Level</span>
-                <span className="font-mono font-bold text-[#0B7377]">
+                <span className="font-mono font-bold text-brand-teal-ink">
                   {state.batteryPct !== null ? `${state.batteryPct}%` : '—'}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-600">Mouthpiece Status</span>
-                <span className="font-mono text-[#5D5FA0]">{state.bleConnected ? 'Sterile (UV-C OK)' : '—'}</span>
+                <span className="font-mono text-brand-purple-ink">
+                  {state.bleConnected ? 'Sterile (UV-C OK)' : '—'}
+                </span>
               </div>
             </div>
 
             {state.bleError && !state.bleConnected && (
               <div
                 role="alert"
-                className="p-3.5 rounded-2xl bg-[#F0C754]/15 border border-[#F0C754]/50 text-xs text-slate-700 leading-relaxed"
+                className="p-3.5 rounded-2xl bg-brand-yellow/15 border border-brand-yellow/50 text-xs text-slate-700 leading-relaxed"
               >
-                <div className="font-bold text-[#8a6500] mb-0.5">Trainer not found</div>
+                <div className="font-bold text-brand-yellow-ink mb-0.5">Trainer not found</div>
                 {state.bleError}
               </div>
             )}
@@ -162,7 +169,7 @@ export default function HomePage() {
               <button
                 type="button"
                 onClick={() => navigate('play')}
-                className="text-xs font-semibold text-[#0B7377] hover:underline"
+                className="text-xs font-semibold text-brand-teal-ink hover:underline"
               >
                 No trainer? Play Forest · Level 1 in free-trial mode →
               </button>
@@ -174,7 +181,7 @@ export default function HomePage() {
             onClick={state.bleConnected ? trainer.disconnect : trainer.pair}
             disabled={state.bleScanning}
             className="mt-4 w-full py-3.5 rounded-2xl font-bold text-xs uppercase tracking-wider text-white transition-all shadow-sm"
-            style={{ backgroundColor: state.bleScanning ? PDF_COLORS.purpleDeep : '#1E2432' }}
+            style={{ backgroundColor: state.bleScanning ? PDF_COLORS.purpleDeep : ink }}
           >
             {state.bleScanning
               ? 'Searching for trainer…'
@@ -197,7 +204,7 @@ export default function HomePage() {
           <button
             type="button"
             onClick={() => navigate('maps')}
-            className="text-xs font-semibold text-[#0B7377] hover:underline"
+            className="text-xs font-semibold text-brand-teal-ink hover:underline"
           >
             View Full Map Catalog (03) →
           </button>
@@ -208,7 +215,7 @@ export default function HomePage() {
             <div
               key={m.id}
               className={`rounded-[28px] bg-white p-6 border transition-all flex flex-col justify-between shadow-sm ${
-                state.lastMap.id === m.id ? 'border-2 border-[#13A4A9]' : 'border-slate-200/80 hover:border-slate-300'
+                state.lastMap.id === m.id ? 'border-2 border-brand-teal' : 'border-slate-200/80 hover:border-slate-300'
               }`}
             >
               <div className="space-y-3">

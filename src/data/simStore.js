@@ -1,22 +1,26 @@
+import { brand, ink, onDeep } from '../styles/tokens.js';
+
+/** Flat view of the brand palette (named after the design PDF); values come from styles/tokens.js. */
 export const PDF_COLORS = {
-  teal: '#13A4A9',
-  tealInk: '#0B7377', // teal dark enough for small text on light backgrounds (WCAG AA)
-  tealDeep: '#0F8387', // filled teal that carries white text (WCAG AA)
-  purpleDeep: '#71739E', // filled purple that carries white text (WCAG AA)
-  purple: '#8E90C6',
-  yellow: '#F0C754',
-  pink: '#F0A7AB',
-  blue: '#96C7D2'
+  teal: brand.teal.DEFAULT,
+  tealInk: brand.teal.ink, // teal dark enough for small text on light backgrounds (WCAG AA)
+  tealDeep: brand.teal.deep, // filled teal that carries white text (WCAG AA)
+  purpleDeep: brand.purple.deep, // filled purple that carries white text (WCAG AA)
+  purple: brand.purple.DEFAULT,
+  yellow: brand.yellow.DEFAULT,
+  pink: brand.pink.DEFAULT,
+  blue: brand.blue.DEFAULT
 };
 
-// Filled brand surfaces and the text color that stays readable on them (WCAG AA, 4.5:1).
+// Filled brand surfaces and the text color that stays readable on them (WCAG AA, 4.5:1):
+// teal and purple swap to their deep variant under white text; yellow and pink keep ink text.
 const SOLIDS = {
-  '#13A4A9': { bg: '#0F8387', fg: '#FFFFFF' },
-  '#8E90C6': { bg: '#71739E', fg: '#FFFFFF' },
-  '#F0C754': { bg: '#F0C754', fg: '#1E2432' },
-  '#F0A7AB': { bg: '#F0A7AB', fg: '#1E2432' }
+  [brand.teal.DEFAULT]: { bg: brand.teal.deep, fg: onDeep },
+  [brand.purple.DEFAULT]: { bg: brand.purple.deep, fg: onDeep },
+  [brand.yellow.DEFAULT]: { bg: brand.yellow.DEFAULT, fg: ink },
+  [brand.pink.DEFAULT]: { bg: brand.pink.DEFAULT, fg: ink }
 };
-export const solid = color => SOLIDS[color] || { bg: color, fg: '#FFFFFF' };
+export const solid = color => SOLIDS[color] || { bg: color, fg: onDeep };
 export const solidStyle = color => ({ backgroundColor: solid(color).bg, color: solid(color).fg });
 
 export const INITIAL_SIM_STATE = {
@@ -48,7 +52,7 @@ export const INITIAL_SIM_STATE = {
       name: 'Forest · Level 1',
       kpa: 1.5,
       targetL: 3.5,
-      color: '#13A4A9',
+      color: PDF_COLORS.teal,
       unlocked: true,
       tag: 'Recommended Today',
       desc: 'Misty alpine pine forest. Gentle inspiratory flow to expand lower alveoli.'
@@ -58,7 +62,7 @@ export const INITIAL_SIM_STATE = {
       name: 'Sunlit Canyon · Level 2',
       kpa: 2.5,
       targetL: 4.0,
-      color: '#F0C754',
+      color: PDF_COLORS.yellow,
       unlocked: true,
       tag: 'Endurance Boost',
       desc: 'Moderate inhale & exhale resistance to strengthen diaphragm muscles.'
@@ -68,7 +72,7 @@ export const INITIAL_SIM_STATE = {
       name: 'Glacier Ridge · Level 3',
       kpa: 3.5,
       targetL: 4.5,
-      color: '#8E90C6',
+      color: PDF_COLORS.purple,
       unlocked: true,
       tag: 'Advanced Control',
       desc: 'High-pressure stability challenge for deep pulmonary recovery.'
@@ -115,10 +119,10 @@ export const INITIAL_SIM_STATE = {
     { id: 'TEST-104', date: 'Oct 25', fvc: 3.89, fev1: 3.31, pef: 474, ratio: '85.1%' }
   ],
   disinfectionParts: [
-    { part: 'Mouthpiece', pct: 85, color: '#13A4A9', status: 'Sterilize Soon' },
-    { part: 'Filter', pct: 68, color: '#8E90C6', status: 'Good (68%)' },
-    { part: 'Core Valve', pct: 46, color: '#F0C754', status: 'Optimal' },
-    { part: 'Main Body', pct: 25, color: '#F0A7AB', status: 'Clean' }
+    { part: 'Mouthpiece', pct: 85, color: PDF_COLORS.teal, status: 'Sterilize Soon' },
+    { part: 'Filter', pct: 68, color: PDF_COLORS.purple, status: 'Good (68%)' },
+    { part: 'Core Valve', pct: 46, color: PDF_COLORS.yellow, status: 'Optimal' },
+    { part: 'Main Body', pct: 25, color: PDF_COLORS.pink, status: 'Clean' }
   ],
   bookedDays: [10, 19, 21, 24, 30],
   leaseUsedDays: 18,

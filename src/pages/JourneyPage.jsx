@@ -1,9 +1,10 @@
 import { useApp } from '../app/AppContext.jsx';
+import { brand } from '../styles/tokens.js';
 
 const BEHAVIOR_SLIDERS = [
-  { label: 'Inspiratory Volume (FVC)', left: '1.5L', right: '4.5L', pct: '82%', color: '#13A4A9' },
-  { label: 'Expiratory Flow Stability', left: 'Unsteady', right: 'Locked', pct: '76%', color: '#8E90C6' },
-  { label: 'Daily Training Consistency', left: '1 Day/wk', right: '7 Days/wk', pct: '90%', color: '#F0C754' }
+  { label: 'Inspiratory Volume (FVC)', left: '1.5L', right: '4.5L', pct: '82%', color: brand.teal.DEFAULT },
+  { label: 'Expiratory Flow Stability', left: 'Unsteady', right: 'Locked', pct: '76%', color: brand.purple.DEFAULT },
+  { label: 'Daily Training Consistency', left: '1 Day/wk', right: '7 Days/wk', pct: '90%', color: brand.yellow.DEFAULT }
 ];
 
 const JOURNEY_STAGES = [
@@ -20,7 +21,7 @@ export default function JourneyPage() {
   return (
     <section className="space-y-6 animate-page">
       <div>
-        <span className="text-xs font-mono text-[#5D5FA0] font-semibold">
+        <span className="text-xs font-mono text-brand-purple-ink font-semibold">
           11 PATIENT RECOVERY JOURNEY & BEHAVIOR METRICS
         </span>
         <h2 className="text-3xl font-bold text-slate-900 mt-1">Rehabilitation Journey & Emotion Curve</h2>
@@ -31,7 +32,7 @@ export default function JourneyPage() {
         <div className="lg:col-span-5 rounded-[32px] bg-white p-7 border border-slate-200/80 space-y-4">
           <div className="flex items-center gap-4">
             <div
-              className="w-16 h-16 rounded-full bg-[#8E90C6]/25 flex items-center justify-center text-2xl"
+              className="w-16 h-16 rounded-full bg-brand-purple/25 flex items-center justify-center text-2xl"
               aria-hidden="true"
             >
               🧑‍⚕️
@@ -41,7 +42,7 @@ export default function JourneyPage() {
               <div className="text-xs text-slate-600">Thoracic Post-Op Recovery • Home User</div>
             </div>
           </div>
-          <div className="p-4 rounded-2xl bg-[#8E90C6]/10 text-xs text-slate-700 italic">
+          <div className="p-4 rounded-2xl bg-brand-purple/10 text-xs text-slate-700 italic">
             &quot;Traditional 3-ball trainers felt repetitive and couldn&apos;t show my daily progress. With gamified
             maps and quantified FVC curves, I look forward to breathing training every morning!&quot;
           </div>
@@ -72,7 +73,7 @@ export default function JourneyPage() {
       <div className="rounded-[32px] bg-white p-8 border border-slate-200/80 space-y-4">
         <div className="flex justify-between items-center">
           <span className="font-bold text-sm text-slate-800">5-Stage Post-Discharge Emotion & Lung Capacity Curve</span>
-          <span className="text-xs font-mono text-[#0B7377]">Stage 1 → Stage 5</span>
+          <span className="text-xs font-mono text-brand-teal-ink">Stage 1 → Stage 5</span>
         </div>
         <svg
           viewBox="0 0 800 180"
@@ -82,19 +83,24 @@ export default function JourneyPage() {
         >
           <defs>
             <linearGradient id="journeyGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#8E90C6" stopOpacity="0.35" />
-              <stop offset="100%" stopColor="#8E90C6" stopOpacity="0.0" />
+              <stop offset="0%" stopColor={brand.purple.DEFAULT} stopOpacity="0.35" />
+              <stop offset="100%" stopColor={brand.purple.DEFAULT} stopOpacity="0.0" />
             </linearGradient>
           </defs>
           <path d="M60 135 L230 110 L400 75 L570 50 L740 30 L740 165 L60 165 Z" fill="url(#journeyGrad)" />
-          <polyline points="60,135 230,110 400,75 570,50 740,30" fill="none" stroke="#8E90C6" strokeWidth="3.5" />
+          <polyline
+            points="60,135 230,110 400,75 570,50 740,30"
+            fill="none"
+            stroke={brand.purple.DEFAULT}
+            strokeWidth="3.5"
+          />
           {JOURNEY_STAGES.map(pt => (
             <g key={pt.stage}>
-              <circle cx={pt.x} cy={pt.y} r="14" fill="#F0C754" />
+              <circle cx={pt.x} cy={pt.y} r="14" fill={brand.yellow.DEFAULT} />
               <text x={pt.x - 8} y={pt.y + 5} fontSize="14">
                 {pt.emoji}
               </text>
-              <text x={pt.x - 42} y="168" fontSize="11" fill="#475569" fontWeight="600">
+              <text x={pt.x - 42} y="168" fontSize="11" className="fill-slate-600" fontWeight="600">
                 {pt.stage}
               </text>
             </g>

@@ -1,12 +1,13 @@
 import { solidStyle } from '../data/simStore.js';
+import { brand } from '../styles/tokens.js';
 
 const CHART_BARS = [60, 90, 125, 105, 145, 165, 150, 180];
 
 const FRIENDS = [
-  { name: 'Ali', score: '4,308 pts', color: '#13A4A9' },
-  { name: 'Bage', score: '4,120 pts', color: '#8E90C6' },
-  { name: 'Ms. Bai', score: '3,890 pts', color: '#F0C754' },
-  { name: 'Mr. Bi', score: '3,640 pts', color: '#F0A7AB' }
+  { name: 'Ali', score: '4,308 pts', color: brand.teal.DEFAULT },
+  { name: 'Bage', score: '4,120 pts', color: brand.purple.DEFAULT },
+  { name: 'Ms. Bai', score: '3,890 pts', color: brand.yellow.DEFAULT },
+  { name: 'Mr. Bi', score: '3,640 pts', color: brand.pink.DEFAULT }
 ];
 
 export default function RankingPage() {
@@ -19,14 +20,21 @@ export default function RankingPage() {
           <svg viewBox="0 0 520 200" className="w-full" aria-hidden="true">
             {CHART_BARS.map((h, i) => (
               <g key={i}>
-                <rect x={35 + i * 58} y={185 - h} width="14" height={h} rx="4" fill="#13A4A9" />
-                <rect x={52 + i * 58} y={185 - h * 0.8} width="14" height={h * 0.8} rx="4" fill="#8E90C6" />
+                <rect x={35 + i * 58} y={185 - h} width="14" height={h} rx="4" fill={brand.teal.DEFAULT} />
+                <rect
+                  x={52 + i * 58}
+                  y={185 - h * 0.8}
+                  width="14"
+                  height={h * 0.8}
+                  rx="4"
+                  fill={brand.purple.DEFAULT}
+                />
               </g>
             ))}
             <polyline
               points="42,105 100,80 158,55 216,70 274,38 332,26 390,40 448,18"
               fill="none"
-              stroke="#F0C754"
+              stroke={brand.yellow.DEFAULT}
               strokeWidth="3.5"
             />
           </svg>

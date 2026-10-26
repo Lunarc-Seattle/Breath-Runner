@@ -1,3 +1,5 @@
+import { brand } from '../styles/tokens.js';
+
 /**
  * Every page in the app, keyed by the slug used in the URL hash (#/play, #/history, …).
  * Order and `group` drive the navigation drawer; `code` is the number shown in the UI
@@ -9,7 +11,7 @@ export const ROUTES = [
     code: '01',
     name: 'Welcome & Today',
     subtitle: 'Resume session, pick map & inline Bluetooth pair',
-    badge: '#13A4A9',
+    badge: brand.teal.DEFAULT,
     group: null
   },
   {
@@ -17,7 +19,7 @@ export const ROUTES = [
     code: '02',
     name: "Today's Schedule",
     subtitle: 'Taskly-inspired daily rehab routine & weekly pins',
-    badge: '#F0C754',
+    badge: brand.yellow.DEFAULT,
     group: 'Train'
   },
   {
@@ -25,7 +27,7 @@ export const ROUTES = [
     code: '03',
     name: 'Choose a Map',
     subtitle: 'Select Forest, Canyon, or Glacier resistance scenes',
-    badge: '#96C7D2',
+    badge: brand.blue.DEFAULT,
     group: 'Train'
   },
   {
@@ -33,7 +35,7 @@ export const ROUTES = [
     code: '04',
     name: 'Training Game',
     subtitle: 'Forest Level 1 interactive breath runner game',
-    badge: '#13A4A9',
+    badge: brand.teal.DEFAULT,
     group: 'Train'
   },
   {
@@ -41,7 +43,7 @@ export const ROUTES = [
     code: '13',
     name: 'Run History',
     subtitle: 'Your saved Breath Runner runs, coins & breath sync',
-    badge: '#13A4A9',
+    badge: brand.teal.DEFAULT,
     group: 'Train'
   },
   {
@@ -49,7 +51,7 @@ export const ROUTES = [
     code: '05',
     name: 'Spirometry Lab',
     subtitle: 'Real-time 1,000Hz lung capacity (FVC / FEV1) test',
-    badge: '#8E90C6',
+    badge: brand.purple.DEFAULT,
     group: 'Train'
   },
   {
@@ -57,7 +59,7 @@ export const ROUTES = [
     code: '06',
     name: 'Multiplayer Co-Op',
     subtitle: 'Live 2-player synchronized breathing arena',
-    badge: '#F0A7AB',
+    badge: brand.pink.DEFAULT,
     group: 'Together'
   },
   {
@@ -65,7 +67,7 @@ export const ROUTES = [
     code: '07',
     name: 'Community Ranking',
     subtitle: 'Friends leaderboard (Ali, Bage, Ms. Bai) & trends',
-    badge: '#F0C754',
+    badge: brand.yellow.DEFAULT,
     group: 'Together'
   },
   {
@@ -73,7 +75,7 @@ export const ROUTES = [
     code: '08',
     name: 'Hygiene & Booking',
     subtitle: '4-part disinfection ring & April sterilization calendar',
-    badge: '#13A4A9',
+    badge: brand.teal.DEFAULT,
     group: 'Care'
   },
   {
@@ -81,7 +83,7 @@ export const ROUTES = [
     code: '09',
     name: 'Device Rental',
     subtitle: 'Hospital shared trainer lease & cloud telemetry',
-    badge: '#96C7D2',
+    badge: brand.blue.DEFAULT,
     group: 'Care'
   },
   {
@@ -89,7 +91,7 @@ export const ROUTES = [
     code: '10',
     name: 'Doctor & CI Pipeline',
     subtitle: 'Thoracic physician guidance & automated trace checks',
-    badge: '#8E90C6',
+    badge: brand.purple.DEFAULT,
     group: 'Care'
   },
   {
@@ -97,7 +99,7 @@ export const ROUTES = [
     code: '11',
     name: 'Recovery Journey',
     subtitle: 'Emotion curve & pulmonary behavior sliders',
-    badge: '#F0A7AB',
+    badge: brand.pink.DEFAULT,
     group: 'You'
   },
   {
@@ -105,7 +107,7 @@ export const ROUTES = [
     code: '12',
     name: 'My Profile',
     subtitle: 'User profile, training modules, rental card & badges',
-    badge: '#8E90C6',
+    badge: brand.purple.DEFAULT,
     group: 'You'
   }
 ];

@@ -18,12 +18,12 @@ export default function SchedulePage() {
       <div className="lg:col-span-4 rounded-[32px] bg-white p-7 border border-slate-200/80 space-y-6">
         <div className="flex items-center justify-between">
           <span className="font-bold text-sm text-slate-800">Weekly Pinned</span>
-          <span className="text-xs font-semibold text-[#0B7377]">Peking Univ. Rehab</span>
+          <span className="text-xs font-semibold text-brand-teal-ink">Peking Univ. Rehab</span>
         </div>
 
-        <div className="p-5 rounded-3xl bg-[#F0C754]/20 border border-[#F0C754]/40 space-y-2">
+        <div className="p-5 rounded-3xl bg-brand-yellow/20 border border-brand-yellow/40 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="px-2.5 py-0.5 rounded-full bg-[#F0C754] text-slate-900 font-bold text-[10px]">
+            <span className="px-2.5 py-0.5 rounded-full bg-brand-yellow text-slate-900 font-bold text-[10px]">
               DOCTOR NOTE
             </span>
             <span className="text-xs font-mono text-slate-600">Dr. Chen</span>
@@ -34,7 +34,7 @@ export default function SchedulePage() {
 
         <div className="p-4 rounded-2xl bg-slate-50 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span aria-hidden="true" className="w-8 h-8 rounded-xl bg-[#F0A7AB]/30 flex items-center justify-center">
+            <span aria-hidden="true" className="w-8 h-8 rounded-xl bg-brand-pink/30 flex items-center justify-center">
               🧼
             </span>
             <div>
@@ -42,7 +42,11 @@ export default function SchedulePage() {
               <div className="text-[11px] text-slate-500">Booked for April 19</div>
             </div>
           </div>
-          <button type="button" onClick={() => navigate('hygiene')} className="text-xs font-semibold text-[#0B7377]">
+          <button
+            type="button"
+            onClick={() => navigate('hygiene')}
+            className="text-xs font-semibold text-brand-teal-ink"
+          >
             View →
           </button>
         </div>
@@ -53,12 +57,12 @@ export default function SchedulePage() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="text-3xl font-bold text-slate-900">Today&apos;s Breathing Schedule</h2>
-            <p className="text-sm font-semibold text-[#F0C754]">Sunday, October 25</p>
+            <p className="text-sm font-semibold text-brand-yellow">Sunday, October 25</p>
           </div>
           <button
             type="button"
             onClick={() => navigate('play')}
-            className="px-5 py-2.5 rounded-2xl bg-[#F0C754] text-slate-900 font-bold text-xs"
+            className="px-5 py-2.5 rounded-2xl bg-brand-yellow text-slate-900 font-bold text-xs"
           >
             + Start Scheduled Session
           </button>
@@ -74,7 +78,7 @@ export default function SchedulePage() {
               onClick={() => toggleTask(task)}
               className={`w-full text-left p-5 rounded-3xl cursor-pointer transition-all flex items-center justify-between ${
                 task.highlight
-                  ? 'bg-[#F0C754] text-slate-900 shadow-sm'
+                  ? 'bg-brand-yellow text-slate-900 shadow-sm'
                   : 'bg-slate-50 hover:bg-slate-100 text-slate-800'
               }`}
             >
@@ -85,7 +89,7 @@ export default function SchedulePage() {
                   readOnly
                   tabIndex={-1}
                   aria-hidden="true"
-                  className="w-4 h-4 rounded accent-[#13A4A9] pointer-events-none"
+                  className="w-4 h-4 rounded accent-brand-teal pointer-events-none"
                 />
                 <div>
                   <div className="font-bold text-base">{task.title}</div>

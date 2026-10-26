@@ -12,7 +12,7 @@ export default function DoctorPage() {
             <span>
               {r.id} — {r.target} ({r.steps} samples)
             </span>
-            <span className="px-3 py-1 rounded-full bg-[#13A4A9]/15 text-[#0B7377] font-bold">
+            <span className="px-3 py-1 rounded-full bg-brand-teal/15 text-brand-teal-ink font-bold">
               {r.status} (Drift: {r.drift})
             </span>
           </div>

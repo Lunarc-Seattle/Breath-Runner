@@ -26,7 +26,9 @@ function formatDuration(sec) {
 
 function formatCoins(run) {
   if (!has(run.coins)) return DASH;
-  return has(run.totalCoins) ? `${run.coins}/${run.totalCoins}` : String(run.coins);
+  if (!has(run.totalCoins)) return String(run.coins);
+  // totalCoins is per lap; multi-lap runs can collect more than one lap's worth.
+  return run.coins > run.totalCoins ? `${run.coins} (${run.totalCoins}/lap)` : `${run.coins}/${run.totalCoins}`;
 }
 
 function summarize(runs) {
@@ -98,7 +100,7 @@ export default function HistoryPage() {
     <section className="space-y-6 animate-page">
       <div className="flex flex-wrap justify-between items-end gap-4">
         <div>
-          <span className="text-xs font-mono text-[#0B7377] font-semibold">
+          <span className="text-xs font-mono text-brand-teal-ink font-semibold">
             13 RUN HISTORY // SAVED BREATH RUNNER RUNS
           </span>
           <h2 className="text-3xl font-bold text-slate-900 mt-1">Your Runs, Coins &amp; Breath Sync</h2>
@@ -107,7 +109,7 @@ export default function HistoryPage() {
           <button
             type="button"
             onClick={() => navigate('play')}
-            className="px-5 py-3 rounded-2xl bg-[#0F8387] text-white font-bold text-xs"
+            className="px-5 py-3 rounded-2xl bg-brand-teal-deep text-white font-bold text-xs"
           >
             Play a run →
           </button>
@@ -116,7 +118,7 @@ export default function HistoryPage() {
               type="button"
               onClick={clearHistory}
               disabled={clearing}
-              className="px-5 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 hover:border-[#F0A7AB] hover:text-[#b4424a] font-bold text-xs disabled:opacity-50"
+              className="px-5 py-3 rounded-2xl bg-white border border-slate-200 text-slate-700 hover:border-brand-pink hover:text-brand-pink-ink font-bold text-xs disabled:opacity-50"
             >
               {clearing ? 'Clearing…' : 'Clear history'}
             </button>
@@ -130,7 +132,7 @@ export default function HistoryPage() {
           role="status"
         >
           <span
-            className="inline-block w-2 h-2 rounded-full bg-[#13A4A9] animate-pulse mr-2 align-middle"
+            className="inline-block w-2 h-2 rounded-full bg-brand-teal animate-pulse mr-2 align-middle"
             aria-hidden="true"
           ></span>
           Loading saved runs…
@@ -139,18 +141,14 @@ export default function HistoryPage() {
 
       {status === 'error' && (
         <div
-          className="rounded-3xl bg-[#F0A7AB]/15 border border-[#F0A7AB]/50 p-6 flex flex-wrap items-center justify-between gap-4"
+          className="rounded-3xl bg-brand-pink/15 border border-brand-pink/50 p-6 flex flex-wrap items-center justify-between gap-4"
           role="alert"
         >
           <div>
             <div className="text-sm font-bold text-slate-900">Could not load your run history</div>
             <div className="text-xs text-slate-600 mt-1">{error}</div>
           </div>
-          <button
-            type="button"
-            onClick={load}
-            className="px-5 py-2.5 rounded-2xl bg-[#1E2432] text-white font-bold text-xs"
-          >
+          <button type="button" onClick={load} className="px-5 py-2.5 rounded-2xl bg-ink text-white font-bold text-xs">
             Try again
           </button>
         </div>
@@ -158,7 +156,7 @@ export default function HistoryPage() {
 
       {status === 'ready' && list.length === 0 && (
         <div className="rounded-[32px] bg-white p-10 border border-slate-200/80 shadow-sm text-center space-y-3">
-          <div className="text-xs font-mono text-[#0B7377]">NO RUNS YET</div>
+          <div className="text-xs font-mono text-brand-teal-ink">NO RUNS YET</div>
           <p className="text-sm text-slate-600 max-w-md mx-auto">
             Finish a lap in the Breath Runner and press “Save to history” — your coins, breath sync and falls will show
             up here.
@@ -166,7 +164,7 @@ export default function HistoryPage() {
           <button
             type="button"
             onClick={() => navigate('play')}
-            className="px-6 py-3 rounded-2xl bg-gradient-to-r from-[#13A4A9] to-[#5fc0c4] text-white font-bold text-xs"
+            className="px-6 py-3 rounded-2xl bg-gradient-to-r from-brand-teal to-brand-teal-light text-white font-bold text-xs"
           >
             Start your first run
           </button>
@@ -177,9 +175,9 @@ export default function HistoryPage() {
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <Tile label="Total runs" value={stats.total} tone="text-slate-900" />
-            <Tile label="Total minutes" value={stats.minutes} tone="text-[#0B7377]" />
-            <Tile label="Best breath sync" value={stats.bestSync} tone="text-[#5D5FA0]" />
-            <Tile label="Total coins" value={stats.coins} tone="text-[#b8860b]" />
+            <Tile label="Total minutes" value={stats.minutes} tone="text-brand-teal-ink" />
+            <Tile label="Best breath sync" value={stats.bestSync} tone="text-brand-purple-ink" />
+            <Tile label="Total coins" value={stats.coins} tone="text-brand-gold" />
           </div>
 
           <div className="rounded-3xl bg-white border border-slate-200/80 shadow-sm overflow-hidden">

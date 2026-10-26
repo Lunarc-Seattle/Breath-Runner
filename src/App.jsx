@@ -20,13 +20,13 @@ function TrainerPill() {
       title={state.bleConnected ? 'Trainer connected' : 'Pair your AeroCare trainer'}
       className={`hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-2xl text-xs font-mono font-medium transition-colors ${
         state.bleConnected
-          ? 'bg-[#13A4A9]/10 text-[#0B7377] hover:bg-[#13A4A9]/20'
+          ? 'bg-brand-teal/10 text-brand-teal-ink hover:bg-brand-teal/20'
           : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
       }`}
     >
       <span
         aria-hidden="true"
-        className={`w-2 h-2 rounded-full ${state.bleConnected ? 'bg-[#0F8387]' : state.bleScanning ? 'bg-[#71739E] animate-pulse' : 'bg-slate-400'}`}
+        className={`w-2 h-2 rounded-full ${state.bleConnected ? 'bg-brand-teal-deep' : state.bleScanning ? 'bg-brand-purple-deep animate-pulse' : 'bg-slate-400'}`}
       />
       <span>{label}</span>
     </button>
@@ -47,11 +47,11 @@ function Shell({ slug }) {
             <button
               type="button"
               onClick={() => navigate('profile')}
-              className="flex items-center gap-2.5 pl-2 pr-3.5 py-1.5 rounded-2xl bg-[#8E90C6]/15 hover:bg-[#8E90C6]/25 transition-colors"
+              className="flex items-center gap-2.5 pl-2 pr-3.5 py-1.5 rounded-2xl bg-brand-purple/15 hover:bg-brand-purple/25 transition-colors"
             >
               <span
                 aria-hidden="true"
-                className="w-7 h-7 rounded-full bg-[#71739E] text-white flex items-center justify-center text-xs font-bold"
+                className="w-7 h-7 rounded-full bg-brand-purple-deep text-white flex items-center justify-center text-xs font-bold"
               >
                 XM
               </span>
@@ -63,8 +63,8 @@ function Shell({ slug }) {
 
       <div role="status" aria-live="polite" className="fixed bottom-6 right-6 z-50">
         {toast && (
-          <div className="bg-[#1E2432] text-white px-5 py-3.5 rounded-2xl shadow-xl border border-white/15 flex items-center gap-3 font-mono text-xs max-w-md">
-            <span aria-hidden="true" className="w-2.5 h-2.5 shrink-0 rounded-full bg-[#F0C754]" />
+          <div className="bg-ink text-white px-5 py-3.5 rounded-2xl shadow-xl border border-white/15 flex items-center gap-3 font-mono text-xs max-w-md">
+            <span aria-hidden="true" className="w-2.5 h-2.5 shrink-0 rounded-full bg-brand-yellow" />
             <span>{toast}</span>
           </div>
         )}

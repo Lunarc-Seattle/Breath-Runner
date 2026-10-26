@@ -9,7 +9,7 @@ export default function MapsPage() {
     <section className="space-y-6 animate-page">
       <div className="flex flex-wrap justify-between items-end gap-4">
         <div>
-          <span className="text-xs font-mono text-[#0B7377] font-semibold">
+          <span className="text-xs font-mono text-brand-teal-ink font-semibold">
             03 CHOOSE A MAP // SCENE &amp; RESISTANCE SELECTOR
           </span>
           <h2 className="text-3xl font-bold text-slate-900 mt-1">Pick a Scene &amp; Valve Level</h2>
@@ -17,7 +17,7 @@ export default function MapsPage() {
         <button
           type="button"
           onClick={() => navigate('play')}
-          className="px-6 py-3 rounded-2xl bg-[#0F8387] text-white font-bold text-xs"
+          className="px-6 py-3 rounded-2xl bg-brand-teal-deep text-white font-bold text-xs"
         >
           Play {state.lastMap.name} →
         </button>

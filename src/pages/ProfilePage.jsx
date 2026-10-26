@@ -1,5 +1,6 @@
 import { useApp } from '../app/AppContext.jsx';
 import { PDF_COLORS } from '../data/simStore.js';
+import { brand, onDeep } from '../styles/tokens.js';
 
 const SIDEBAR_LINKS = [
   { slug: 'maps', label: '🌲 Training Maps', count: '3' },
@@ -15,21 +16,21 @@ const TRAINING_MODULES = [
     title: 'Forest · Level 1 (Inspiratory Basics)',
     sub: '1.5 kPa valve • 6 modules completed',
     status: 'Completed',
-    statusColor: '#13A4A9',
+    statusColor: brand.teal.DEFAULT,
     mapId: 'MAP-FOREST-01'
   },
   {
     title: 'Sunlit Canyon · Level 2 (Dual Mode)',
     sub: '2.5 kPa valve • 8 modules completed',
     status: 'Completed',
-    statusColor: '#13A4A9',
+    statusColor: brand.teal.DEFAULT,
     mapId: 'MAP-CANYON-02'
   },
   {
     title: 'Glacier Ridge · Level 3 (Deep Alveoli)',
     sub: '3.5 kPa valve • 5 modules in progress',
     status: 'In Progress',
-    statusColor: '#8E90C6',
+    statusColor: brand.purple.DEFAULT,
     mapId: 'MAP-GLACIER-03'
   }
 ];
@@ -38,8 +39,8 @@ export default function ProfilePage() {
   const { state, navigate } = useApp();
 
   return (
-    <section className="rounded-[36px] overflow-hidden border border-slate-200/90 shadow-lg bg-[#EEF0F8] grid grid-cols-1 lg:grid-cols-12 animate-page">
-      {/* Left Purple Sidebar (Ref Image 2 Clara Martin Style using PDF #8E90C6) */}
+    <section className="rounded-[36px] overflow-hidden border border-slate-200/90 shadow-lg bg-surface-lavender grid grid-cols-1 lg:grid-cols-12 animate-page">
+      {/* Left Purple Sidebar (Ref Image 2 Clara Martin Style using the brand.purple token) */}
       <aside
         className="lg:col-span-3 p-7 text-white flex flex-col justify-between"
         style={{ backgroundColor: PDF_COLORS.purpleDeep }}
@@ -56,7 +57,7 @@ export default function ProfilePage() {
 
           <nav className="space-y-2 text-xs font-semibold">
             <div
-              className="px-4 py-3 rounded-2xl bg-white text-[#5D5FA0] flex items-center justify-between shadow-sm"
+              className="px-4 py-3 rounded-2xl bg-white text-brand-purple-ink flex items-center justify-between shadow-sm"
               aria-current="page"
             >
               <span>👤 My Profile</span>
@@ -79,12 +80,12 @@ export default function ProfilePage() {
         {/* Decorative Vase & Botanical Leaves Illustration at Bottom Left (Matching Ref Image 2) */}
         <div className="pt-8 flex justify-center">
           <svg viewBox="0 0 140 160" className="w-32 h-36" aria-hidden="true">
-            <path d="M70 95 Q45 55 35 25" stroke="#13A4A9" strokeWidth="2.5" fill="none" />
-            <path d="M70 95 Q95 50 108 20" stroke="#F0A7AB" strokeWidth="2.5" fill="none" />
-            <ellipse cx="35" cy="25" rx="10" ry="18" transform="rotate(-25 35 25)" fill="#13A4A9" />
-            <ellipse cx="108" cy="20" rx="10" ry="18" transform="rotate(25 108 20)" fill="#F0A7AB" />
-            <ellipse cx="70" cy="40" rx="11" ry="20" fill="#F0C754" />
-            <path d="M48 95 L92 95 L100 148 C100 155 40 155 40 148 Z" fill="#FFFFFF" fillOpacity="0.9" />
+            <path d="M70 95 Q45 55 35 25" stroke={brand.teal.DEFAULT} strokeWidth="2.5" fill="none" />
+            <path d="M70 95 Q95 50 108 20" stroke={brand.pink.DEFAULT} strokeWidth="2.5" fill="none" />
+            <ellipse cx="35" cy="25" rx="10" ry="18" transform="rotate(-25 35 25)" fill={brand.teal.DEFAULT} />
+            <ellipse cx="108" cy="20" rx="10" ry="18" transform="rotate(25 108 20)" fill={brand.pink.DEFAULT} />
+            <ellipse cx="70" cy="40" rx="11" ry="20" fill={brand.yellow.DEFAULT} />
+            <path d="M48 95 L92 95 L100 148 C100 155 40 155 40 148 Z" fill={onDeep} fillOpacity="0.9" />
           </svg>
         </div>
       </aside>
@@ -101,7 +102,7 @@ export default function ProfilePage() {
             <button
               type="button"
               onClick={() => navigate('home')}
-              className="px-4 py-2 rounded-full bg-[#0F8387] text-white text-xs font-bold"
+              className="px-4 py-2 rounded-full bg-brand-teal-deep text-white text-xs font-bold"
             >
               ← Welcome Page
             </button>
@@ -112,7 +113,7 @@ export default function ProfilePage() {
         <div className="rounded-3xl bg-white p-6 shadow-sm flex flex-col sm:flex-row items-center gap-6">
           <div
             className="w-28 h-28 rounded-full flex items-center justify-center text-3xl font-bold text-white shrink-0 shadow-md"
-            style={{ background: 'linear-gradient(135deg, #13A4A9, #8E90C6)' }}
+            style={{ background: `linear-gradient(135deg, ${brand.teal.DEFAULT}, ${brand.purple.DEFAULT})` }}
             aria-hidden="true"
           >
             XM
@@ -120,7 +121,7 @@ export default function ProfilePage() {
           <div className="space-y-2 flex-1 text-center sm:text-left">
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
               <h3 className="text-2xl font-bold text-slate-900">{state.userName}</h3>
-              <span className="px-3 py-0.5 rounded-full bg-[#13A4A9]/15 text-[#0B7377] text-xs font-bold">
+              <span className="px-3 py-0.5 rounded-full bg-brand-teal/15 text-brand-teal-ink text-xs font-bold">
                 Activity Log: 4.3083
               </span>
             </div>
@@ -132,7 +133,10 @@ export default function ProfilePage() {
             </div>
             <div className="pt-2 flex flex-wrap justify-center sm:justify-start gap-2">
               {PROFILE_TAGS.map(tag => (
-                <span key={tag} className="px-3 py-1 rounded-full bg-[#8E90C6]/15 text-[#5D5FA0] text-[11px] font-bold">
+                <span
+                  key={tag}
+                  className="px-3 py-1 rounded-full bg-brand-purple/15 text-brand-purple-ink text-[11px] font-bold"
+                >
                   {tag}
                 </span>
               ))}
@@ -146,11 +150,11 @@ export default function ProfilePage() {
           <div className="lg:col-span-7 rounded-3xl bg-white p-6 shadow-sm space-y-4">
             <div className="flex justify-between items-center">
               <h4 className="font-bold text-base text-slate-800">My Breathing Modules</h4>
-              <span className="text-xs font-mono text-[#0B7377]">Total: 200 min</span>
+              <span className="text-xs font-mono text-brand-teal-ink">Total: 200 min</span>
             </div>
 
             <div
-              className="space-y-3 relative before:content-[''] before:w-0.5 before:bg-[#8E90C6]/40 before:top-4 before:bottom-4 before:left-3"
+              className="space-y-3 relative before:content-[''] before:w-0.5 before:bg-brand-purple/40 before:top-4 before:bottom-4 before:left-3"
               style={{ position: 'relative' }}
             >
               {TRAINING_MODULES.map(mod => (
@@ -158,7 +162,7 @@ export default function ProfilePage() {
                   type="button"
                   key={mod.title}
                   onClick={() => navigate('play')}
-                  className="w-full text-left p-4 rounded-2xl bg-[#F4F6FA] hover:bg-[#8E90C6]/15 transition-colors cursor-pointer flex items-center justify-between"
+                  className="w-full text-left p-4 rounded-2xl bg-canvas hover:bg-brand-purple/15 transition-colors cursor-pointer flex items-center justify-between"
                 >
                   <div>
                     <div className="font-bold text-sm text-slate-800">{mod.title}</div>
@@ -186,7 +190,7 @@ export default function ProfilePage() {
                 <span>
                   Day {state.leaseUsedDays} / {state.leaseQuotaDays}
                 </span>
-                <button type="button" onClick={() => navigate('rental')} className="font-bold text-[#0B7377]">
+                <button type="button" onClick={() => navigate('rental')} className="font-bold text-brand-teal-ink">
                   Manage Lease →
                 </button>
               </div>
@@ -205,7 +209,7 @@ export default function ProfilePage() {
               <button
                 type="button"
                 onClick={() => navigate('hygiene')}
-                className="w-full py-2.5 rounded-2xl bg-[#F0A7AB] text-slate-900 font-bold text-xs mt-2"
+                className="w-full py-2.5 rounded-2xl bg-brand-pink text-slate-900 font-bold text-xs mt-2"
               >
                 Book Sterilization Slot
               </button>
