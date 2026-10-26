@@ -56,14 +56,15 @@ test('each level is harder than the one before', () => {
   assert.ok(l2.config.breathCues.length < l3.config.breathCues.length);
 });
 
-test('following a scripted level\'s breath cues collects every coin without falling', () => {
+test("following a scripted level's breath cues collects every coin without falling", () => {
   for (const id of ['MAP-CANYON-02', 'MAP-GLACIER-03']) {
     const { map, config, speed } = FOREST_LEVELS[id];
     let s = createRunnerState(map);
     let next = 0;
     let holdLeft = 0;
     while (s.lap === 1 && s.elapsed < 60) {
-      if (s.onGround && next < config.breathCues.length && s.x >= config.breathCues[next][0]) holdLeft = config.breathCues[next++][1];
+      if (s.onGround && next < config.breathCues.length && s.x >= config.breathCues[next][0])
+        holdLeft = config.breathCues[next++][1];
       s = stepRunner(s, DT, holdLeft > 0, map, config, speed);
       holdLeft -= DT;
     }

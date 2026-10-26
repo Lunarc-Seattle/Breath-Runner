@@ -7,7 +7,16 @@ const CLOSE_DELAY_MS = 260;
 
 function HouseIcon({ className }) {
   return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <path d="M3 11.5 12 4l9 7.5" />
       <path d="M5.5 10v9.5h13V10" />
       <path d="M10 19.5v-5h4v5" />
@@ -31,7 +40,11 @@ function HomeMark({ active, onClick }) {
       </span>
       <span className="hidden sm:flex flex-col items-start leading-none">
         <span className="text-sm font-bold text-slate-900">AeroCare</span>
-        <span className={`text-[10px] font-mono mt-0.5 transition-colors ${active ? 'text-[#0B7377]' : 'text-slate-500 group-hover:text-[#0B7377]'}`}>HOME</span>
+        <span
+          className={`text-[10px] font-mono mt-0.5 transition-colors ${active ? 'text-[#0B7377]' : 'text-slate-500 group-hover:text-[#0B7377]'}`}
+        >
+          HOME
+        </span>
       </span>
     </button>
   );
@@ -46,6 +59,7 @@ export function NavDrawer({ routes, currentSlug, onNavigate }) {
   const closeTimer = useRef(null);
   const triggerRef = useRef(null);
   const navRef = useRef(null);
+  const mouseOnTriggerRef = useRef(false);
   const active = routes.find(r => r.slug === currentSlug) || routes[0];
   const onHome = currentSlug === HOME_SLUG;
 
@@ -95,7 +109,11 @@ export function NavDrawer({ routes, currentSlug, onNavigate }) {
           isActive ? 'bg-[#13A4A9]/10 text-[#0B7377]' : 'text-slate-700 hover:bg-slate-100'
         }`}
       >
-        <span className="w-7 h-7 shrink-0 rounded-lg flex items-center justify-center font-mono text-[11px] text-white font-bold" style={{ backgroundColor: r.badge }} aria-hidden="true">
+        <span
+          className="w-7 h-7 shrink-0 rounded-lg flex items-center justify-center font-mono text-[11px] text-white font-bold"
+          style={{ backgroundColor: r.badge }}
+          aria-hidden="true"
+        >
           {r.code}
         </span>
         <span className="min-w-0">
@@ -114,9 +132,23 @@ export function NavDrawer({ routes, currentSlug, onNavigate }) {
         <button
           type="button"
           ref={triggerRef}
-          onMouseEnter={show}
-          onMouseLeave={hideSoon}
-          onClick={() => (open ? setOpen(false) : show())}
+          onPointerEnter={e => {
+            if (e.pointerType !== 'mouse') return;
+            mouseOnTriggerRef.current = true;
+            show();
+          }}
+          onPointerLeave={e => {
+            if (e.pointerType !== 'mouse') return;
+            mouseOnTriggerRef.current = false;
+            hideSoon();
+          }}
+          onClick={() => {
+            // With a mouse, hovering already opened the drawer: a click should keep it open, not toggle it shut.
+            // Keyboard (Enter/Space) and touch taps toggle.
+            if (mouseOnTriggerRef.current) return show();
+            if (open) setOpen(false);
+            else show();
+          }}
           aria-expanded={open}
           aria-controls="nav-drawer"
           aria-label={`Pages menu, current page ${active.code} ${active.name}`}
@@ -127,7 +159,14 @@ export function NavDrawer({ routes, currentSlug, onNavigate }) {
           <span className="w-2 h-2 rounded-full" style={{ backgroundColor: active.badge }} aria-hidden="true"></span>
           <span className={`font-mono text-xs ${open ? 'text-[#F0C754]' : 'text-slate-600'}`}>{active.code}</span>
           <span className="font-semibold hidden sm:inline">{active.name}</span>
-          <svg className={`w-3.5 h-3.5 transition-transform duration-500 ${open ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24" aria-hidden="true">
+          <svg
+            className={`w-3.5 h-3.5 transition-transform duration-500 ${open ? 'rotate-90' : ''}`}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
           </svg>
         </button>
@@ -136,11 +175,22 @@ export function NavDrawer({ routes, currentSlug, onNavigate }) {
       {createPortal(
         <>
           {/* Left-edge hover zone with a faint handle hinting that something lives there */}
-          <div className="fixed left-0 top-[72px] bottom-0 w-3 z-40 hidden md:flex items-center group" onMouseEnter={show} onMouseLeave={hideSoon} aria-hidden="true">
-            <span className={`ml-1 w-1 h-14 rounded-full bg-slate-400/40 transition-all duration-500 group-hover:h-24 group-hover:bg-[#13A4A9]/70 ${open ? 'opacity-0' : ''}`}></span>
+          <div
+            className="fixed left-0 top-[72px] bottom-0 w-3 z-40 hidden md:flex items-center group"
+            onMouseEnter={show}
+            onMouseLeave={hideSoon}
+            aria-hidden="true"
+          >
+            <span
+              className={`ml-1 w-1 h-14 rounded-full bg-slate-400/40 transition-all duration-500 group-hover:h-24 group-hover:bg-[#13A4A9]/70 ${open ? 'opacity-0' : ''}`}
+            ></span>
           </div>
 
-          <div className={`nav-scrim fixed inset-0 top-[72px] z-30 ${open ? 'is-open' : ''}`} onClick={() => setOpen(false)} {...hiddenProps}></div>
+          <div
+            className={`nav-scrim fixed inset-0 top-[72px] z-30 ${open ? 'is-open' : ''}`}
+            onClick={() => setOpen(false)}
+            {...hiddenProps}
+          ></div>
 
           <nav
             id="nav-drawer"
@@ -157,21 +207,30 @@ export function NavDrawer({ routes, currentSlug, onNavigate }) {
               aria-current={onHome ? 'page' : undefined}
               style={{ '--d': open ? '30ms' : '0ms' }}
               className={`nav-item w-full text-left p-3 rounded-2xl flex items-center gap-3 ${
-                onHome ? 'bg-gradient-to-r from-[#13A4A9] to-[#5fc0c4] text-white' : 'bg-[#13A4A9]/5 text-[#0B7377] hover:bg-[#13A4A9]/15'
+                onHome
+                  ? 'bg-gradient-to-r from-[#13A4A9] to-[#5fc0c4] text-white'
+                  : 'bg-[#13A4A9]/5 text-[#0B7377] hover:bg-[#13A4A9]/15'
               }`}
             >
-              <span className={`w-9 h-9 rounded-xl flex items-center justify-center ${onHome ? 'bg-white/20' : 'bg-[#0F8387] text-white'}`}>
+              <span
+                className={`w-9 h-9 rounded-xl flex items-center justify-center ${onHome ? 'bg-white/20' : 'bg-[#0F8387] text-white'}`}
+              >
                 <HouseIcon className="w-[18px] h-[18px]" />
               </span>
               <span>
                 <span className="block text-sm font-bold">Home</span>
-                <span className={`block text-[11px] ${onHome ? 'text-white/80' : 'text-slate-600'}`}>Today, resume &amp; pick a map</span>
+                <span className={`block text-[11px] ${onHome ? 'text-white/80' : 'text-slate-600'}`}>
+                  Today, resume &amp; pick a map
+                </span>
               </span>
             </button>
 
             {NAV_GROUPS.map(group => (
               <div key={group} className="mt-3">
-                <div className="nav-item px-3 pb-1 text-[10px] font-mono uppercase tracking-[0.18em] text-slate-500" style={{ '--d': open ? `${60 + order * 28}ms` : '0ms' }}>
+                <div
+                  className="nav-item px-3 pb-1 text-[10px] font-mono uppercase tracking-[0.18em] text-slate-500"
+                  style={{ '--d': open ? `${60 + order * 28}ms` : '0ms' }}
+                >
                   {group}
                 </div>
                 {routes.filter(r => r.group === group).map(item)}

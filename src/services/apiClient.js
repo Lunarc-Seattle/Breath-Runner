@@ -29,7 +29,7 @@ export async function detectBackend() {
     const res = await fetch(`${API_BASE}/health`, { signal: controller.signal });
     clearTimeout(timeout);
     if (res.ok && (await res.json()).status === 'ok') return 'server';
-  } catch (_) {
+  } catch {
     // No API reachable: static hosting.
   }
   return 'local';
@@ -49,7 +49,9 @@ export function createSessionRepository(mode) {
       mode,
       list: async () => (await request('/sessions')).sessions,
       add: async session => (await request('/sessions', { method: 'POST', body: JSON.stringify(session) })).session,
-      clear: async () => { await request('/sessions', { method: 'DELETE' }); }
+      clear: async () => {
+        await request('/sessions', { method: 'DELETE' });
+      }
     };
   }
 

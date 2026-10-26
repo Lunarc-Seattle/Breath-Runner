@@ -11,9 +11,27 @@ const SIDEBAR_LINKS = [
 const PROFILE_TAGS = ['BLE 5.0', 'FVC 3.89L', '200 Min', 'Lv.1 Crown', 'Lv.2 Medal'];
 
 const TRAINING_MODULES = [
-  { title: 'Forest · Level 1 (Inspiratory Basics)', sub: '1.5 kPa valve • 6 modules completed', status: 'Completed', statusColor: '#13A4A9', mapId: 'MAP-FOREST-01' },
-  { title: 'Sunlit Canyon · Level 2 (Dual Mode)', sub: '2.5 kPa valve • 8 modules completed', status: 'Completed', statusColor: '#13A4A9', mapId: 'MAP-CANYON-02' },
-  { title: 'Glacier Ridge · Level 3 (Deep Alveoli)', sub: '3.5 kPa valve • 5 modules in progress', status: 'In Progress', statusColor: '#8E90C6', mapId: 'MAP-GLACIER-03' }
+  {
+    title: 'Forest · Level 1 (Inspiratory Basics)',
+    sub: '1.5 kPa valve • 6 modules completed',
+    status: 'Completed',
+    statusColor: '#13A4A9',
+    mapId: 'MAP-FOREST-01'
+  },
+  {
+    title: 'Sunlit Canyon · Level 2 (Dual Mode)',
+    sub: '2.5 kPa valve • 8 modules completed',
+    status: 'Completed',
+    statusColor: '#13A4A9',
+    mapId: 'MAP-CANYON-02'
+  },
+  {
+    title: 'Glacier Ridge · Level 3 (Deep Alveoli)',
+    sub: '3.5 kPa valve • 5 modules in progress',
+    status: 'In Progress',
+    statusColor: '#8E90C6',
+    mapId: 'MAP-GLACIER-03'
+  }
 ];
 
 export default function ProfilePage() {
@@ -21,17 +39,26 @@ export default function ProfilePage() {
 
   return (
     <section className="rounded-[36px] overflow-hidden border border-slate-200/90 shadow-lg bg-[#EEF0F8] grid grid-cols-1 lg:grid-cols-12 animate-page">
-
       {/* Left Purple Sidebar (Ref Image 2 Clara Martin Style using PDF #8E90C6) */}
-      <aside className="lg:col-span-3 p-7 text-white flex flex-col justify-between" style={{ backgroundColor: PDF_COLORS.purpleDeep }}>
+      <aside
+        className="lg:col-span-3 p-7 text-white flex flex-col justify-between"
+        style={{ backgroundColor: PDF_COLORS.purpleDeep }}
+      >
         <div className="space-y-6">
           <div>
             <div className="text-xs opacity-80">Dashboard</div>
-            <div className="text-xl font-bold leading-tight mt-0.5">Patient Profile<br />Lung Rehab</div>
+            <div className="text-xl font-bold leading-tight mt-0.5">
+              Patient Profile
+              <br />
+              Lung Rehab
+            </div>
           </div>
 
           <nav className="space-y-2 text-xs font-semibold">
-            <div className="px-4 py-3 rounded-2xl bg-white text-[#5D5FA0] flex items-center justify-between shadow-sm" aria-current="page">
+            <div
+              className="px-4 py-3 rounded-2xl bg-white text-[#5D5FA0] flex items-center justify-between shadow-sm"
+              aria-current="page"
+            >
               <span>👤 My Profile</span>
               <span aria-hidden="true">●</span>
             </div>
@@ -64,7 +91,6 @@ export default function ProfilePage() {
 
       {/* Right 9 Cols Main Profile Content */}
       <div className="lg:col-span-9 p-6 lg:p-8 space-y-6">
-
         {/* Top Search & Title Bar */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h2 className="text-2xl font-bold text-slate-800">My Profile & Progress</h2>
@@ -72,7 +98,11 @@ export default function ProfilePage() {
             <div className="px-4 py-2 rounded-full bg-white text-xs text-slate-500 border border-slate-200 flex items-center gap-2">
               <span>🔍 Search records, badges...</span>
             </div>
-            <button type="button" onClick={() => navigate('home')} className="px-4 py-2 rounded-full bg-[#0F8387] text-white text-xs font-bold">
+            <button
+              type="button"
+              onClick={() => navigate('home')}
+              className="px-4 py-2 rounded-full bg-[#0F8387] text-white text-xs font-bold"
+            >
               ← Welcome Page
             </button>
           </div>
@@ -80,13 +110,19 @@ export default function ProfilePage() {
 
         {/* Profile Header Card (Avatar + Metadata + Social/Hospital Badges) */}
         <div className="rounded-3xl bg-white p-6 shadow-sm flex flex-col sm:flex-row items-center gap-6">
-          <div className="w-28 h-28 rounded-full flex items-center justify-center text-3xl font-bold text-white shrink-0 shadow-md" style={{ background: 'linear-gradient(135deg, #13A4A9, #8E90C6)' }} aria-hidden="true">
+          <div
+            className="w-28 h-28 rounded-full flex items-center justify-center text-3xl font-bold text-white shrink-0 shadow-md"
+            style={{ background: 'linear-gradient(135deg, #13A4A9, #8E90C6)' }}
+            aria-hidden="true"
+          >
             XM
           </div>
           <div className="space-y-2 flex-1 text-center sm:text-left">
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
               <h3 className="text-2xl font-bold text-slate-900">{state.userName}</h3>
-              <span className="px-3 py-0.5 rounded-full bg-[#13A4A9]/15 text-[#0B7377] text-xs font-bold">Activity Log: 4.3083</span>
+              <span className="px-3 py-0.5 rounded-full bg-[#13A4A9]/15 text-[#0B7377] text-xs font-bold">
+                Activity Log: 4.3083
+              </span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-xs text-slate-600">
               <div>📅 Enrolled: {state.enrolledDate}</div>
@@ -106,7 +142,6 @@ export default function ProfilePage() {
 
         {/* Middle Grid: Training Modules Timeline (Left) + Rental Payment & Plan (Right) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
           {/* My Training Modules (Mes formations style) */}
           <div className="lg:col-span-7 rounded-3xl bg-white p-6 shadow-sm space-y-4">
             <div className="flex justify-between items-center">
@@ -114,7 +149,10 @@ export default function ProfilePage() {
               <span className="text-xs font-mono text-[#0B7377]">Total: 200 min</span>
             </div>
 
-            <div className="space-y-3 relative before:content-[''] before:w-0.5 before:bg-[#8E90C6]/40 before:top-4 before:bottom-4 before:left-3" style={{ position: 'relative' }}>
+            <div
+              className="space-y-3 relative before:content-[''] before:w-0.5 before:bg-[#8E90C6]/40 before:top-4 before:bottom-4 before:left-3"
+              style={{ position: 'relative' }}
+            >
               {TRAINING_MODULES.map(mod => (
                 <button
                   type="button"
@@ -126,7 +164,10 @@ export default function ProfilePage() {
                     <div className="font-bold text-sm text-slate-800">{mod.title}</div>
                     <div className="text-xs text-slate-600">{mod.sub}</div>
                   </div>
-                  <span className="px-3 py-1 rounded-full text-white text-[10px] font-bold" style={{ backgroundColor: mod.statusColor }}>
+                  <span
+                    className="px-3 py-1 rounded-full text-white text-[10px] font-bold"
+                    style={{ backgroundColor: mod.statusColor }}
+                  >
                     {mod.status}
                   </span>
                 </button>
@@ -142,12 +183,19 @@ export default function ProfilePage() {
                 Hospital Lease Card •••• 9942 (Deposit ¥228)
               </div>
               <div className="flex items-center justify-between text-xs text-slate-600">
-                <span>Day {state.leaseUsedDays} / {state.leaseQuotaDays}</span>
-                <button type="button" onClick={() => navigate('rental')} className="font-bold text-[#0B7377]">Manage Lease →</button>
+                <span>
+                  Day {state.leaseUsedDays} / {state.leaseQuotaDays}
+                </span>
+                <button type="button" onClick={() => navigate('rental')} className="font-bold text-[#0B7377]">
+                  Manage Lease →
+                </button>
               </div>
             </div>
 
-            <div className="rounded-3xl p-6 text-white space-y-3 shadow-sm" style={{ backgroundColor: PDF_COLORS.tealDeep }}>
+            <div
+              className="rounded-3xl p-6 text-white space-y-3 shadow-sm"
+              style={{ backgroundColor: PDF_COLORS.tealDeep }}
+            >
               <h4 className="font-bold text-base">Hospital Telehealth Plan</h4>
               <ul className="text-xs space-y-1.5 opacity-95">
                 <li>✓ Real-time 1,000Hz spirometry cloud sync</li>
@@ -170,20 +218,25 @@ export default function ProfilePage() {
           <h4 className="font-bold text-base text-slate-800">Recent Recovery Activity</h4>
           <div className="divide-y divide-slate-100 text-xs">
             <div className="py-2.5 flex justify-between items-center">
-              <span>🫁 <strong>Spirometry FVC 3.89L</strong> recorded in Digital Lab</span>
+              <span>
+                🫁 <strong>Spirometry FVC 3.89L</strong> recorded in Digital Lab
+              </span>
               <span className="text-slate-500">Today • &gt;</span>
             </div>
             <div className="py-2.5 flex justify-between items-center">
-              <span>🌲 <strong>Forest Level 1</strong> breath runner session completed (+320 coins)</span>
+              <span>
+                🌲 <strong>Forest Level 1</strong> breath runner session completed (+320 coins)
+              </span>
               <span className="text-slate-500">Yesterday • &gt;</span>
             </div>
             <div className="py-2.5 flex justify-between items-center">
-              <span>🏅 <strong>Lv.2 Endurance Medal</strong> unlocked (200 total training minutes)</span>
+              <span>
+                🏅 <strong>Lv.2 Endurance Medal</strong> unlocked (200 total training minutes)
+              </span>
               <span className="text-slate-500">2 days ago • &gt;</span>
             </div>
           </div>
         </div>
-
       </div>
     </section>
   );

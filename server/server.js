@@ -7,8 +7,7 @@ import { createApp } from './app.js';
 import { createSessionRepository } from './models/sessionRepository.js';
 
 const PORT = Number(process.env.PORT) || 4000;
-const DATA_FILE = process.env.DATA_FILE
-  || resolve(dirname(fileURLToPath(import.meta.url)), 'data', 'sessions.json');
+const DATA_FILE = process.env.DATA_FILE || resolve(dirname(fileURLToPath(import.meta.url)), 'data', 'sessions.json');
 
 const repository = await createSessionRepository({ filePath: DATA_FILE });
 const app = createApp({ repository });

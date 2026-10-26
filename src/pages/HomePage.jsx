@@ -9,22 +9,33 @@ export default function HomePage() {
     <section className="space-y-8 animate-page">
       {/* Hero Greeting & Inline Bluetooth Pairing Card */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
         {/* Left 8 Cols: Warm Patient Greeting & "Resume or Pick Map?" Prompt */}
         <div className="lg:col-span-8 rounded-[32px] bg-white p-8 lg:p-10 border border-slate-200/80 shadow-sm flex flex-col justify-between relative overflow-hidden">
           {/* Decorative PDF Palette Blobs */}
-          <div aria-hidden="true" className=" -right-12 -top-12 w-48 h-48 rounded-full opacity-20 pointer-events-none" style={{ backgroundColor: PDF_COLORS.purple, position: 'absolute' }}></div>
-          <div aria-hidden="true" className=" right-24 -bottom-16 w-40 h-40 rounded-full opacity-20 pointer-events-none" style={{ backgroundColor: PDF_COLORS.yellow, position: 'absolute' }}></div>
+          <div
+            aria-hidden="true"
+            className=" -right-12 -top-12 w-48 h-48 rounded-full opacity-20 pointer-events-none"
+            style={{ backgroundColor: PDF_COLORS.purple, position: 'absolute' }}
+          ></div>
+          <div
+            aria-hidden="true"
+            className=" right-24 -bottom-16 w-40 h-40 rounded-full opacity-20 pointer-events-none"
+            style={{ backgroundColor: PDF_COLORS.yellow, position: 'absolute' }}
+          ></div>
 
           <div className="space-y-4 relative z-10">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold" style={{ backgroundColor: '#13A4A918', color: PDF_COLORS.tealInk }}>
+            <div
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold"
+              style={{ backgroundColor: '#13A4A918', color: PDF_COLORS.tealInk }}
+            >
               <span>🌿 Daily Lung Recovery Companion</span>
               <span aria-hidden="true">•</span>
               <span>Day 18 Streak</span>
             </div>
 
             <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-slate-900 leading-tight">
-              Hi, {state.userName}! 👋<br />
+              Hi, {state.userName}! 👋
+              <br />
               <span className="font-normal text-slate-600 text-2xl sm:text-3xl">
                 What map would you like to practice today, or resume your last session?
               </span>
@@ -34,7 +45,10 @@ export default function HomePage() {
           {/* Primary Action Cards: Resume Last Session VS Choose New Map */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-8 relative z-10">
             {/* Option A: Resume Last Session */}
-            <div className="p-5 rounded-3xl text-white flex flex-col justify-between shadow-md" style={{ backgroundColor: PDF_COLORS.tealDeep }}>
+            <div
+              className="p-5 rounded-3xl text-white flex flex-col justify-between shadow-md"
+              style={{ backgroundColor: PDF_COLORS.tealDeep }}
+            >
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs font-mono">
                   <span>RESUME LAST PRACTICE</span>
@@ -58,12 +72,12 @@ export default function HomePage() {
             <div className="p-5 rounded-3xl bg-[#8E90C6]/15 border border-[#8E90C6]/30 flex flex-col justify-between">
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs font-mono text-[#5D5FA0] font-semibold">
-                  <span>TODAY'S CHECKUP</span>
+                  <span>TODAY&apos;S CHECKUP</span>
                   <span>PEAK: 3.89 L</span>
                 </div>
                 <div className="text-2xl font-bold text-slate-800">Blow a Lung Test First?</div>
                 <div className="text-xs text-slate-600">
-                  Measure today's FVC &amp; FEV1 before jumping into a new map scene.
+                  Measure today&apos;s FVC &amp; FEV1 before jumping into a new map scene.
                 </div>
               </div>
               <div className="mt-5 flex gap-2">
@@ -92,7 +106,13 @@ export default function HomePage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-xs font-mono uppercase tracking-wider text-slate-500">Bluetooth Trainer</span>
-              <span className="px-3 py-1 rounded-full text-xs font-bold" style={{ backgroundColor: state.bleConnected ? '#13A4A918' : state.bleScanning ? '#8E90C620' : '#F0A7AB30', color: state.bleConnected ? PDF_COLORS.tealInk : state.bleScanning ? '#5D5FA0' : '#B23A26' }}>
+              <span
+                className="px-3 py-1 rounded-full text-xs font-bold"
+                style={{
+                  backgroundColor: state.bleConnected ? '#13A4A918' : state.bleScanning ? '#8E90C620' : '#F0A7AB30',
+                  color: state.bleConnected ? PDF_COLORS.tealInk : state.bleScanning ? '#5D5FA0' : '#B23A26'
+                }}
+              >
                 {state.bleScanning ? 'SEARCHING…' : state.bleConnected ? '● CONNECTED' : 'NOT CONNECTED'}
               </span>
             </div>
@@ -102,7 +122,12 @@ export default function HomePage() {
               <svg viewBox="0 0 240 165" className="w-48 h-36" aria-hidden="true">
                 <circle cx="120" cy="82" r="68" fill="#8E90C6" fillOpacity="0.18" />
                 <circle cx="165" cy="115" r="35" fill="#F0C754" fillOpacity="0.35" />
-                <path d="M85 60 C85 42 145 42 160 60 L182 60 L182 82 L158 85 L138 142 C134 154 110 154 108 140 L102 88 L85 78 Z" fill="#F0A7AB" stroke="#1E2432" strokeWidth="1.5" />
+                <path
+                  d="M85 60 C85 42 145 42 160 60 L182 60 L182 82 L158 85 L138 142 C134 154 110 154 108 140 L102 88 L85 78 Z"
+                  fill="#F0A7AB"
+                  stroke="#1E2432"
+                  strokeWidth="1.5"
+                />
                 <rect x="178" y="64" width="16" height="14" rx="3" fill="#13A4A9" />
               </svg>
             </div>
@@ -114,7 +139,9 @@ export default function HomePage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-600">Battery Level</span>
-                <span className="font-mono font-bold text-[#0B7377]">{state.batteryPct !== null ? `${state.batteryPct}%` : '—'}</span>
+                <span className="font-mono font-bold text-[#0B7377]">
+                  {state.batteryPct !== null ? `${state.batteryPct}%` : '—'}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-600">Mouthpiece Status</span>
@@ -123,13 +150,20 @@ export default function HomePage() {
             </div>
 
             {state.bleError && !state.bleConnected && (
-              <div role="alert" className="p-3.5 rounded-2xl bg-[#F0C754]/15 border border-[#F0C754]/50 text-xs text-slate-700 leading-relaxed">
+              <div
+                role="alert"
+                className="p-3.5 rounded-2xl bg-[#F0C754]/15 border border-[#F0C754]/50 text-xs text-slate-700 leading-relaxed"
+              >
                 <div className="font-bold text-[#8a6500] mb-0.5">Trainer not found</div>
                 {state.bleError}
               </div>
             )}
             {!state.bleConnected && (
-              <button type="button" onClick={() => navigate('play')} className="text-xs font-semibold text-[#0B7377] hover:underline">
+              <button
+                type="button"
+                onClick={() => navigate('play')}
+                className="text-xs font-semibold text-[#0B7377] hover:underline"
+              >
                 No trainer? Play Forest · Level 1 in free-trial mode →
               </button>
             )}
@@ -142,7 +176,11 @@ export default function HomePage() {
             className="mt-4 w-full py-3.5 rounded-2xl font-bold text-xs uppercase tracking-wider text-white transition-all shadow-sm"
             style={{ backgroundColor: state.bleScanning ? PDF_COLORS.purpleDeep : '#1E2432' }}
           >
-            {state.bleScanning ? 'Searching for trainer…' : state.bleConnected ? 'Disconnect trainer' : 'Pair Bluetooth trainer'}
+            {state.bleScanning
+              ? 'Searching for trainer…'
+              : state.bleConnected
+                ? 'Disconnect trainer'
+                : 'Pair Bluetooth trainer'}
           </button>
         </div>
       </div>
@@ -152,9 +190,15 @@ export default function HomePage() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold text-slate-900">Pick a Map to Practice Today</h2>
-            <p className="text-xs text-slate-600">Click any scene below to load its resistance valve profile and start training</p>
+            <p className="text-xs text-slate-600">
+              Click any scene below to load its resistance valve profile and start training
+            </p>
           </div>
-          <button type="button" onClick={() => navigate('maps')} className="text-xs font-semibold text-[#0B7377] hover:underline">
+          <button
+            type="button"
+            onClick={() => navigate('maps')}
+            className="text-xs font-semibold text-[#0B7377] hover:underline"
+          >
             View Full Map Catalog (03) →
           </button>
         </div>

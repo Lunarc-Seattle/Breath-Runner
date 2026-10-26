@@ -43,15 +43,70 @@ export const INITIAL_SIM_STATE = {
     stars: 3
   },
   maps: [
-    { id: 'MAP-FOREST-01', name: 'Forest · Level 1', kpa: 1.5, targetL: 3.5, color: '#13A4A9', unlocked: true, tag: 'Recommended Today', desc: 'Misty alpine pine forest. Gentle inspiratory flow to expand lower alveoli.' },
-    { id: 'MAP-CANYON-02', name: 'Sunlit Canyon · Level 2', kpa: 2.5, targetL: 4.0, color: '#F0C754', unlocked: true, tag: 'Endurance Boost', desc: 'Moderate inhale & exhale resistance to strengthen diaphragm muscles.' },
-    { id: 'MAP-GLACIER-03', name: 'Glacier Ridge · Level 3', kpa: 3.5, targetL: 4.5, color: '#8E90C6', unlocked: true, tag: 'Advanced Control', desc: 'High-pressure stability challenge for deep pulmonary recovery.' }
+    {
+      id: 'MAP-FOREST-01',
+      name: 'Forest · Level 1',
+      kpa: 1.5,
+      targetL: 3.5,
+      color: '#13A4A9',
+      unlocked: true,
+      tag: 'Recommended Today',
+      desc: 'Misty alpine pine forest. Gentle inspiratory flow to expand lower alveoli.'
+    },
+    {
+      id: 'MAP-CANYON-02',
+      name: 'Sunlit Canyon · Level 2',
+      kpa: 2.5,
+      targetL: 4.0,
+      color: '#F0C754',
+      unlocked: true,
+      tag: 'Endurance Boost',
+      desc: 'Moderate inhale & exhale resistance to strengthen diaphragm muscles.'
+    },
+    {
+      id: 'MAP-GLACIER-03',
+      name: 'Glacier Ridge · Level 3',
+      kpa: 3.5,
+      targetL: 4.5,
+      color: '#8E90C6',
+      unlocked: true,
+      tag: 'Advanced Control',
+      desc: 'High-pressure stability challenge for deep pulmonary recovery.'
+    }
   ],
   scheduleTasks: [
-    { id: 'TSK-1', time: '08:00 AM', title: 'Morning Warm-Up Breath', detail: '10 min • Forest Level 1 (1.5 kPa)', highlight: true, done: true },
-    { id: 'TSK-2', time: '09:30 AM', title: 'Digital Spirometry Check', detail: '3 forced expiratory maneuvers (FVC & FEV1)', highlight: true, done: true },
-    { id: 'TSK-3', time: '02:00 PM', title: 'Co-Op Session with Ali', detail: '15 min synchronized rhythm training', highlight: false, done: false },
-    { id: 'TSK-4', time: '07:30 PM', title: 'Mouthpiece UV-C & Rinse', detail: 'Clean silicone mouthpiece after evening session', highlight: false, done: false }
+    {
+      id: 'TSK-1',
+      time: '08:00 AM',
+      title: 'Morning Warm-Up Breath',
+      detail: '10 min • Forest Level 1 (1.5 kPa)',
+      highlight: true,
+      done: true
+    },
+    {
+      id: 'TSK-2',
+      time: '09:30 AM',
+      title: 'Digital Spirometry Check',
+      detail: '3 forced expiratory maneuvers (FVC & FEV1)',
+      highlight: true,
+      done: true
+    },
+    {
+      id: 'TSK-3',
+      time: '02:00 PM',
+      title: 'Co-Op Session with Ali',
+      detail: '15 min synchronized rhythm training',
+      highlight: false,
+      done: false
+    },
+    {
+      id: 'TSK-4',
+      time: '07:30 PM',
+      title: 'Mouthpiece UV-C & Rinse',
+      detail: 'Clean silicone mouthpiece after evening session',
+      highlight: false,
+      done: false
+    }
   ],
   spirometryLogs: [
     { id: 'TEST-101', date: 'Oct 19', fvc: 3.18, fev1: 2.61, pef: 402, ratio: '82.1%' },

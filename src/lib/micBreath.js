@@ -8,10 +8,10 @@
  */
 
 export function createBreathDetector({
-  calibrateSec = 1.2,  // listen to the room first
-  onRatio = 2.6,       // start when level > floor x onRatio ...
-  offRatio = 1.7,      // ... stop when it falls below floor x offRatio (hysteresis)
-  minDelta = 0.012,    // and always at least this far above the floor
+  calibrateSec = 1.2, // listen to the room first
+  onRatio = 2.6, // start when level > floor x onRatio ...
+  offRatio = 1.7, // ... stop when it falls below floor x offRatio (hysteresis)
+  minDelta = 0.012, // and always at least this far above the floor
   minFloor = 0.003
 } = {}) {
   let elapsed = 0;

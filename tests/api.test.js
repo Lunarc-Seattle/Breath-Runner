@@ -22,11 +22,12 @@ after(async () => {
   await rm(dir, { recursive: true, force: true });
 });
 
-const post = body => fetch(`${base}/sessions`, {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: typeof body === 'string' ? body : JSON.stringify(body)
-});
+const post = body =>
+  fetch(`${base}/sessions`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: typeof body === 'string' ? body : JSON.stringify(body)
+  });
 
 test('health endpoint', async () => {
   const res = await fetch(`${base}/health`);
@@ -35,7 +36,13 @@ test('health endpoint', async () => {
 });
 
 test('creates, lists, persists and clears sessions', async () => {
-  const res = await post({ patternId: 'box', patternName: 'Box Breathing', rounds: 6, durationSec: 96, completed: true });
+  const res = await post({
+    patternId: 'box',
+    patternName: 'Box Breathing',
+    rounds: 6,
+    durationSec: 96,
+    completed: true
+  });
   assert.equal(res.status, 201);
   const { session } = await res.json();
   assert.ok(session.id);
@@ -88,11 +95,25 @@ test('server generates ids: a client id cannot overwrite another record', async 
 });
 
 test('stores Breath Runner results and rejects impossible ones', async () => {
-  const run = { patternId: 'MAP-FOREST-01', patternName: 'Forest · Level 1', rounds: 1, durationSec: 30, coins: 24, totalCoins: 30, syncPct: 71, falls: 2 };
+  const run = {
+    patternId: 'MAP-FOREST-01',
+    patternName: 'Forest · Level 1',
+    rounds: 1,
+    durationSec: 30,
+    coins: 24,
+    totalCoins: 30,
+    syncPct: 71,
+    falls: 2
+  };
   const { session } = await (await post(run)).json();
   assert.equal(session.coins, 24);
   assert.equal(session.syncPct, 71);
-  for (const bad of [{ syncPct: 140 }, { falls: -1 }, { coins: 500, totalCoins: 30 }, { completedAt: new Date(Date.now() + 864e5).toISOString() }]) {
+  for (const bad of [
+    { syncPct: 140 },
+    { falls: -1 },
+    { coins: 500, totalCoins: 30 },
+    { completedAt: new Date(Date.now() + 864e5).toISOString() }
+  ]) {
     assert.equal((await post({ ...run, ...bad })).status, 400, JSON.stringify(bad));
   }
   await fetch(`${base}/sessions`, { method: 'DELETE' });

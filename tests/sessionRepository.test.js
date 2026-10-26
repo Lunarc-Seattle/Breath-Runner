@@ -21,7 +21,10 @@ function fakeFs() {
       }
       files.set(p, data);
     },
-    rename: async (from, to) => { files.set(to, files.get(from)); files.delete(from); },
+    rename: async (from, to) => {
+      files.set(to, files.get(from));
+      files.delete(from);
+    },
     mkdir: async () => {}
   };
   return fs;

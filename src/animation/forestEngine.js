@@ -17,7 +17,10 @@ const RUNNER_H = FOREST_MAP.runner.h;
 // Difficulty (coin layout, pace, lung size) lives in src/core/forestLevels.ts.
 export const MAP_THEMES = {
   'MAP-FOREST-01': { filter: 'none', mist: 'rgba(246,233,223,0.32)' },
-  'MAP-CANYON-02': { filter: 'sepia(0.55) saturate(1.7) hue-rotate(-30deg) brightness(1.03)', mist: 'rgba(255,214,170,0.3)' },
+  'MAP-CANYON-02': {
+    filter: 'sepia(0.55) saturate(1.7) hue-rotate(-30deg) brightness(1.03)',
+    mist: 'rgba(255,214,170,0.3)'
+  },
   'MAP-GLACIER-03': { filter: 'saturate(0.5) brightness(1.14) hue-rotate(14deg)', mist: 'rgba(235,245,255,0.42)' }
 };
 
@@ -53,7 +56,9 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
   // Gameplay (runner, arrow, coins, particles) is unchanged.
   const motionQuery = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
   let reducedMotion = !!motionQuery?.matches;
-  const onMotionChange = e => { reducedMotion = e.matches; };
+  const onMotionChange = e => {
+    reducedMotion = e.matches;
+  };
   motionQuery?.addEventListener?.('change', onMotionChange);
 
   // Gradients are built once at the origin and positioned with translate.
@@ -89,7 +94,11 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
   const particles = [];
   const dust = [];
   const mist = Array.from({ length: 6 }, (_, i) => ({
-    x: (i / 6) * W, y: 380 + (i % 3) * 120, w: 520 + (i % 2) * 260, h: 46 + (i % 3) * 18, v: 8 + (i % 3) * 5
+    x: (i / 6) * W,
+    y: 380 + (i % 3) * 120,
+    w: 520 + (i % 2) * 260,
+    h: 46 + (i % 3) * 18,
+    v: 8 + (i % 3) * 5
   }));
   const birds = [
     { x: 300, y: 250, s: 0.9, v: 34, p: 0 },
@@ -97,8 +106,11 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
     { x: 2000, y: 300, s: 0.6, v: 30, p: 3.1 }
   ];
   const sparks = Array.from({ length: 36 }, () => ({
-    x: Math.random() * W, y: 520 + Math.random() * 520, r: 1.6 + Math.random() * 2.6,
-    v: 6 + Math.random() * 14, p: Math.random() * Math.PI * 2
+    x: Math.random() * W,
+    y: 520 + Math.random() * 520,
+    r: 1.6 + Math.random() * 2.6,
+    v: 6 + Math.random() * 14,
+    p: Math.random() * Math.PI * 2
   }));
 
   function resize() {
@@ -120,7 +132,14 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
     for (let k = 0; k < 14; k++) {
       const a = (Math.PI * 2 * k) / 14;
       const v = 90 + Math.random() * 120;
-      particles.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 40, life: 1, color: k % 2 ? '#fbb03b' : '#fde047' });
+      particles.push({
+        x,
+        y,
+        vx: Math.cos(a) * v,
+        vy: Math.sin(a) * v - 40,
+        life: 1,
+        color: k % 2 ? '#fbb03b' : '#fde047'
+      });
     }
     particles.push({ x, y: y - 20, vx: 0, vy: -70, life: 1.2, text: '+1' });
   }
@@ -130,10 +149,25 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
       if (e.type === 'coin') spawnCoinBurst(e.x, e.y);
       if (e.type === 'land') {
         landSquash = 1;
-        for (let k = 0; k < 6; k++) dust.push({ x: state.x - 10 + k * 4, y: state.y, vx: -40 - Math.random() * 60, vy: -20 - Math.random() * 30, life: 0.7 });
+        for (let k = 0; k < 6; k++)
+          dust.push({
+            x: state.x - 10 + k * 4,
+            y: state.y,
+            vx: -40 - Math.random() * 60,
+            vy: -20 - Math.random() * 30,
+            life: 0.7
+          });
       }
       if (e.type === 'fall') {
-        for (let k = 0; k < 18; k++) particles.push({ x: e.x, y: e.y - 60, vx: (Math.random() - 0.5) * 220, vy: -Math.random() * 200, life: 1, color: '#7accf3' });
+        for (let k = 0; k < 18; k++)
+          particles.push({
+            x: e.x,
+            y: e.y - 60,
+            vx: (Math.random() - 0.5) * 220,
+            vy: -Math.random() * 200,
+            life: 1,
+            color: '#7accf3'
+          });
       }
       if (onEvent) onEvent(e, snapshot());
     }
@@ -165,7 +199,13 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
       state = stepRunner(state, dt, holding, level.map, level.config, speedMul * level.speed);
       handleEvents(state.events);
       if (state.onGround && !state.respawnSec && Math.random() < dt * 9) {
-        dust.push({ x: state.x - 18, y: state.y, vx: -30 - Math.random() * 40, vy: -10 - Math.random() * 20, life: 0.5 });
+        dust.push({
+          x: state.x - 18,
+          y: state.y,
+          vx: -30 - Math.random() * 40,
+          vy: -10 - Math.random() * 20,
+          life: 0.5
+        });
       }
     }
     landSquash = Math.max(0, landSquash - dt * 4);
@@ -176,18 +216,35 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
     if (Math.abs(target - camX) > visW) camX = target; // lap restart: cut, don't sweep back
 
     if (!reducedMotion) {
-      mist.forEach(m => { m.x += m.v * dt; if (m.x > W + m.w) m.x = -m.w; });
-      birds.forEach(b => { b.x += b.v * dt; if (b.x > W + 80) b.x = -80; });
-      sparks.forEach(s => { s.y -= s.v * dt; if (s.y < 480) { s.y = 1100; s.x = Math.random() * W; } });
+      mist.forEach(m => {
+        m.x += m.v * dt;
+        if (m.x > W + m.w) m.x = -m.w;
+      });
+      birds.forEach(b => {
+        b.x += b.v * dt;
+        if (b.x > W + 80) b.x = -80;
+      });
+      sparks.forEach(s => {
+        s.y -= s.v * dt;
+        if (s.y < 480) {
+          s.y = 1100;
+          s.x = Math.random() * W;
+        }
+      });
     }
     for (let i = particles.length - 1; i >= 0; i--) {
       const p = particles[i];
-      p.x += p.vx * dt; p.y += p.vy * dt; p.vy += (p.text ? 0 : 300) * dt; p.life -= dt * 1.5;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.vy += (p.text ? 0 : 300) * dt;
+      p.life -= dt * 1.5;
       if (p.life <= 0) particles.splice(i, 1);
     }
     for (let i = dust.length - 1; i >= 0; i--) {
       const d = dust[i];
-      d.x += d.vx * dt; d.y += d.vy * dt; d.life -= dt * 1.6;
+      d.x += d.vx * dt;
+      d.y += d.vy * dt;
+      d.life -= dt * 1.6;
       if (d.life <= 0) dust.splice(i, 1);
     }
   }
@@ -273,7 +330,8 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
     ctx.rotate(angle);
     ctx.shadowColor = 'rgba(250,204,21,0.9)';
     ctx.shadowBlur = inhale ? 26 : 14;
-    if (sprites.arrow.complete && sprites.arrow.naturalWidth) ctx.drawImage(sprites.arrow, -size / 2, -size / 2, size, size);
+    if (sprites.arrow.complete && sprites.arrow.naturalWidth)
+      ctx.drawImage(sprites.arrow, -size / 2, -size / 2, size, size);
     ctx.restore();
   }
 
@@ -392,9 +450,16 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
   document.addEventListener('visibilitychange', onVisibility);
 
   return {
-    setHolding(value) { holding = value; },
-    setRunning(value) { running = value; if (onHud) onHud(snapshot()); },
-    setSpeed(value) { speedMul = value; },
+    setHolding(value) {
+      holding = value;
+    },
+    setRunning(value) {
+      running = value;
+      if (onHud) onHud(snapshot());
+    },
+    setSpeed(value) {
+      speedMul = value;
+    },
     setMap(id) {
       const nextTheme = MAP_THEMES[id] || MAP_THEMES['MAP-FOREST-01'];
       if (nextTheme !== theme) applyTheme(nextTheme);

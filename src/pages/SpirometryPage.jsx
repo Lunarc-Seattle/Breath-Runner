@@ -30,7 +30,9 @@ export default function SpirometryPage() {
     <section className="space-y-6 animate-page">
       <div className="flex flex-wrap justify-between items-end gap-4">
         <div>
-          <span className="text-xs font-mono text-[#5D5FA0] font-semibold">05 SPIROMETRY LAB // LUNG CAPACITY TEST</span>
+          <span className="text-xs font-mono text-[#5D5FA0] font-semibold">
+            05 SPIROMETRY LAB // LUNG CAPACITY TEST
+          </span>
           <h2 className="text-3xl font-bold text-slate-900">Digital Lung-Capacity &amp; Flow Analyzer</h2>
         </div>
         <button
@@ -65,7 +67,9 @@ export default function SpirometryPage() {
           <div className="text-xs font-mono text-slate-500">RECENT SPIROMETRY LOGS</div>
           {state.spirometryLogs.map(l => (
             <div key={l.id} className="p-4 rounded-2xl bg-slate-50 flex justify-between items-center text-xs font-mono">
-              <span><strong>{l.id}</strong> ({l.date}) — FVC: {l.fvc}L | FEV1: {l.fev1}L</span>
+              <span>
+                <strong>{l.id}</strong> ({l.date}) — FVC: {l.fvc}L | FEV1: {l.fev1}L
+              </span>
               <span className="px-2.5 py-1 rounded-full bg-[#13A4A9]/15 text-[#0B7377] font-bold">{l.ratio}</span>
             </div>
           ))}

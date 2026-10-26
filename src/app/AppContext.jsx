@@ -46,7 +46,13 @@ export function AppProvider({ navigate, children }) {
         }
       });
       trainerRef.current = trainer;
-      setState(p => ({ ...p, bleScanning: false, bleConnected: true, deviceName: trainer.name, batteryPct: trainer.battery }));
+      setState(p => ({
+        ...p,
+        bleScanning: false,
+        bleConnected: true,
+        deviceName: trainer.name,
+        batteryPct: trainer.battery
+      }));
       notify(`Connected to ${trainer.name}${trainer.battery !== null ? ` (battery ${trainer.battery}%)` : ''}`);
     } catch (err) {
       const message = describePairError(err);
@@ -63,28 +69,41 @@ export function AppProvider({ navigate, children }) {
   }, [handleDisconnect]);
 
   /** Make `map` the active level; with `play`, jump straight into the game. */
-  const selectMap = useCallback((map, play = false) => {
-    setState(p => ({
-      ...p,
-      lastMap: { ...p.lastMap, id: map.id, name: map.name, valveKpa: map.kpa, targetL: map.targetL, lastPlayed: 'Selected Just Now' }
-    }));
-    if (play) {
-      navigate('play');
-      notify(`Launching ${map.name} (${map.kpa} kPa resistance)...`);
-    } else {
-      notify(`Switched active training map to ${map.name}`);
-    }
-  }, [navigate, notify]);
+  const selectMap = useCallback(
+    (map, play = false) => {
+      setState(p => ({
+        ...p,
+        lastMap: {
+          ...p.lastMap,
+          id: map.id,
+          name: map.name,
+          valveKpa: map.kpa,
+          targetL: map.targetL,
+          lastPlayed: 'Selected Just Now'
+        }
+      }));
+      if (play) {
+        navigate('play');
+        notify(`Launching ${map.name} (${map.kpa} kPa resistance)...`);
+      } else {
+        notify(`Switched active training map to ${map.name}`);
+      }
+    },
+    [navigate, notify]
+  );
 
-  const value = useMemo(() => ({
-    state,
-    setState,
-    toast,
-    notify,
-    navigate,
-    selectMap,
-    trainer: { pair: pairTrainerDevice, disconnect: disconnectTrainer }
-  }), [state, toast, notify, navigate, selectMap, pairTrainerDevice, disconnectTrainer]);
+  const value = useMemo(
+    () => ({
+      state,
+      setState,
+      toast,
+      notify,
+      navigate,
+      selectMap,
+      trainer: { pair: pairTrainerDevice, disconnect: disconnectTrainer }
+    }),
+    [state, toast, notify, navigate, selectMap, pairTrainerDevice, disconnectTrainer]
+  );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }

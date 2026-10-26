@@ -14,7 +14,14 @@ test('cycleSeconds sums phase durations', () => {
 
 test('createCustomPattern drops zero-length phases and clamps values', () => {
   const p = createCustomPattern({ inhale: 4, holdIn: 0, exhale: 99, holdOut: 2 });
-  assert.deepEqual(p.phases.map(ph => [ph.type, ph.seconds]), [['inhale', 4], ['exhale', 20], ['hold', 2]]);
+  assert.deepEqual(
+    p.phases.map(ph => [ph.type, ph.seconds]),
+    [
+      ['inhale', 4],
+      ['exhale', 20],
+      ['hold', 2]
+    ]
+  );
 });
 
 test('createCustomPattern rejects patterns without inhale or exhale', () => {

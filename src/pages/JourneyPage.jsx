@@ -20,7 +20,9 @@ export default function JourneyPage() {
   return (
     <section className="space-y-6 animate-page">
       <div>
-        <span className="text-xs font-mono text-[#5D5FA0] font-semibold">11 PATIENT RECOVERY JOURNEY & BEHAVIOR METRICS</span>
+        <span className="text-xs font-mono text-[#5D5FA0] font-semibold">
+          11 PATIENT RECOVERY JOURNEY & BEHAVIOR METRICS
+        </span>
         <h2 className="text-3xl font-bold text-slate-900 mt-1">Rehabilitation Journey & Emotion Curve</h2>
       </div>
 
@@ -28,14 +30,20 @@ export default function JourneyPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-5 rounded-[32px] bg-white p-7 border border-slate-200/80 space-y-4">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-[#8E90C6]/25 flex items-center justify-center text-2xl" aria-hidden="true">🧑‍⚕️</div>
+            <div
+              className="w-16 h-16 rounded-full bg-[#8E90C6]/25 flex items-center justify-center text-2xl"
+              aria-hidden="true"
+            >
+              🧑‍⚕️
+            </div>
             <div>
               <div className="font-bold text-lg">{state.userName} (38 yrs)</div>
               <div className="text-xs text-slate-600">Thoracic Post-Op Recovery • Home User</div>
             </div>
           </div>
           <div className="p-4 rounded-2xl bg-[#8E90C6]/10 text-xs text-slate-700 italic">
-            "Traditional 3-ball trainers felt repetitive and couldn't show my daily progress. With gamified maps and quantified FVC curves, I look forward to breathing training every morning!"
+            &quot;Traditional 3-ball trainers felt repetitive and couldn&apos;t show my daily progress. With gamified
+            maps and quantified FVC curves, I look forward to breathing training every morning!&quot;
           </div>
         </div>
 
@@ -66,7 +74,12 @@ export default function JourneyPage() {
           <span className="font-bold text-sm text-slate-800">5-Stage Post-Discharge Emotion & Lung Capacity Curve</span>
           <span className="text-xs font-mono text-[#0B7377]">Stage 1 → Stage 5</span>
         </div>
-        <svg viewBox="0 0 800 180" className="w-full" role="img" aria-label={`Recovery journey: ${JOURNEY_STAGES.map(pt => pt.stage).join(', ')}`}>
+        <svg
+          viewBox="0 0 800 180"
+          className="w-full"
+          role="img"
+          aria-label={`Recovery journey: ${JOURNEY_STAGES.map(pt => pt.stage).join(', ')}`}
+        >
           <defs>
             <linearGradient id="journeyGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#8E90C6" stopOpacity="0.35" />
@@ -78,8 +91,12 @@ export default function JourneyPage() {
           {JOURNEY_STAGES.map(pt => (
             <g key={pt.stage}>
               <circle cx={pt.x} cy={pt.y} r="14" fill="#F0C754" />
-              <text x={pt.x - 8} y={pt.y + 5} fontSize="14">{pt.emoji}</text>
-              <text x={pt.x - 42} y="168" fontSize="11" fill="#475569" fontWeight="600">{pt.stage}</text>
+              <text x={pt.x - 8} y={pt.y + 5} fontSize="14">
+                {pt.emoji}
+              </text>
+              <text x={pt.x - 42} y="168" fontSize="11" fill="#475569" fontWeight="600">
+                {pt.stage}
+              </text>
             </g>
           ))}
         </svg>

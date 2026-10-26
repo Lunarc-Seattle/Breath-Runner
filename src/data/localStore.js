@@ -11,7 +11,7 @@ function read(key, fallback) {
   try {
     const raw = window.localStorage.getItem(key);
     return raw === null ? fallback : JSON.parse(raw);
-  } catch (_) {
+  } catch {
     return fallback;
   }
 }
@@ -19,7 +19,7 @@ function read(key, fallback) {
 function write(key, value) {
   try {
     window.localStorage.setItem(key, JSON.stringify(value));
-  } catch (_) {
+  } catch {
     // Storage unavailable or full; in-memory state still works for this visit.
   }
 }

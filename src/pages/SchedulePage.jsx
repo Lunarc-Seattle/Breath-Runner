@@ -7,7 +7,7 @@ export default function SchedulePage() {
   const toggleTask = task => {
     setState(p => ({
       ...p,
-      scheduleTasks: p.scheduleTasks.map(t => t.id === task.id ? { ...t, done: !t.done } : t)
+      scheduleTasks: p.scheduleTasks.map(t => (t.id === task.id ? { ...t, done: !t.done } : t))
     }));
     notify(`Toggled task: ${task.title}`);
   };
@@ -23,7 +23,9 @@ export default function SchedulePage() {
 
         <div className="p-5 rounded-3xl bg-[#F0C754]/20 border border-[#F0C754]/40 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="px-2.5 py-0.5 rounded-full bg-[#F0C754] text-slate-900 font-bold text-[10px]">DOCTOR NOTE</span>
+            <span className="px-2.5 py-0.5 rounded-full bg-[#F0C754] text-slate-900 font-bold text-[10px]">
+              DOCTOR NOTE
+            </span>
             <span className="text-xs font-mono text-slate-600">Dr. Chen</span>
           </div>
           <div className="font-bold text-base text-slate-900">Call doctor for spirometry review</div>
@@ -32,13 +34,17 @@ export default function SchedulePage() {
 
         <div className="p-4 rounded-2xl bg-slate-50 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span aria-hidden="true" className="w-8 h-8 rounded-xl bg-[#F0A7AB]/30 flex items-center justify-center">🧼</span>
+            <span aria-hidden="true" className="w-8 h-8 rounded-xl bg-[#F0A7AB]/30 flex items-center justify-center">
+              🧼
+            </span>
             <div>
               <div className="text-xs font-bold">Mouthpiece Sterilization</div>
               <div className="text-[11px] text-slate-500">Booked for April 19</div>
             </div>
           </div>
-          <button type="button" onClick={() => navigate('hygiene')} className="text-xs font-semibold text-[#0B7377]">View →</button>
+          <button type="button" onClick={() => navigate('hygiene')} className="text-xs font-semibold text-[#0B7377]">
+            View →
+          </button>
         </div>
       </div>
 
@@ -46,7 +52,7 @@ export default function SchedulePage() {
       <div className="lg:col-span-8 rounded-[32px] bg-white p-8 border border-slate-200/80 space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h2 className="text-3xl font-bold text-slate-900">Today's Breathing Schedule</h2>
+            <h2 className="text-3xl font-bold text-slate-900">Today&apos;s Breathing Schedule</h2>
             <p className="text-sm font-semibold text-[#F0C754]">Sunday, October 25</p>
           </div>
           <button
@@ -73,7 +79,14 @@ export default function SchedulePage() {
               }`}
             >
               <div className="flex items-center gap-4">
-                <input type="checkbox" checked={task.done} readOnly tabIndex={-1} aria-hidden="true" className="w-4 h-4 rounded accent-[#13A4A9] pointer-events-none" />
+                <input
+                  type="checkbox"
+                  checked={task.done}
+                  readOnly
+                  tabIndex={-1}
+                  aria-hidden="true"
+                  className="w-4 h-4 rounded accent-[#13A4A9] pointer-events-none"
+                />
                 <div>
                   <div className="font-bold text-base">{task.title}</div>
                   <div className="text-xs opacity-80">{task.detail}</div>

@@ -9,8 +9,12 @@ export default function DoctorPage() {
       <div className="p-7 rounded-[32px] bg-white border border-slate-200/80 space-y-3 font-mono text-xs">
         {state.regressionRuns.map(r => (
           <div key={r.id} className="p-4 rounded-2xl bg-slate-50 flex justify-between items-center">
-            <span>{r.id} — {r.target} ({r.steps} samples)</span>
-            <span className="px-3 py-1 rounded-full bg-[#13A4A9]/15 text-[#0B7377] font-bold">{r.status} (Drift: {r.drift})</span>
+            <span>
+              {r.id} — {r.target} ({r.steps} samples)
+            </span>
+            <span className="px-3 py-1 rounded-full bg-[#13A4A9]/15 text-[#0B7377] font-bold">
+              {r.status} (Drift: {r.drift})
+            </span>
           </div>
         ))}
       </div>

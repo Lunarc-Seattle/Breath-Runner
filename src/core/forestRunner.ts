@@ -104,20 +104,20 @@ export interface Point {
 }
 
 export const RUNNER_CONFIG: RunnerConfig = {
-  runSpeed: 165,          // design px / s
+  runSpeed: 165, // design px / s
   gravity: 1700,
-  floatGravity: 420,      // while inhaling in the air
-  glideVy: 110,           // max fall speed while inhaling: a long steady breath glides far
+  floatGravity: 420, // while inhaling in the air
+  glideVy: 110, // max fall speed while inhaling: a long steady breath glides far
   jumpVy: -600,
-  lungSec: 2.4,           // seconds of continuous float on a full breath
-  refillSec: 1.6,         // seconds to refill from empty while exhaling
-  stepUp: 28,             // max surface rise the runner walks over
-  fallY: 1050,            // feet below this = fell between cliffs
-  bodyOffset: 76,         // feet -> body centre, for coin pickup
+  lungSec: 2.4, // seconds of continuous float on a full breath
+  refillSec: 1.6, // seconds to refill from empty while exhaling
+  stepUp: 28, // max surface rise the runner walks over
+  fallY: 1050, // feet below this = fell between cliffs
+  bodyOffset: 76, // feet -> body centre, for coin pickup
   coinReach: 52,
-  cueLeadPx: 120,         // start cueing "inhale" this far before a gap
-  respawnPauseSec: 1.2,   // stand still after a fall before running again
-  respawnInset: 24,       // respawn this far into the cliff's flat top
+  cueLeadPx: 120, // start cueing "inhale" this far before a gap
+  respawnPauseSec: 1.2, // stand still after a fall before running again
+  respawnInset: 24, // respawn this far into the cliff's flat top
   endPad: 50
 };
 
@@ -138,7 +138,13 @@ export function groundAt(map: ForestMap, x: number, fromY: number, reach = 0): n
 }
 
 /** Distance to where the ground ahead falls away (a gap between cliffs), or Infinity within maxPx. */
-export function edgeDistance(map: ForestMap, x: number, feetY: number, maxPx: number, cfg: RunnerConfig = RUNNER_CONFIG): number {
+export function edgeDistance(
+  map: ForestMap,
+  x: number,
+  feetY: number,
+  maxPx: number,
+  cfg: RunnerConfig = RUNNER_CONFIG
+): number {
   for (let dx = 4; dx <= maxPx; dx += 4) {
     const g = groundAt(map, x + dx, feetY, cfg.stepUp);
     if (g === null || g > cfg.fallY || g - feetY > 60) return dx;
@@ -302,10 +308,17 @@ export function stepRunner(
   if (cfg.breathCues) {
     // Scripted levels: inhale from just before each scripted jump until its hold ends.
     const pxPerSec = cfg.runSpeed * speedMul;
-    s.cue = cfg.breathCues.some(([cx, hold]) => s.x > cx - cfg.cueLeadPx && s.x < cx + hold * pxPerSec) ? 'inhale' : 'exhale';
+    s.cue = cfg.breathCues.some(([cx, hold]) => s.x > cx - cfg.cueLeadPx && s.x < cx + hold * pxPerSec)
+      ? 'inhale'
+      : 'exhale';
   } else {
-    s.cue = !s.onGround ? (s.vy < 0 || overGap() ? 'inhale' : 'exhale')
-      : edgeDistance(map, s.x, s.y, cfg.cueLeadPx, cfg) < cfg.cueLeadPx ? 'inhale' : 'exhale';
+    s.cue = !s.onGround
+      ? s.vy < 0 || overGap()
+        ? 'inhale'
+        : 'exhale'
+      : edgeDistance(map, s.x, s.y, cfg.cueLeadPx, cfg) < cfg.cueLeadPx
+        ? 'inhale'
+        : 'exhale';
   }
   if ((s.cue === 'inhale') === holding) s.syncSec += dt;
 
@@ -313,8 +326,17 @@ export function stepRunner(
     s.events.push({ type: 'lap', lap: s.lap, coins: s.lapCoins, sec: s.lapElapsed, total: map.coins.length });
     const fresh = createRunnerState(map);
     Object.assign(s, {
-      x: fresh.x, y: fresh.y, vy: 0, onGround: true, safeX: fresh.x, safeY: fresh.y, respawnSec: 0,
-      taken: fresh.taken, lap: s.lap + 1, lapCoins: 0, lapElapsed: 0
+      x: fresh.x,
+      y: fresh.y,
+      vy: 0,
+      onGround: true,
+      safeX: fresh.x,
+      safeY: fresh.y,
+      respawnSec: 0,
+      taken: fresh.taken,
+      lap: s.lap + 1,
+      lapCoins: 0,
+      lapElapsed: 0
     });
   }
 

@@ -16,20 +16,62 @@ export default function HygienePage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-6 p-7 rounded-[32px] bg-white border border-slate-200/80 flex flex-col sm:flex-row items-center gap-6">
           <svg viewBox="0 0 200 200" className="w-44 h-44 shrink-0" aria-hidden="true">
-            <circle cx="100" cy="100" r="80" fill="none" stroke="#13A4A9" strokeWidth="12" strokeDasharray="410 500" strokeLinecap="round" />
-            <circle cx="100" cy="100" r="62" fill="none" stroke="#8E90C6" strokeWidth="12" strokeDasharray="280 500" strokeLinecap="round" />
-            <circle cx="100" cy="100" r="44" fill="none" stroke="#F0C754" strokeWidth="12" strokeDasharray="190 500" strokeLinecap="round" />
-            <circle cx="100" cy="100" r="26" fill="none" stroke="#F0A7AB" strokeWidth="12" strokeDasharray="110 500" strokeLinecap="round" />
+            <circle
+              cx="100"
+              cy="100"
+              r="80"
+              fill="none"
+              stroke="#13A4A9"
+              strokeWidth="12"
+              strokeDasharray="410 500"
+              strokeLinecap="round"
+            />
+            <circle
+              cx="100"
+              cy="100"
+              r="62"
+              fill="none"
+              stroke="#8E90C6"
+              strokeWidth="12"
+              strokeDasharray="280 500"
+              strokeLinecap="round"
+            />
+            <circle
+              cx="100"
+              cy="100"
+              r="44"
+              fill="none"
+              stroke="#F0C754"
+              strokeWidth="12"
+              strokeDasharray="190 500"
+              strokeLinecap="round"
+            />
+            <circle
+              cx="100"
+              cy="100"
+              r="26"
+              fill="none"
+              stroke="#F0A7AB"
+              strokeWidth="12"
+              strokeDasharray="110 500"
+              strokeLinecap="round"
+            />
           </svg>
           <div className="space-y-2.5 w-full">
             <div className="text-xs font-mono text-slate-500">DISINFECTION NEEDS BY PART</div>
             {state.disinfectionParts.map(p => (
               <div key={p.part} className="flex justify-between items-center text-xs">
                 <span className="font-bold flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: p.color }} aria-hidden="true"></span>
+                  <span
+                    className="w-2.5 h-2.5 rounded-full"
+                    style={{ backgroundColor: p.color }}
+                    aria-hidden="true"
+                  ></span>
                   {p.part}
                 </span>
-                <span className="font-mono">{p.pct}% ({p.status})</span>
+                <span className="font-mono">
+                  {p.pct}% ({p.status})
+                </span>
               </div>
             ))}
           </div>

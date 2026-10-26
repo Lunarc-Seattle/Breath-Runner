@@ -9,19 +9,31 @@ export default function MapsPage() {
     <section className="space-y-6 animate-page">
       <div className="flex flex-wrap justify-between items-end gap-4">
         <div>
-          <span className="text-xs font-mono text-[#0B7377] font-semibold">03 CHOOSE A MAP // SCENE &amp; RESISTANCE SELECTOR</span>
+          <span className="text-xs font-mono text-[#0B7377] font-semibold">
+            03 CHOOSE A MAP // SCENE &amp; RESISTANCE SELECTOR
+          </span>
           <h2 className="text-3xl font-bold text-slate-900 mt-1">Pick a Scene &amp; Valve Level</h2>
         </div>
-        <button type="button" onClick={() => navigate('play')} className="px-6 py-3 rounded-2xl bg-[#0F8387] text-white font-bold text-xs">
+        <button
+          type="button"
+          onClick={() => navigate('play')}
+          className="px-6 py-3 rounded-2xl bg-[#0F8387] text-white font-bold text-xs"
+        >
           Play {state.lastMap.name} →
         </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {state.maps.map(m => (
-          <div key={m.id} className="rounded-[32px] bg-white p-7 border border-slate-200/80 flex flex-col justify-between space-y-6 shadow-sm">
+          <div
+            key={m.id}
+            className="rounded-[32px] bg-white p-7 border border-slate-200/80 flex flex-col justify-between space-y-6 shadow-sm"
+          >
             <div className="space-y-4">
-              <div className="h-36 rounded-2xl flex items-center justify-center text-white font-bold text-xl" style={solidStyle(m.color)}>
+              <div
+                className="h-36 rounded-2xl flex items-center justify-center text-white font-bold text-xl"
+                style={solidStyle(m.color)}
+              >
                 {m.name}
               </div>
               <div className="flex justify-between text-xs font-mono text-slate-500">

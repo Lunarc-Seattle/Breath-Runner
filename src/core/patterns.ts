@@ -115,14 +115,22 @@ export function phaseLabel(phase: Pick<Phase, 'type' | 'label'>): string {
  * Build a pattern from four user-chosen durations. Zero-length phases are dropped.
  * Throws if the result has no inhale or no exhale.
  */
-export function createCustomPattern({ inhale = 4, holdIn = 0, exhale = 4, holdOut = 0 }: CustomPatternInput = {}): Pattern {
-  const clamp = (v: number | string): number => Math.min(CUSTOM_LIMITS.max, Math.max(CUSTOM_LIMITS.min, Number(v) || 0));
-  const phases: Phase[] = ([
-    { type: 'inhale', seconds: clamp(inhale) },
-    { type: 'hold', seconds: clamp(holdIn) },
-    { type: 'exhale', seconds: clamp(exhale) },
-    { type: 'hold', seconds: clamp(holdOut) }
-  ] satisfies Phase[]).filter(ph => ph.seconds > 0);
+export function createCustomPattern({
+  inhale = 4,
+  holdIn = 0,
+  exhale = 4,
+  holdOut = 0
+}: CustomPatternInput = {}): Pattern {
+  const clamp = (v: number | string): number =>
+    Math.min(CUSTOM_LIMITS.max, Math.max(CUSTOM_LIMITS.min, Number(v) || 0));
+  const phases: Phase[] = (
+    [
+      { type: 'inhale', seconds: clamp(inhale) },
+      { type: 'hold', seconds: clamp(holdIn) },
+      { type: 'exhale', seconds: clamp(exhale) },
+      { type: 'hold', seconds: clamp(holdOut) }
+    ] satisfies Phase[]
+  ).filter(ph => ph.seconds > 0);
 
   const pattern: Pattern = {
     id: 'custom',

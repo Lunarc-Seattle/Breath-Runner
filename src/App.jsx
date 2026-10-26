@@ -19,7 +19,9 @@ function TrainerPill() {
       disabled={state.bleScanning}
       title={state.bleConnected ? 'Trainer connected' : 'Pair your AeroCare trainer'}
       className={`hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-2xl text-xs font-mono font-medium transition-colors ${
-        state.bleConnected ? 'bg-[#13A4A9]/10 text-[#0B7377] hover:bg-[#13A4A9]/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+        state.bleConnected
+          ? 'bg-[#13A4A9]/10 text-[#0B7377] hover:bg-[#13A4A9]/20'
+          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
       }`}
     >
       <span
@@ -47,7 +49,10 @@ function Shell({ slug }) {
               onClick={() => navigate('profile')}
               className="flex items-center gap-2.5 pl-2 pr-3.5 py-1.5 rounded-2xl bg-[#8E90C6]/15 hover:bg-[#8E90C6]/25 transition-colors"
             >
-              <span aria-hidden="true" className="w-7 h-7 rounded-full bg-[#71739E] text-white flex items-center justify-center text-xs font-bold">
+              <span
+                aria-hidden="true"
+                className="w-7 h-7 rounded-full bg-[#71739E] text-white flex items-center justify-center text-xs font-bold"
+              >
                 XM
               </span>
               <span className="text-xs font-semibold text-slate-700">{state.userName}</span>

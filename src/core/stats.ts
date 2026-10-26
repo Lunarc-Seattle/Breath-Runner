@@ -45,7 +45,10 @@ function startOfDay(date: DateInput): Date {
 }
 
 /** Consecutive practice days ending today (or yesterday, so the streak survives until tonight). */
-export function currentStreak(sessions: readonly Pick<SessionLike, 'completedAt'>[], now: DateInput = new Date()): number {
+export function currentStreak(
+  sessions: readonly Pick<SessionLike, 'completedAt'>[],
+  now: DateInput = new Date()
+): number {
   const days = new Set(sessions.map(s => dateKey(s.completedAt)));
   let cursor = startOfDay(now);
   if (!days.has(dateKey(cursor))) cursor = new Date(cursor.getTime() - DAY_MS);

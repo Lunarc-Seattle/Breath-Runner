@@ -7,7 +7,8 @@ import { solidStyle } from '../data/simStore.js';
 import { startMicBreath, describeMicError } from '../lib/micBreath.js';
 
 const COIN_ICON_URL = `${import.meta.env.BASE_URL}assets/forest/coin.png`;
-const GLASS = 'bg-[#04214b]/60 backdrop-blur-md border border-white/20 text-white shadow-[0_12px_32px_rgba(4,33,75,0.28)]';
+const GLASS =
+  'bg-[#04214b]/60 backdrop-blur-md border border-white/20 text-white shadow-[0_12px_32px_rgba(4,33,75,0.28)]';
 
 function Stat({ label, value, tone }) {
   return (
@@ -21,7 +22,16 @@ function Stat({ label, value, tone }) {
 /**
  * Page 04: full-bleed Forest Runner stage. The .ai illustration is the map; HUD panels float on it.
  */
-export function ForestRunnerStage({ map, maps, bleConnected, bleScanning, deviceName, onToggleDevice, onSelectMap, notify }) {
+export function ForestRunnerStage({
+  map,
+  maps,
+  bleConnected,
+  bleScanning,
+  deviceName,
+  onToggleDevice,
+  onSelectMap,
+  notify
+}) {
   const stageRef = useRef(null);
   const bgRef = useRef(null);
   const canvasRef = useRef(null);
@@ -88,8 +98,12 @@ export function ForestRunnerStage({ map, maps, bleConnected, bleScanning, device
     setLapResult(null);
     setHoldingState(false);
   }, [map.id]);
-  useEffect(() => { engineRef.current?.setSpeed(speed); }, [speed]);
-  useEffect(() => { soundRef.current = sound; }, [sound]);
+  useEffect(() => {
+    engineRef.current?.setSpeed(speed);
+  }, [speed]);
+  useEffect(() => {
+    soundRef.current = sound;
+  }, [sound]);
 
   // Inhale = pointer/Space hold OR an audible breath on the mic.
   const applyHolding = () => {
@@ -146,8 +160,9 @@ export function ForestRunnerStage({ map, maps, bleConnected, bleScanning, device
       micStopRef.current = await startMicBreath(u => {
         const next = u.calibrating ? 'calibrating' : 'on';
         if (next !== status) {
-          setMicStatus(status = next);
-          if (next === 'on') notify('Mic ready: breathe in audibly close to the mic to jump. The bar shows what it hears.');
+          setMicStatus((status = next));
+          if (next === 'on')
+            notify('Mic ready: breathe in audibly close to the mic to jump. The bar shows what it hears.');
         }
         if (micMeterRef.current) micMeterRef.current.style.transform = `scaleX(${u.level})`;
         if (u.active !== micHoldRef.current) micChangeRef.current(u.active);
@@ -157,10 +172,13 @@ export function ForestRunnerStage({ map, maps, bleConnected, bleScanning, device
       notify(describeMicError(err));
     }
   };
-  useEffect(() => () => {
-    micStopRef.current?.();
-    clearTimeout(fallHintTimer.current);
-  }, []);
+  useEffect(
+    () => () => {
+      micStopRef.current?.();
+      clearTimeout(fallHintTimer.current);
+    },
+    []
+  );
   const micLabel = { off: 'Mic', asking: 'Allow mic…', calibrating: 'Stay quiet…', on: 'Mic on' }[micStatus];
 
   // Hold Space (or ↑) to inhale. Bound once; the listeners read the latest handlers through a ref.
@@ -173,7 +191,9 @@ export function ForestRunnerStage({ map, maps, bleConnected, bleScanning, device
       e.preventDefault();
       keyHandlersRef.current.pressStart();
     };
-    const up = e => { if (isBreathKey(e)) keyHandlersRef.current.setHolding(false); };
+    const up = e => {
+      if (isBreathKey(e)) keyHandlersRef.current.setHolding(false);
+    };
     const blur = () => keyHandlersRef.current.setHolding(false);
     window.addEventListener('keydown', down);
     window.addEventListener('keyup', up);
@@ -220,7 +240,18 @@ export function ForestRunnerStage({ map, maps, bleConnected, bleScanning, device
 
   const stopHold = () => setHolding(false);
   const keepPointer = e => e.stopPropagation();
-  const h = hud || { coins: 0, totalCoins: 30, lapCoins: 0, combo: 0, lap: 1, sync: 100, lung: 1, cue: 'exhale', progress: 0, falls: 0 };
+  const h = hud || {
+    coins: 0,
+    totalCoins: 30,
+    lapCoins: 0,
+    combo: 0,
+    lap: 1,
+    sync: 100,
+    lung: 1,
+    cue: 'exhale',
+    progress: 0,
+    falls: 0
+  };
   const inhaleCue = h.cue === 'inhale';
   const level = getLevel(map.id);
 
@@ -241,11 +272,14 @@ export function ForestRunnerStage({ map, maps, bleConnected, bleScanning, device
               onClick={() => onSelectMap(m)}
               aria-pressed={m.id === map.id}
               className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-2xl text-xs font-bold transition-all border ${
-                m.id === map.id ? 'text-white border-transparent shadow-sm' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
+                m.id === map.id
+                  ? 'text-white border-transparent shadow-sm'
+                  : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
               }`}
               style={m.id === map.id ? solidStyle(m.color) : undefined}
             >
-              {m.name}<span className="ml-1.5 font-mono opacity-70">{m.kpa} kPa</span>
+              {m.name}
+              <span className="ml-1.5 font-mono opacity-70">{m.kpa} kPa</span>
             </button>
           ))}
         </div>
@@ -267,7 +301,11 @@ export function ForestRunnerStage({ map, maps, bleConnected, bleScanning, device
             draggable="false"
             className="absolute top-0 left-0 max-w-none origin-top-left will-change-transform pointer-events-none transition-[filter] duration-700"
           />
-          <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" aria-hidden="true"></canvas>
+          <canvas
+            ref={canvasRef}
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            aria-hidden="true"
+          ></canvas>
 
           {/* Top HUD */}
           <div className="absolute top-3 left-3 right-3 md:top-5 md:left-5 md:right-5 flex flex-wrap items-start justify-between gap-3 pointer-events-none">
@@ -279,9 +317,13 @@ export function ForestRunnerStage({ map, maps, bleConnected, bleScanning, device
               <div className="w-px h-8 bg-white/20"></div>
               <Stat label="Breath sync" value={`${h.sync}%`} tone="text-[#a7f3d0]" />
               <div className="w-px h-8 bg-white/20 hidden sm:block"></div>
-              <div className="hidden sm:block"><Stat label="Combo" value={`x${h.combo}`} tone="text-[#7accf3]" /></div>
+              <div className="hidden sm:block">
+                <Stat label="Combo" value={`x${h.combo}`} tone="text-[#7accf3]" />
+              </div>
               <div className="w-px h-8 bg-white/20 hidden md:block"></div>
-              <div className="hidden md:block"><Stat label="Lap" value={h.lap} tone="text-white" /></div>
+              <div className="hidden md:block">
+                <Stat label="Lap" value={h.lap} tone="text-white" />
+              </div>
             </div>
 
             <div className="flex flex-col items-end gap-2">
@@ -294,20 +336,33 @@ export function ForestRunnerStage({ map, maps, bleConnected, bleScanning, device
                 }`}
               >
                 <span className="relative flex w-2.5 h-2.5" aria-hidden="true">
-                  {!bleConnected && <span className="absolute inset-0 rounded-full bg-[#F0C754] animate-ping opacity-75"></span>}
-                  <span className={`relative w-2.5 h-2.5 rounded-full ${bleConnected ? 'bg-[#34d399]' : 'bg-[#F0C754]'}`}></span>
+                  {!bleConnected && (
+                    <span className="absolute inset-0 rounded-full bg-[#F0C754] animate-ping opacity-75"></span>
+                  )}
+                  <span
+                    className={`relative w-2.5 h-2.5 rounded-full ${bleConnected ? 'bg-[#34d399]' : 'bg-[#F0C754]'}`}
+                  ></span>
                 </span>
                 <span className={bleConnected ? 'text-[#a7f3d0]' : 'text-[#fde68a]'}>
-                  {bleScanning ? 'Pairing trainer…' : bleConnected ? `${deviceName} linked` : `No trainer connected — free trial of ${map.name}`}
+                  {bleScanning
+                    ? 'Pairing trainer…'
+                    : bleConnected
+                      ? `${deviceName} linked`
+                      : `No trainer connected — free trial of ${map.name}`}
                 </span>
                 <span className="hidden md:inline text-white/50 font-mono">{bleConnected ? 'disconnect' : 'pair'}</span>
               </button>
               <div className={`${GLASS} rounded-full px-3 py-1.5 flex items-center gap-2 text-[11px] font-mono`}>
                 <span className="text-white/60">ROUTE</span>
                 <div className="w-28 md:w-40 h-1.5 rounded-full bg-white/20 overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-[#a7f3d0] via-[#7accf3] to-[#fde047]" style={{ width: `${Math.round(h.progress * 100)}%` }}></div>
+                  <div
+                    className="h-full bg-gradient-to-r from-[#a7f3d0] via-[#7accf3] to-[#fde047]"
+                    style={{ width: `${Math.round(h.progress * 100)}%` }}
+                  ></div>
                 </div>
-                <span>{h.lapCoins}/{h.totalCoins}</span>
+                <span>
+                  {h.lapCoins}/{h.totalCoins}
+                </span>
               </div>
             </div>
           </div>
@@ -321,17 +376,23 @@ export function ForestRunnerStage({ map, maps, bleConnected, bleScanning, device
           >
             <div className={`${GLASS} rounded-2xl px-5 py-3 text-center max-w-xs`}>
               <div className="text-sm font-bold text-[#fde047]">Almost! Back to the start of this cliff</div>
-              <div className="text-xs text-white/85 mt-1">When the arrow tilts up, take one long, steady inhale and keep it going over the gap.</div>
+              <div className="text-xs text-white/85 mt-1">
+                When the arrow tilts up, take one long, steady inhale and keep it going over the gap.
+              </div>
             </div>
           </div>
           <div className="sr-only" aria-live="polite">
-            {showFallHint && 'Almost! Back to the start of this cliff. When the arrow tilts up, take one long, steady inhale and keep it going over the gap.'}
+            {showFallHint &&
+              'Almost! Back to the start of this cliff. When the arrow tilts up, take one long, steady inhale and keep it going over the gap.'}
           </div>
 
           {/* Start overlay */}
           {!started && (
             <div className="absolute inset-0 flex items-center justify-center p-4 bg-[#04214b]/25 backdrop-blur-[2px]">
-              <div className={`${GLASS} rounded-3xl max-w-md w-full p-6 md:p-7 text-center pointer-events-auto`} onPointerDown={keepPointer}>
+              <div
+                className={`${GLASS} rounded-3xl max-w-md w-full p-6 md:p-7 text-center pointer-events-auto`}
+                onPointerDown={keepPointer}
+              >
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F0C754]/20 text-[#fde68a] text-[11px] font-mono font-semibold">
                   {map.valveKpa} kPa valve · target {map.targetL} L
                 </div>
@@ -349,7 +410,9 @@ export function ForestRunnerStage({ map, maps, bleConnected, bleScanning, device
                   ))}
                 </div>
                 <p className="text-sm text-white/80 mt-2 leading-relaxed">
-                  She runs on her own. When the golden arrow tilts up, <strong className="text-[#fde047]">start a long, steady inhale</strong> to jump. Keep inhaling to glide across the gap, then exhale to land.
+                  She runs on her own. When the golden arrow tilts up,{' '}
+                  <strong className="text-[#fde047]">start a long, steady inhale</strong> to jump. Keep inhaling to
+                  glide across the gap, then exhale to land.
                 </p>
                 <div className="mt-4 grid grid-cols-3 gap-2 text-[11px] font-mono text-white/75">
                   <div className="rounded-xl bg-white/10 py-2">Hold screen</div>
@@ -364,7 +427,12 @@ export function ForestRunnerStage({ map, maps, bleConnected, bleScanning, device
                     {micStatus === 'off' ? 'or 🎙 mic' : micLabel}
                   </button>
                 </div>
-                <button ref={startButtonRef} type="button" onClick={begin} className="mt-5 w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#13A4A9] to-[#7accf3] text-[#04214b] font-bold text-sm hover:brightness-110 transition">
+                <button
+                  ref={startButtonRef}
+                  type="button"
+                  onClick={begin}
+                  className="mt-5 w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#13A4A9] to-[#7accf3] text-[#04214b] font-bold text-sm hover:brightness-110 transition"
+                >
                   ▶ Start running
                 </button>
               </div>
@@ -374,13 +442,34 @@ export function ForestRunnerStage({ map, maps, bleConnected, bleScanning, device
           {/* Lap result */}
           {lapResult && (
             <div className="absolute inset-0 flex items-center justify-center p-4 bg-[#04214b]/30 backdrop-blur-[2px]">
-              <div className={`${GLASS} rounded-3xl max-w-sm w-full p-6 text-center pointer-events-auto`} onPointerDown={keepPointer}>
+              <div
+                className={`${GLASS} rounded-3xl max-w-sm w-full p-6 text-center pointer-events-auto`}
+                onPointerDown={keepPointer}
+              >
                 <div className="text-[11px] font-mono text-[#a7f3d0]">LAP {lapResult.lap} COMPLETE</div>
-                <div className="text-4xl font-bold mt-2 text-[#fde047]">{lapResult.coins}<span className="text-lg text-white/60"> / {lapResult.total} coins</span></div>
-                <div className="text-sm text-white/75 mt-2">{lapResult.sec.toFixed(1)} s · {h.sync}% breath sync · {h.falls} slips</div>
+                <div className="text-4xl font-bold mt-2 text-[#fde047]">
+                  {lapResult.coins}
+                  <span className="text-lg text-white/60"> / {lapResult.total} coins</span>
+                </div>
+                <div className="text-sm text-white/75 mt-2">
+                  {lapResult.sec.toFixed(1)} s · {h.sync}% breath sync · {h.falls} slips
+                </div>
                 <div className="mt-5 flex gap-2">
-                  <button type="button" onClick={saveRun} className="flex-1 py-3 rounded-2xl bg-white/15 hover:bg-white/25 text-xs font-bold">Save to history</button>
-                  <button ref={nextLapButtonRef} type="button" onClick={begin} className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-[#f15a24] to-[#fbb03b] text-xs font-bold">Next lap →</button>
+                  <button
+                    type="button"
+                    onClick={saveRun}
+                    className="flex-1 py-3 rounded-2xl bg-white/15 hover:bg-white/25 text-xs font-bold"
+                  >
+                    Save to history
+                  </button>
+                  <button
+                    ref={nextLapButtonRef}
+                    type="button"
+                    onClick={begin}
+                    className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-[#f15a24] to-[#fbb03b] text-xs font-bold"
+                  >
+                    Next lap →
+                  </button>
                 </div>
               </div>
             </div>
@@ -400,11 +489,16 @@ export function ForestRunnerStage({ map, maps, bleConnected, bleScanning, device
                 {inhaleCue ? '↑' : '↓'}
               </div>
               <div>
-                <div aria-live="polite" className={`text-sm font-bold ${inhaleCue ? 'text-[#fde047]' : 'text-white'}`}>{inhaleCue ? 'Inhale — jump & glide' : 'Exhale — relax & run'}</div>
+                <div aria-live="polite" className={`text-sm font-bold ${inhaleCue ? 'text-[#fde047]' : 'text-white'}`}>
+                  {inhaleCue ? 'Inhale — jump & glide' : 'Exhale — relax & run'}
+                </div>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-[10px] font-mono text-white/60">LUNG</span>
                   <div className="w-24 h-1.5 rounded-full bg-white/20 overflow-hidden">
-                    <div className="h-full bg-[#7accf3] transition-[width] duration-100" style={{ width: `${Math.round(h.lung * 100)}%` }}></div>
+                    <div
+                      className="h-full bg-[#7accf3] transition-[width] duration-100"
+                      style={{ width: `${Math.round(h.lung * 100)}%` }}
+                    ></div>
                   </div>
                 </div>
               </div>
@@ -412,11 +506,17 @@ export function ForestRunnerStage({ map, maps, bleConnected, bleScanning, device
 
             <button
               type="button"
-              onPointerDown={e => { e.stopPropagation(); e.currentTarget.setPointerCapture?.(e.pointerId); pressStart(); }}
+              onPointerDown={e => {
+                e.stopPropagation();
+                e.currentTarget.setPointerCapture?.(e.pointerId);
+                pressStart();
+              }}
               onPointerUp={stopHold}
               onPointerCancel={stopHold}
               className={`pointer-events-auto flex-1 py-3.5 rounded-2xl font-bold text-sm transition-all touch-none ${
-                holding ? 'bg-[#7accf3] text-[#04214b] scale-[0.98]' : 'bg-gradient-to-r from-[#f15a24] to-[#fbb03b] text-white'
+                holding
+                  ? 'bg-[#7accf3] text-[#04214b] scale-[0.98]'
+                  : 'bg-gradient-to-r from-[#f15a24] to-[#fbb03b] text-white'
               }`}
             >
               {holding ? '▲ Inhaling…' : started ? 'Hold to inhale' : 'Hold to start'}
@@ -441,7 +541,12 @@ export function ForestRunnerStage({ map, maps, bleConnected, bleScanning, device
                 title="Breathe audibly near the microphone to inhale"
                 className={`relative h-10 px-3 rounded-xl text-xs font-bold overflow-hidden ${micStatus === 'off' ? 'bg-white/15 hover:bg-white/25' : 'bg-[#7accf3]/25 ring-1 ring-[#7accf3]/70'}`}
               >
-                <span ref={micMeterRef} className="absolute inset-y-0 left-0 w-full bg-[#7accf3]/35 origin-left" style={{ transform: 'scaleX(0)' }} aria-hidden="true"></span>
+                <span
+                  ref={micMeterRef}
+                  className="absolute inset-y-0 left-0 w-full bg-[#7accf3]/35 origin-left"
+                  style={{ transform: 'scaleX(0)' }}
+                  aria-hidden="true"
+                ></span>
                 <span className="relative">🎙 {micLabel}</span>
               </button>
               <button
@@ -456,10 +561,24 @@ export function ForestRunnerStage({ map, maps, bleConnected, bleScanning, device
               </button>
               <label className="hidden lg:flex items-center gap-2 text-[11px] font-mono text-white/70">
                 SPEED
-                <input type="range" min="0.6" max="1.4" step="0.1" value={speed} onChange={e => setSpeed(parseFloat(e.target.value))} className="w-20 accent-[#7accf3]" />
+                <input
+                  type="range"
+                  min="0.6"
+                  max="1.4"
+                  step="0.1"
+                  value={speed}
+                  onChange={e => setSpeed(parseFloat(e.target.value))}
+                  className="w-20 accent-[#7accf3]"
+                />
                 <span className="w-8">{speed.toFixed(1)}x</span>
               </label>
-              <button type="button" onClick={saveRun} className="px-3.5 h-10 rounded-xl bg-[#0F8387] hover:bg-[#0f8f94] text-xs font-bold whitespace-nowrap">Save run</button>
+              <button
+                type="button"
+                onClick={saveRun}
+                className="px-3.5 h-10 rounded-xl bg-[#0F8387] hover:bg-[#0f8f94] text-xs font-bold whitespace-nowrap"
+              >
+                Save run
+              </button>
             </div>
           </div>
         </div>

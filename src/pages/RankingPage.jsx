@@ -23,7 +23,12 @@ export default function RankingPage() {
                 <rect x={52 + i * 58} y={185 - h * 0.8} width="14" height={h * 0.8} rx="4" fill="#8E90C6" />
               </g>
             ))}
-            <polyline points="42,105 100,80 158,55 216,70 274,38 332,26 390,40 448,18" fill="none" stroke="#F0C754" strokeWidth="3.5" />
+            <polyline
+              points="42,105 100,80 158,55 216,70 274,38 332,26 390,40 448,18"
+              fill="none"
+              stroke="#F0C754"
+              strokeWidth="3.5"
+            />
           </svg>
         </div>
         <div className="lg:col-span-5 p-7 rounded-[32px] bg-white border border-slate-200/80 space-y-3">
@@ -31,7 +36,10 @@ export default function RankingPage() {
           {FRIENDS.map((f, idx) => (
             <div key={f.name} className="p-4 rounded-2xl bg-slate-50 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <span className="w-7 h-7 rounded-full text-white text-xs font-bold flex items-center justify-center" style={solidStyle(f.color)}>
+                <span
+                  className="w-7 h-7 rounded-full text-white text-xs font-bold flex items-center justify-center"
+                  style={solidStyle(f.color)}
+                >
                   {idx + 1}
                 </span>
                 <span className="font-bold text-sm">{f.name}</span>

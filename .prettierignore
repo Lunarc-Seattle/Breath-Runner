@@ -1,0 +1,16 @@
+# Build output, reports and dependencies
+dist/
+node_modules/
+playwright-report/
+test-results/
+coverage/
+
+# Binary assets, docs and static files
+pic/
+docs/
+public/
+*.md
+package-lock.json
+
+# Generated
+src/animation/forestMap.js

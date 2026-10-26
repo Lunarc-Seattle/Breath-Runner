@@ -61,7 +61,12 @@ export function createSessionId(): string {
 export const MAX_CLOCK_SKEW_MS = 5 * 60 * 1000;
 
 // Optional Breath Runner results, validated when present: [field, max].
-const GAME_FIELDS: readonly (readonly [GameField, number])[] = [['coins', 1000], ['totalCoins', 1000], ['syncPct', 100], ['falls', 1000]];
+const GAME_FIELDS: readonly (readonly [GameField, number])[] = [
+  ['coins', 1000],
+  ['totalCoins', 1000],
+  ['syncPct', 100],
+  ['falls', 1000]
+];
 
 /**
  * Returns a clean session object or throws with a message suitable for a 400 response.
@@ -80,7 +85,8 @@ export function normalizeSession(input: unknown, now: Date = new Date()): Sessio
 
   if (!patternId || patternId.length > 40) throw new ValidationError('patternId is required (max 40 chars)');
   if (!patternName || patternName.length > 80) throw new ValidationError('patternName is required (max 80 chars)');
-  if (!Number.isInteger(rounds) || rounds < 0 || rounds > 200) throw new ValidationError('rounds must be an integer 0-200');
+  if (!Number.isInteger(rounds) || rounds < 0 || rounds > 200)
+    throw new ValidationError('rounds must be an integer 0-200');
   if (!Number.isFinite(durationSec) || durationSec <= 0 || durationSec > MAX_SESSION_SEC) {
     throw new ValidationError(`durationSec must be between 0 and ${MAX_SESSION_SEC}`);
   }
@@ -98,7 +104,11 @@ export function normalizeSession(input: unknown, now: Date = new Date()): Sessio
     }
     game[field] = value;
   }
-  if (game.coins !== undefined && game.totalCoins !== undefined && game.coins > game.totalCoins * Math.max(1, rounds + 1)) {
+  if (
+    game.coins !== undefined &&
+    game.totalCoins !== undefined &&
+    game.coins > game.totalCoins * Math.max(1, rounds + 1)
+  ) {
     throw new ValidationError('coins cannot exceed the coins available in the run');
   }
 

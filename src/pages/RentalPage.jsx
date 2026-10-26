@@ -13,8 +13,12 @@ export default function RentalPage() {
       <h2 className="text-3xl font-bold text-slate-900">09 Shared Hospital Device Rental</h2>
       <div className="p-8 rounded-[32px] bg-white border border-slate-200/80 flex flex-wrap items-center justify-between gap-6">
         <div className="space-y-2">
-          <span className="px-3 py-1 rounded-full bg-[#96C7D2]/25 text-[#0B7377] text-xs font-bold">ACTIVE LEASE • PEKING UNIV. HOSPITAL</span>
-          <div className="text-2xl font-bold">Day {state.leaseUsedDays} of {state.leaseQuotaDays} Days</div>
+          <span className="px-3 py-1 rounded-full bg-[#96C7D2]/25 text-[#0B7377] text-xs font-bold">
+            ACTIVE LEASE • PEKING UNIV. HOSPITAL
+          </span>
+          <div className="text-2xl font-bold">
+            Day {state.leaseUsedDays} of {state.leaseQuotaDays} Days
+          </div>
           <p className="text-xs text-slate-600">Refundable Deposit Paid: ¥228.00 • Daily Shared Rate: ¥12.00/day</p>
         </div>
         <button
