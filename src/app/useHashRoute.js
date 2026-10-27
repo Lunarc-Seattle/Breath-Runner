@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { DEFAULT_SLUG, findRoute } from './routes.js';
+import { DEFAULT_SLUG, resolveSlug } from './routes.js';
 
 /**
  * Hash routing (#/play) so it works on GitHub Pages without server rewrites:
@@ -7,7 +7,7 @@ import { DEFAULT_SLUG, findRoute } from './routes.js';
  */
 export function slugFromHash(hash) {
   const slug = hash.replace(/^#\/?/, '').split(/[/?]/)[0];
-  return findRoute(slug) ? slug : DEFAULT_SLUG;
+  return resolveSlug(slug) || DEFAULT_SLUG;
 }
 
 export function useHashRoute() {
@@ -20,7 +20,7 @@ export function useHashRoute() {
   }, []);
 
   const navigate = useCallback(next => {
-    const target = findRoute(next) ? next : DEFAULT_SLUG;
+    const target = resolveSlug(next) || DEFAULT_SLUG;
     if (slugFromHash(window.location.hash) !== target) window.location.hash = `/${target}`;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);

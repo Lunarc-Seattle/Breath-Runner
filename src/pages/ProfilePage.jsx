@@ -188,9 +188,9 @@ export default function ProfilePage() {
               </div>
               <div className="flex items-center justify-between text-xs text-slate-600">
                 <span>
-                  Day {state.leaseUsedDays} / {state.leaseQuotaDays}
+                  Day {state.lease.usedDays} / {state.lease.quotaDays}
                 </span>
-                <button type="button" onClick={() => navigate('rental')} className="font-bold text-brand-teal-ink">
+                <button type="button" onClick={() => navigate('trainer')} className="font-bold text-brand-teal-ink">
                   Manage Lease →
                 </button>
               </div>
@@ -208,7 +208,7 @@ export default function ProfilePage() {
               </ul>
               <button
                 type="button"
-                onClick={() => navigate('hygiene')}
+                onClick={() => navigate('trainer')}
                 className="w-full py-2.5 rounded-2xl bg-brand-pink text-slate-900 font-bold text-xs mt-2"
               >
                 Book Sterilization Slot

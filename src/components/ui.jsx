@@ -10,9 +10,10 @@ const CARD_TONES = {
   coral: 'bg-surface-coral'
 };
 
-export function Card({ as: Tag = 'article', tone = 'plain', className = '', children, ...rest }) {
+/** `flush` drops the default padding, for cards that set their own (or bleed a photo to the edge). */
+export function Card({ as: Tag = 'article', tone = 'plain', flush = false, className = '', children, ...rest }) {
   return (
-    <Tag className={`rounded-[22px] p-5 sm:p-6 min-w-0 ${CARD_TONES[tone]} ${className}`} {...rest}>
+    <Tag className={`rounded-[22px] min-w-0 ${flush ? '' : 'p-5 sm:p-6'} ${CARD_TONES[tone]} ${className}`} {...rest}>
       {children}
     </Tag>
   );
@@ -39,7 +40,8 @@ const CHIP_TONES = {
   coral: 'bg-surface-coral text-brand-pink-ink',
   sun: 'bg-surface-sun text-brand-yellow-ink',
   lavender: 'bg-surface-lavender text-brand-purple-ink',
-  plain: 'bg-white text-slate-700'
+  plain: 'bg-white text-slate-700',
+  canvas: 'bg-canvas text-slate-700'
 };
 
 export function Chip({ tone = 'plain', dot = false, className = '', children }) {

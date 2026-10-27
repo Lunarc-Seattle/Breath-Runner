@@ -174,7 +174,7 @@ function SyncCard({ runs, status, error, onProgress, onPlay }) {
   );
 }
 
-function TrainerCard({ state, trainer, booking, onBook }) {
+function TrainerCard({ state, trainer, booking, daysSince, onBook }) {
   const connected = state.bleConnected;
   return (
     <Card tone="warm" className="flex flex-col gap-4" aria-labelledby="trainer-title">
@@ -238,7 +238,9 @@ function TrainerCard({ state, trainer, booking, onBook }) {
             {booking ? 'Disinfection booked' : 'Disinfection due'}
           </div>
           <div className="text-[13px] text-slate-700">
-            {booking ? `${SHORT_DATE.format(booking.date)}, ${booking.slot}` : 'Last done 15 days ago · sample'}
+            {booking
+              ? `${SHORT_DATE.format(booking.date)}, ${booking.slot}`
+              : `Last done ${daysSince} days ago · sample`}
           </div>
         </div>
         <button type="button" onClick={onBook} className={btn.link}>
@@ -312,7 +314,8 @@ export default function HomePage() {
           state={state}
           trainer={trainer}
           booking={state.disinfectionBooking}
-          onBook={() => navigate('hygiene')}
+          daysSince={state.hygiene.daysSince}
+          onBook={() => navigate('trainer')}
         />
         <FriendsCard friends={state.friendsThisWeek} myCoins={coinsLast7(runs)} myInitials="XM" />
       </div>

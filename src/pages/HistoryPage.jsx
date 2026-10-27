@@ -293,7 +293,7 @@ export default function HistoryPage() {
       </header>
 
       {status === 'loading' && (
-        <Card as="div" className="text-center text-sm text-slate-600 p-10" role="status">
+        <Card as="div" flush className="text-center text-sm text-slate-600 p-10" role="status">
           <span
             className="inline-block w-2 h-2 rounded-full bg-brand-teal animate-pulse mr-2 align-middle"
             aria-hidden="true"
@@ -315,7 +315,7 @@ export default function HistoryPage() {
       )}
 
       {status === 'ready' && runs.length === 0 && (
-        <Card as="div" className="text-center space-y-3 p-10">
+        <Card as="div" flush className="text-center space-y-3 p-10">
           <h2 className="text-[17px] font-semibold text-slate-900">No runs yet</h2>
           <p className="text-sm text-slate-600 max-w-md mx-auto">
             Finish a lap in the Breath Runner and press “Save to history”: your coins, breath sync and falls will show

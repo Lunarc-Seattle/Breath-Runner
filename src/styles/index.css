@@ -251,3 +251,8 @@ body {
     padding: 42px 0 0 46px;
   }
 }
+/* Trainer & care device photo: fade the top and bottom edges into the card. */
+.trainer-photo-mask {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 9%, #000 91%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 9%, #000 91%, transparent 100%);
+}
