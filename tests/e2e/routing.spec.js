@@ -17,32 +17,32 @@ test.describe('hash routing', () => {
 
   test('the browser back button returns to the previous page', async ({ page }) => {
     await page.goto('/#/home');
-    await expect(pagesMenu(page)).toHaveAccessibleName(/01 Welcome & Today$/);
+    await expect(pagesMenu(page)).toHaveAccessibleName(/01 Home$/);
 
     // Navigate through the drawer, the way a user would.
     await pagesMenu(page).click();
     await page
       .getByRole('navigation', { name: 'Pages' })
-      .getByRole('button', { name: /Run History/ })
+      .getByRole('button', { name: /^Progress/ })
       .click();
     await expect(page).toHaveURL(/#\/history$/);
-    await expect(page.getByRole('heading', { name: 'Your Runs, Coins & Breath Sync' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Progress' })).toBeVisible();
 
     await page.goBack();
     await expect(page).toHaveURL(/#\/home$/);
-    await expect(pagesMenu(page)).toHaveAccessibleName(/01 Welcome & Today$/);
+    await expect(pagesMenu(page)).toHaveAccessibleName(/01 Home$/);
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   });
 
   test('a deep link to #/history loads that page directly', async ({ page }) => {
     await page.goto('/#/history');
-    await expect(page.getByRole('heading', { name: 'Your Runs, Coins & Breath Sync' })).toBeVisible();
-    await expect(pagesMenu(page)).toHaveAccessibleName(/13 Run History$/);
+    await expect(page.getByRole('heading', { level: 1, name: 'Progress' })).toBeVisible();
+    await expect(pagesMenu(page)).toHaveAccessibleName(/13 Progress$/);
   });
 
   test('an unknown hash falls back to home', async ({ page }) => {
     await page.goto('/#/does-not-exist');
-    await expect(pagesMenu(page)).toHaveAccessibleName(/01 Welcome & Today$/);
+    await expect(pagesMenu(page)).toHaveAccessibleName(/01 Home$/);
     await expect(page.getByRole('button', { name: /^AeroCare home$/i })).toHaveAttribute('aria-current', 'page');
   });
 });

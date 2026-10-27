@@ -44,7 +44,7 @@ export default function SchedulePage() {
           </div>
           <button
             type="button"
-            onClick={() => navigate('hygiene')}
+            onClick={() => navigate('trainer')}
             className="text-xs font-semibold text-brand-teal-ink"
           >
             View →

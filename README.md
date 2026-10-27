@@ -75,7 +75,7 @@ The game runs on the original `pic/background.ai` file, not on a redrawing of it
   - **Shutdown:** on SIGTERM the server drains in-flight writes before exiting.
   - **The JSON store:** it skips corrupt rows on load and rolls back failed writes, so memory and disk stay consistent even when writes interleave.
 - **Routing and resilience.** Hash routes (`#/play`, `#/history`) make deep links, reload and the back button work on static hosting. Each page sits in its own error boundary.
-- **Tested at three levels.** 57 unit and API tests (`node:test`, 94% line coverage with a CI gate) and 34 Playwright end-to-end tests. One plays a full lap by following the on-screen breath cue, saves it, and checks it in Run History. Others cover every route, keyboard and focus behaviour, and API validation.
+- **Tested at three levels.** 78 unit and API tests (`node:test`, 95% line coverage with a CI gate) and 45 Playwright end-to-end tests. One plays a full lap by following the on-screen breath cue, saves it, and checks it on the Progress page. Others cover every route, keyboard and focus behaviour, and API validation.
 - **CI that gates the deploy, with a public report.** Each push and PR runs these in parallel:
   - lint (ESLint), formatting (Prettier) and type checking;
   - unit tests with coverage, and the production build;
@@ -89,11 +89,11 @@ The game runs on the original `pic/background.ai` file, not on a redrawing of it
 
 ## The rest of the app
 
-Breath Runner is page 04 of a 12-page companion-app prototype: welcome & resume, daily schedule, map choice, spirometry lab, co-op mode, leaderboard, hygiene booking, device rental, physician guidance, recovery journey and profile. A 13th page, **Run History**, lists your saved runs with coins, breath sync, falls and laps. Navigation hides in a drawer that eases in when you hover the page pill or the left edge of the screen; the AeroCare mark is always Home.
+Breath Runner is page 04 of a companion-app prototype: home, daily schedule, map choice, spirometry lab, co-op mode, leaderboard, trainer & care (hygiene booking and device loan), a care team view, physician guidance, recovery journey and profile. **Home** and **Progress** are driven by your saved runs: today's three sessions, breath sync over the last week, a ridge chart of each day's best breath sync, and a table of runs with coins, falls and laps. Everything else (friends, the trainer loan, hygiene, the care team's patients) is sample data and says so on the page. Navigation hides in a drawer that eases in when you hover the page pill or the left edge of the screen; the AeroCare mark is always Home.
 
 ![Navigation drawer open from the left edge, grouped into Train, Together, Care and You](docs/media/nav-drawer.jpg)
 
-![Run History: total runs, minutes, best breath sync and coins, then a table of saved runs with level, duration, coins, breath sync, falls and laps](docs/media/run-history.jpg)
+![Progress page after two real laps: best breath sync per day, stats for runs, training time, best breath sync and coins, then a table of saved runs with level, duration, coins, breath sync, falls and laps](docs/media/progress.jpg)
 
 **Honest scope:** apart from the game, these pages are interactive prototypes with sample data. Trainer pairing uses the real Web Bluetooth API (Chrome / Edge) and looks for a device named `AeroCare…`. The trainer itself is a design concept, so without one the app says no trainer was found and points you to free-trial mode. The microphone input, the game and the session storage are real.
 

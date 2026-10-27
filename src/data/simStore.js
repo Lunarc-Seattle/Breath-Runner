@@ -118,15 +118,27 @@ export const INITIAL_SIM_STATE = {
     { id: 'TEST-103', date: 'Oct 23', fvc: 3.66, fev1: 3.09, pef: 451, ratio: '84.4%' },
     { id: 'TEST-104', date: 'Oct 25', fvc: 3.89, fev1: 3.31, pef: 474, ratio: '85.1%' }
   ],
-  disinfectionParts: [
-    { part: 'Mouthpiece', pct: 85, color: PDF_COLORS.teal, status: 'Sterilize Soon' },
-    { part: 'Filter', pct: 68, color: PDF_COLORS.purple, status: 'Good (68%)' },
-    { part: 'Core Valve', pct: 46, color: PDF_COLORS.yellow, status: 'Optimal' },
-    { part: 'Main Body', pct: 25, color: PDF_COLORS.pink, status: 'Clean' }
+  // Sample trainer hygiene for Trainer & care: `clean` is the share of each part still clean (0-1).
+  hygiene: {
+    daysSince: 15,
+    cleanPct: 20,
+    parts: [
+      { part: 'Mouthpiece', clean: 0.12, color: 'coral', state: 'Clean now', tone: 'warn' },
+      { part: 'Filter', clean: 0.3, color: 'sun', state: 'In 2 days', tone: 'soon' },
+      { part: 'Core', clean: 0.64, color: 'lavender', state: 'Good', tone: 'ok' },
+      { part: 'Body', clean: 0.82, color: 'teal', state: 'Good', tone: 'ok' }
+    ]
+  },
+  // Set by the Trainer & care booking form: { date: Date, slot: '9 to 11 AM' } (sample, never sent anywhere).
+  disinfectionBooking: null,
+  // Sample friends for the Home leaderboard; the patient's own row is computed from saved runs.
+  friendsThisWeek: [
+    { name: 'Ali', initials: 'A', tone: 'sun', coins: 1020 },
+    { name: 'Bage', initials: 'B', tone: 'coral', coins: 640 },
+    { name: 'Ms. Bai', initials: 'MB', tone: 'white', coins: 410 }
   ],
-  bookedDays: [10, 19, 21, 24, 30],
-  leaseUsedDays: 18,
-  leaseQuotaDays: 30,
+  // Sample hospital loan of the trainer.
+  lease: { hospital: 'Peking Univ. Hospital', usedDays: 18, quotaDays: 30 },
   regressionRuns: [
     { id: 'REG-8841', target: 'Venturi_Flow_Sensor_Calibration', steps: '120,000', drift: '0.004L', status: 'PASS' },
     { id: 'REG-8842', target: 'Forest_Map_Physics_Sync_Engine', steps: '240,000', drift: '0.006L', status: 'PASS' },

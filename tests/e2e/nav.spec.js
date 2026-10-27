@@ -5,7 +5,7 @@ import { pagesMenu } from './helpers.js';
 test.describe('navigation drawer', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/#/history');
-    await expect(page.getByRole('heading', { name: 'Your Runs, Coins & Breath Sync' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Progress' })).toBeVisible();
   });
 
   test('hovering the page pill opens the drawer and Esc closes it', async ({ page }) => {
@@ -29,7 +29,7 @@ test.describe('navigation drawer', () => {
     const drawer = page.getByRole('navigation', { name: 'Pages' });
     await expect(drawer).toBeVisible();
 
-    await expect(drawer.getByRole('button', { name: /Run History/ })).toHaveAttribute('aria-current', 'page');
+    await expect(drawer.getByRole('button', { name: /^Progress/ })).toHaveAttribute('aria-current', 'page');
     await expect(drawer.locator('[aria-current="page"]')).toHaveCount(1);
     await expect(drawer.getByRole('button', { name: /Training Game/ })).not.toHaveAttribute('aria-current', /.*/);
   });

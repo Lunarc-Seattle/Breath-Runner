@@ -1,248 +1,323 @@
+import { useMemo, useState } from 'react';
 import { useApp } from '../app/AppContext.jsx';
-import { PDF_COLORS, solidStyle } from '../data/simStore.js';
-import { brand, ink, status, withAlpha } from '../styles/tokens.js';
+import { useSavedRuns } from '../app/useSavedRuns.js';
+import { getLevel } from '../core/forestLevels.ts';
+import { coinsLast7, dailyBestSync, greeting, runsInRange, todaySlots, totals, weekChange } from '../core/progress.ts';
+import { RidgeChart } from '../components/RidgeChart.jsx';
+import { Avatar, BatteryIcon, btn, Card, CardHead, Chip, SampleTag } from '../components/ui.jsx';
 
-/** 01 Home: greeting, resume / pick a map, and inline Bluetooth trainer pairing. */
-export default function HomePage() {
-  const { state, navigate, selectMap, trainer } = useApp();
+const ASSETS = `${import.meta.env.BASE_URL}assets/`;
+const WEEKDAY = new Intl.DateTimeFormat('en-US', { weekday: 'short' });
+const LONG_DATE = new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+const SHORT_DATE = new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+const nf = new Intl.NumberFormat('en-US');
+
+// Marker positions on the hero art, as % of the 2400×1108 illustration (from the design).
+const MARKER_AT = {
+  morning: { left: '23.5%', top: '82.1%' },
+  afternoon: { left: '72.5%', top: '81.6%' },
+  evening: { left: '87%', top: '65.6%' }
+};
+const SLOT_NOTE = { done: 'Done', missed: 'Missed' };
+
+function CheckIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="m5 12.5 4.5 4.5L19 7.5" />
+    </svg>
+  );
+}
+
+function describeSlots(slots) {
+  return slots
+    .map(s => {
+      if (s.state === 'done') return `${s.label} done.`;
+      if (s.state === 'missed') return `${s.label} missed.`;
+      return `${s.label}${s.state === 'next' ? ' is next,' : ''} at ${s.time}.`;
+    })
+    .join(' ');
+}
+
+function Hero({ name, map, slots, onStart }) {
+  const now = new Date();
+  const level = getLevel(map.id);
+  const next = slots.find(s => s.state === 'next');
+  const allDone = slots.every(s => s.state === 'done');
+  const lede = next
+    ? `Your ${next.label.toLowerCase()} session is next.`
+    : allDone
+      ? 'All three sessions done today.'
+      : "Today's sessions are over. Run again whenever you like.";
 
   return (
-    <section className="space-y-8 animate-page">
-      {/* Hero Greeting & Inline Bluetooth Pairing Card */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left 8 Cols: Warm Patient Greeting & "Resume or Pick Map?" Prompt */}
-        <div className="lg:col-span-8 rounded-[32px] bg-white p-8 lg:p-10 border border-slate-200/80 shadow-sm flex flex-col justify-between relative overflow-hidden">
-          {/* Decorative PDF Palette Blobs */}
-          <div
-            aria-hidden="true"
-            className=" -right-12 -top-12 w-48 h-48 rounded-full opacity-20 pointer-events-none"
-            style={{ backgroundColor: PDF_COLORS.purple, position: 'absolute' }}
-          ></div>
-          <div
-            aria-hidden="true"
-            className=" right-24 -bottom-16 w-40 h-40 rounded-full opacity-20 pointer-events-none"
-            style={{ backgroundColor: PDF_COLORS.yellow, position: 'absolute' }}
-          ></div>
-
-          <div className="space-y-4 relative z-10">
-            <div
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold"
-              style={{ backgroundColor: withAlpha(brand.teal.DEFAULT, 0x18), color: PDF_COLORS.tealInk }}
-            >
-              <span>🌿 Daily Lung Recovery Companion</span>
-              <span aria-hidden="true">•</span>
-              <span>Day 18 Streak</span>
-            </div>
-
-            <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-slate-900 leading-tight">
-              Hi, {state.userName}! 👋
-              <br />
-              <span className="font-normal text-slate-600 text-2xl sm:text-3xl">
-                What map would you like to practice today, or resume your last session?
-              </span>
-            </h1>
-          </div>
-
-          {/* Primary Action Cards: Resume Last Session VS Choose New Map */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-8 relative z-10">
-            {/* Option A: Resume Last Session */}
-            <div
-              className="p-5 rounded-3xl text-white flex flex-col justify-between shadow-md"
-              style={{ backgroundColor: PDF_COLORS.tealDeep }}
-            >
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs font-mono">
-                  <span>RESUME LAST PRACTICE</span>
-                  <span>{state.lastMap.progressPct}% DONE</span>
-                </div>
-                <div className="text-2xl font-bold">{state.lastMap.name}</div>
-                <div className="text-xs">
-                  Valve Resistance: {state.lastMap.valveKpa} kPa • Target: {state.lastMap.targetL}L
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => navigate('play')}
-                className="mt-5 w-full py-3 rounded-2xl bg-white text-brand-teal-ink font-bold text-xs uppercase tracking-wider hover:bg-opacity-95 transition-all flex items-center justify-center gap-2"
-              >
-                <span>▶ Resume {state.lastMap.name}</span>
-              </button>
-            </div>
-
-            {/* Option B: QuickSpirometry or Schedule */}
-            <div className="p-5 rounded-3xl bg-brand-purple/15 border border-brand-purple/30 flex flex-col justify-between">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs font-mono text-brand-purple-ink font-semibold">
-                  <span>TODAY&apos;S CHECKUP</span>
-                  <span>PEAK: 3.89 L</span>
-                </div>
-                <div className="text-2xl font-bold text-slate-800">Blow a Lung Test First?</div>
-                <div className="text-xs text-slate-600">
-                  Measure today&apos;s FVC &amp; FEV1 before jumping into a new map scene.
-                </div>
-              </div>
-              <div className="mt-5 flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => navigate('spirometry')}
-                  className="flex-1 py-3 rounded-2xl text-white font-bold text-xs uppercase tracking-wider transition-all"
-                  style={{ backgroundColor: PDF_COLORS.purpleDeep }}
-                >
-                  Spirometry Lab
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate('schedule')}
-                  className="px-4 py-3 rounded-2xl bg-white text-slate-700 font-semibold text-xs border border-slate-200"
-                >
-                  Schedule
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right 4 Cols: Inline Bluetooth Device Pairing & Status Card */}
-        <div className="lg:col-span-4 rounded-[32px] bg-white p-7 border border-slate-200/80 shadow-sm flex flex-col justify-between">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-mono uppercase tracking-wider text-slate-500">Bluetooth Trainer</span>
-              <span
-                className="px-3 py-1 rounded-full text-xs font-bold"
-                style={{
-                  backgroundColor: state.bleConnected
-                    ? withAlpha(brand.teal.DEFAULT, 0x18)
-                    : state.bleScanning
-                      ? withAlpha(brand.purple.DEFAULT, 0x20)
-                      : withAlpha(brand.pink.DEFAULT, 0x30),
-                  color: state.bleConnected ? PDF_COLORS.tealInk : state.bleScanning ? brand.purple.ink : status.error
-                }}
-              >
-                {state.bleScanning ? 'SEARCHING…' : state.bleConnected ? '● CONNECTED' : 'NOT CONNECTED'}
-              </span>
-            </div>
-
-            {/* Rhino Coral-Pink Breathing Trainer Illustration */}
-            <div className="py-3 flex justify-center">
-              <svg viewBox="0 0 240 165" className="w-48 h-36" aria-hidden="true">
-                <circle cx="120" cy="82" r="68" fill={brand.purple.DEFAULT} fillOpacity="0.18" />
-                <circle cx="165" cy="115" r="35" fill={brand.yellow.DEFAULT} fillOpacity="0.35" />
-                <path
-                  d="M85 60 C85 42 145 42 160 60 L182 60 L182 82 L158 85 L138 142 C134 154 110 154 108 140 L102 88 L85 78 Z"
-                  fill={brand.pink.DEFAULT}
-                  stroke={ink}
-                  strokeWidth="1.5"
-                />
-                <rect x="178" y="64" width="16" height="14" rx="3" fill={brand.teal.DEFAULT} />
-              </svg>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-slate-50 space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span className="text-slate-600">Device</span>
-                <span className="font-mono font-semibold">{state.deviceName || '—'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-600">Battery Level</span>
-                <span className="font-mono font-bold text-brand-teal-ink">
-                  {state.batteryPct !== null ? `${state.batteryPct}%` : '—'}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-600">Mouthpiece Status</span>
-                <span className="font-mono text-brand-purple-ink">
-                  {state.bleConnected ? 'Sterile (UV-C OK)' : '—'}
-                </span>
-              </div>
-            </div>
-
-            {state.bleError && !state.bleConnected && (
-              <div
-                role="alert"
-                className="p-3.5 rounded-2xl bg-brand-yellow/15 border border-brand-yellow/50 text-xs text-slate-700 leading-relaxed"
-              >
-                <div className="font-bold text-brand-yellow-ink mb-0.5">Trainer not found</div>
-                {state.bleError}
-              </div>
-            )}
-            {!state.bleConnected && (
-              <button
-                type="button"
-                onClick={() => navigate('play')}
-                className="text-xs font-semibold text-brand-teal-ink hover:underline"
-              >
-                No trainer? Play Forest · Level 1 in free-trial mode →
-              </button>
-            )}
-          </div>
-
+    <div className="home-hero">
+      <div className="home-hero-copy">
+        <p className="text-sm text-slate-600 mb-2">{LONG_DATE.format(now)}</p>
+        <h1
+          id="home-title"
+          className="text-[28px] lg:text-[34px] font-semibold leading-[1.16] tracking-tight text-slate-900"
+        >
+          {greeting(now)},
+          <br />
+          {name}
+        </h1>
+        <p className="text-base text-slate-700 mt-3.5 mb-6 max-w-[36ch]">
+          {lede} <span className="whitespace-nowrap">{map.name} is ready.</span>
+        </p>
+        <p className="home-hero-today">{describeSlots(slots)}</p>
+        <div className="flex items-center gap-4 flex-wrap">
           <button
             type="button"
-            onClick={state.bleConnected ? trainer.disconnect : trainer.pair}
-            disabled={state.bleScanning}
-            className="mt-4 w-full py-3.5 rounded-2xl font-bold text-xs uppercase tracking-wider text-white transition-all shadow-sm"
-            style={{ backgroundColor: state.bleScanning ? PDF_COLORS.purpleDeep : ink }}
+            onClick={onStart}
+            className={`${btn.primary} shadow-[0_10px_24px_rgba(15,131,135,0.28)]`}
           >
-            {state.bleScanning
-              ? 'Searching for trainer…'
-              : state.bleConnected
-                ? 'Disconnect trainer'
-                : 'Pair Bluetooth trainer'}
+            Start today’s run
           </button>
+          <span className="text-sm text-slate-600">{level.skill} · inhale to jump, keep inhaling to glide</span>
         </div>
       </div>
-
-      {/* Bottom Section: "Which Map Would You Like to Blow Today?" */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-bold text-slate-900">Pick a Map to Practice Today</h2>
-            <p className="text-xs text-slate-600">
-              Click any scene below to load its resistance valve profile and start training
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => navigate('maps')}
-            className="text-xs font-semibold text-brand-teal-ink hover:underline"
-          >
-            View Full Map Catalog (03) →
-          </button>
+      <div className="home-hero-scene" aria-hidden="true">
+        <div className="home-hero-art">
+          <img src={`${ASSETS}ui/hero-forest.webp`} alt="" width="2400" height="1108" />
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {state.maps.map(m => (
-            <div
-              key={m.id}
-              className={`rounded-[28px] bg-white p-6 border transition-all flex flex-col justify-between shadow-sm ${
-                state.lastMap.id === m.id ? 'border-2 border-brand-teal' : 'border-slate-200/80 hover:border-slate-300'
-              }`}
-            >
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="px-3 py-1 rounded-full text-xs font-bold text-white" style={solidStyle(m.color)}>
-                    {m.tag}
-                  </span>
-                  <span className="font-mono text-xs text-slate-500">{m.kpa} kPa</span>
-                </div>
-                <h3 className="text-2xl font-bold text-slate-800">{m.name}</h3>
-                <p className="text-xs text-slate-600 leading-relaxed">{m.desc}</p>
-              </div>
-
-              <div className="pt-5 mt-5 border-t border-slate-100 flex items-center justify-between gap-2">
-                <span className="text-xs font-mono text-slate-600">Target: {m.targetL}L</span>
-                <button
-                  type="button"
-                  onClick={() => selectMap(m, true)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-white transition-opacity hover:opacity-90"
-                  style={solidStyle(m.color)}
-                >
-                  Practice Map →
-                </button>
-              </div>
+        <div className="home-hero-art home-hero-marks">
+          {slots.map(s => (
+            <div key={s.id} className={`home-wp is-${s.state}`} style={MARKER_AT[s.id]}>
+              <span className="home-wp-label">
+                {s.label} <em>{SLOT_NOTE[s.state] || s.time}</em>
+              </span>
+              <span className="home-wp-dot">{s.state === 'done' && <CheckIcon />}</span>
             </div>
           ))}
+          <img
+            className="home-runner"
+            src={`${ASSETS}ui/runner-jump.webp`}
+            alt=""
+            width="509"
+            height="560"
+            style={{ left: '61.2%', top: '83.2%' }}
+          />
         </div>
+      </div>
+    </div>
+  );
+}
+
+function SyncCard({ runs, status, error, onProgress, onPlay }) {
+  const days = dailyBestSync(runs, 7);
+  const week = totals(runsInRange(runs, 7));
+  const change = weekChange(runs);
+  const values = days.map(d => d.best);
+  const hasData = values.some(v => v !== null);
+  // Zoom the y axis to the week's range (in steps of 10) so day-to-day change stays visible.
+  const lowest = Math.min(100, ...values.filter(v => v !== null));
+  const floor = Math.max(0, Math.floor((lowest - 10) / 10) * 10);
+
+  return (
+    <Card className="md:col-span-2 xl:col-span-1" aria-labelledby="sync-title">
+      <CardHead id="sync-title" title="Breath sync" caption="Best run each day, last 7 days">
+        <button type="button" onClick={onProgress} className={btn.link}>
+          See all progress
+        </button>
+      </CardHead>
+
+      {status === 'loading' && (
+        <p role="status" className="text-sm text-slate-600 py-10 text-center">
+          Loading saved runs…
+        </p>
+      )}
+      {status === 'error' && (
+        <p role="alert" className="text-sm text-brand-pink-ink py-6">
+          Could not load your runs: {error}
+        </p>
+      )}
+      {status === 'ready' && !hasData && (
+        <div className="py-6 space-y-4">
+          <p className="text-sm text-slate-600 max-w-sm">
+            No runs saved in the last 7 days. Finish a lap and press “Save to history”: your breath sync shows up here.
+          </p>
+          <button type="button" onClick={onPlay} className={btn.soft}>
+            Start a run
+          </button>
+        </div>
+      )}
+      {status === 'ready' && hasData && (
+        <>
+          <div className="flex items-center gap-3.5 flex-wrap mt-1 mb-1.5">
+            <span className="text-[40px] font-semibold leading-none tracking-tight tabular-nums text-slate-900">
+              {week.bestSync}%<span className="text-base font-normal text-slate-600 ml-1.5">best</span>
+            </span>
+            {change !== null && (
+              <Chip tone={change < 0 ? 'coral' : 'teal'}>
+                {change === 0
+                  ? 'Same as last week'
+                  : `${change > 0 ? 'Up' : 'Down'} ${Math.abs(change)} points from last week`}
+              </Chip>
+            )}
+          </div>
+          <RidgeChart
+            values={values}
+            min={floor}
+            max={100}
+            height={210}
+            ticks={[floor + (100 - floor) / 2, 100]}
+            dots
+            compact
+            xlabels={days.map((d, i) => [i, WEEKDAY.format(d.date)])}
+            label={`Best breath sync each day for the last 7 days: ${days
+              .map(d => `${WEEKDAY.format(d.date)} ${d.best === null ? 'no run' : `${d.best}%`}`)
+              .join(', ')}`}
+          />
+        </>
+      )}
+    </Card>
+  );
+}
+
+function TrainerCard({ state, trainer, booking, daysSince, onBook }) {
+  const connected = state.bleConnected;
+  return (
+    <Card tone="warm" className="flex flex-col gap-4" aria-labelledby="trainer-title">
+      <div className="relative overflow-hidden rounded-[18px] bg-neutral-200 aspect-[1.62]">
+        <img
+          src={`${ASSETS}ui/trainer.webp`}
+          alt=""
+          width="800"
+          height="614"
+          loading="lazy"
+          className="absolute inset-0 w-full h-full object-cover object-[50%_38%] home-photo-mask"
+        />
+      </div>
+      <div className="space-y-2.5">
+        <h2 id="trainer-title" className="text-[17px] font-semibold text-slate-900">
+          {connected ? state.deviceName : 'AeroCare trainer'}
+        </h2>
+        <div className="flex flex-wrap gap-2">
+          {state.bleScanning ? (
+            <Chip tone="lavender" dot>
+              Searching…
+            </Chip>
+          ) : connected ? (
+            <>
+              <Chip tone="teal" dot>
+                Connected
+              </Chip>
+              {state.batteryPct !== null && (
+                <Chip>
+                  <BatteryIcon pct={state.batteryPct} low={state.batteryPct < 20} />
+                  Battery {state.batteryPct}%
+                </Chip>
+              )}
+            </>
+          ) : (
+            <p className="text-sm text-slate-700">No trainer found, using the microphone</p>
+          )}
+        </div>
+        {!connected && !state.bleScanning && (
+          <p className="text-[13px] text-slate-600">In the game, breathe in near the mic or hold Space to inhale.</p>
+        )}
+        {state.bleError && !connected && (
+          <p role="alert" className="text-[13px] text-brand-pink-ink">
+            {state.bleError}
+          </p>
+        )}
+        <button
+          type="button"
+          onClick={connected ? trainer.disconnect : trainer.pair}
+          disabled={state.bleScanning}
+          className={`${btn.soft} h-10 px-5 text-sm`}
+        >
+          {connected ? 'Disconnect trainer' : 'Pair Bluetooth trainer'}
+        </button>
+      </div>
+      <div
+        className={`mt-auto flex items-center justify-between gap-3 rounded-[14px] py-3 pl-4 pr-3.5 ${booking ? 'bg-surface-mint' : 'bg-surface-coral'}`}
+      >
+        <div className="min-w-0">
+          <div className={`text-sm font-semibold ${booking ? 'text-brand-teal-ink' : 'text-brand-pink-ink'}`}>
+            {booking ? 'Disinfection booked' : 'Disinfection due'}
+          </div>
+          <div className="text-[13px] text-slate-700">
+            {booking
+              ? `${SHORT_DATE.format(booking.date)}, ${booking.slot}`
+              : `Last done ${daysSince} days ago · sample`}
+          </div>
+        </div>
+        <button type="button" onClick={onBook} className={btn.link}>
+          {booking ? 'Change' : 'Book'}
+        </button>
+      </div>
+    </Card>
+  );
+}
+
+function FriendsCard({ friends, myCoins, myInitials }) {
+  const [invited, setInvited] = useState(false);
+  const board = [
+    ...friends.map(f => ({ ...f, me: false })),
+    { name: 'You', initials: myInitials, tone: 'teal', coins: myCoins, me: true }
+  ].sort((a, b) => b.coins - a.coins || Number(b.me) - Number(a.me));
+
+  return (
+    <Card tone="lavender" aria-labelledby="friends-title">
+      <CardHead id="friends-title" title="Friends this week" caption="Coins from the last 7 days">
+        <SampleTag />
+      </CardHead>
+      <ol className="flex flex-col gap-0.5 mb-3">
+        {board.map((p, i) => (
+          <li
+            key={p.name}
+            className={`grid grid-cols-[16px_36px_minmax(0,1fr)_auto] items-center gap-2.5 px-2.5 py-2 rounded-[14px] ${p.me ? 'bg-white' : ''}`}
+          >
+            <span className="text-[13px] font-semibold text-brand-purple-ink text-center">{i + 1}</span>
+            <Avatar initials={p.initials} tone={p.tone} />
+            <span className="text-sm font-semibold text-slate-900 truncate">{p.name}</span>
+            <span className="inline-flex items-center gap-1.5 text-sm font-semibold tabular-nums text-slate-900">
+              <img src={`${ASSETS}forest/coin.png`} alt="" width="18" height="18" className="w-[18px] h-[18px]" />
+              {nf.format(p.coins)}
+              <span className="sr-only"> coins</span>
+            </span>
+          </li>
+        ))}
+      </ol>
+      <p className="text-[13px] text-slate-600 mb-4">
+        Your coins come from your saved runs. Friends are sample players.
+      </p>
+      <button type="button" onClick={() => setInvited(true)} className={`${btn.soft} w-full`}>
+        Invite a friend to run together
+      </button>
+      <p role="status" className="text-sm text-brand-teal-ink mt-2.5 empty:hidden">
+        {invited ? 'Inviting friends is not part of this demo yet.' : ''}
+      </p>
+    </Card>
+  );
+}
+
+/** 01 Home: today's run, breath sync from saved runs, the paired trainer and friends. */
+export default function HomePage() {
+  const { state, navigate, trainer } = useApp();
+  const { runs, status, error } = useSavedRuns();
+  const slots = useMemo(() => todaySlots(status === 'ready' ? runs : []), [runs, status]);
+
+  return (
+    <section className="space-y-6 animate-page" aria-labelledby="home-title">
+      <Hero name={state.userName} map={state.lastMap} slots={slots} onStart={() => navigate('play')} />
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[minmax(0,1.32fr)_minmax(0,1fr)_minmax(0,0.92fr)] gap-6">
+        <SyncCard
+          runs={runs}
+          status={status}
+          error={error}
+          onProgress={() => navigate('history')}
+          onPlay={() => navigate('play')}
+        />
+        <TrainerCard
+          state={state}
+          trainer={trainer}
+          booking={state.disinfectionBooking}
+          daysSince={state.hygiene.daysSince}
+          onBook={() => navigate('trainer')}
+        />
+        <FriendsCard friends={state.friendsThisWeek} myCoins={coinsLast7(runs)} myInitials="XM" />
       </div>
     </section>
   );

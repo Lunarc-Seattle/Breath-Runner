@@ -46,9 +46,7 @@ test('play a lap by following the breath cue, save it, then clear the history', 
   await expect(page.getByRole('status').filter({ hasText: /^Saved / })).toContainText(`${coins} coins`);
 
   await page.goto('/#/history');
-  const row = page
-    .getByRole('row')
-    .filter({ has: page.getByRole('rowheader', { name: `${LEVEL_NAME} · Breath Runner` }) });
+  const row = page.getByRole('row').filter({ has: page.getByRole('rowheader', { name: LEVEL_NAME }) });
   await expect(row).toHaveCount(1);
   const cells = row.getByRole('cell');
   // Columns: Date | (Level is the row header) | Duration | Coins | Breath sync | Falls | Laps
@@ -62,7 +60,7 @@ test('play a lap by following the breath cue, save it, then clear the history', 
     dialog.accept();
   });
   await page.getByRole('button', { name: 'Clear history' }).click();
-  await expect(page.getByText('NO RUNS YET')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'No runs yet' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Start your first run' })).toBeVisible();
   await expect(row).toHaveCount(0);
 });

@@ -3,14 +3,15 @@ import { brand } from '../styles/tokens.js';
 /**
  * Every page in the app, keyed by the slug used in the URL hash (#/play, #/history, …).
  * Order and `group` drive the navigation drawer; `code` is the number shown in the UI
- * (01–12 are the original design pages; Run History was added later as 13).
+ * (01–12 are the original design pages; Progress, the saved-run history, was added later as 13).
+ * Trainer & Care (08) took over the old Hygiene (08) and Device Rental (09) pages; Care Team (14) is new.
  */
 export const ROUTES = [
   {
     slug: 'home',
     code: '01',
-    name: 'Welcome & Today',
-    subtitle: 'Resume session, pick map & inline Bluetooth pair',
+    name: 'Home',
+    subtitle: "Today's run, breath sync, trainer & friends",
     badge: brand.teal.DEFAULT,
     group: null
   },
@@ -41,8 +42,8 @@ export const ROUTES = [
   {
     slug: 'history',
     code: '13',
-    name: 'Run History',
-    subtitle: 'Your saved Breath Runner runs, coins & breath sync',
+    name: 'Progress',
+    subtitle: 'Breath sync, runs & coins from your saved runs',
     badge: brand.teal.DEFAULT,
     group: 'Train'
   },
@@ -71,19 +72,19 @@ export const ROUTES = [
     group: 'Together'
   },
   {
-    slug: 'hygiene',
+    slug: 'trainer',
     code: '08',
-    name: 'Hygiene & Booking',
-    subtitle: '4-part disinfection ring & April sterilization calendar',
+    name: 'Trainer & Care',
+    subtitle: 'Paired trainer, hospital loan, hygiene & disinfection booking',
     badge: brand.teal.DEFAULT,
     group: 'Care'
   },
   {
-    slug: 'rental',
-    code: '09',
-    name: 'Device Rental',
-    subtitle: 'Hospital shared trainer lease & cloud telemetry',
-    badge: brand.blue.DEFAULT,
+    slug: 'care-team',
+    code: '14',
+    name: 'Care Team',
+    subtitle: 'Clinician view: sample patients, adherence & prescriptions',
+    badge: brand.purple.DEFAULT,
     group: 'Care'
   },
   {
@@ -115,6 +116,15 @@ export const ROUTES = [
 export const NAV_GROUPS = ['Train', 'Together', 'Care', 'You'];
 
 export const DEFAULT_SLUG = 'home';
+
+/** Old slugs that now live on another page, so saved links and bookmarks still land somewhere useful. */
+export const REDIRECTS = { hygiene: 'trainer', rental: 'trainer' };
+
+/** The page a slug opens: itself, its redirect target, or null when unknown. */
+export function resolveSlug(slug) {
+  const target = REDIRECTS[slug] || slug;
+  return findRoute(target) ? target : null;
+}
 
 export function findRoute(slug) {
   return ROUTES.find(r => r.slug === slug) || null;
