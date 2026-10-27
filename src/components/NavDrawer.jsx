@@ -224,7 +224,7 @@ export function NavDrawer({ routes, currentSlug, onNavigate }) {
               <span>
                 <span className="block text-sm font-bold">Home</span>
                 <span className={`block text-[11px] ${onHome ? 'text-white/80' : 'text-slate-600'}`}>
-                  Today, resume &amp; pick a map
+                  Today&apos;s run, breath sync &amp; trainer
                 </span>
               </span>
             </button>

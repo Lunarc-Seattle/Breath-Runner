@@ -12,6 +12,9 @@
  *  - Small coloured text on light backgrounds uses an `ink` variant (teal.ink, purple.ink, ...).
  *  - The base brand hues (teal, purple, yellow, pink, blue) are for fills, tints, strokes and
  *    illustration; yellow and pink fills carry `ink` text, never white.
+ *  - Each `surface` tint carries the `ink` variant of its own hue: mint -> teal.ink (4.8:1),
+ *    coral -> pink.ink (4.6:1), sun -> yellow.ink (4.7:1), lavender -> purple.ink (5.1:1);
+ *    warm carries `ink` or slate-600. slate-500 is AA on white only, so use slate-600 on any tint.
  */
 
 export const brand = {
@@ -47,7 +50,17 @@ export const brand = {
 export const ink = '#1E2432'; // primary dark: toasts, dark buttons, illustration outlines
 export const canvas = '#F4F6FA'; // page background and quiet card fills
 export const surface = {
-  lavender: '#EEF0F8' // profile card backdrop
+  lavender: '#EEF0F8', // profile card and friends card backdrop
+  mint: '#DDF0F0', // teal chips, selected toggles, available calendar days (teal.ink text)
+  warm: '#F7EFE9', // trainer card backdrop
+  coral: '#FCE8E8', // "needs attention" chips and notices (pink.ink text)
+  sun: '#FBF0CF' // "soon" chips and avatar tint (yellow.ink text)
+};
+/** Ridge charts (Progress, Home, care team): the game's mountain silhouette. */
+export const chart = {
+  ridge: '#BCDCDE', // area fill under the line
+  line: '#2A4860', // the ridge line, day dots and milestone pines (9.6:1 on white)
+  grid: '#E3ECED' // horizontal grid lines
 };
 export const status = {
   error: '#B23A26' // "not connected" text on pink tints (AA)
@@ -69,7 +82,7 @@ export const game = {
 };
 
 /** Everything Tailwind should know about, keyed exactly as the class names read. */
-export const colors = { brand, ink, canvas, surface, status, game };
+export const colors = { brand, ink, canvas, surface, chart, status, game };
 
 /** `#RRGGBB` plus a 0-255 alpha byte, for inline 8-digit hex tints (e.g. withAlpha(teal, 0x18)). */
 export const withAlpha = (hex, alphaByte) => hex + alphaByte.toString(16).toUpperCase().padStart(2, '0');

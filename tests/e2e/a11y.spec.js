@@ -8,7 +8,7 @@ import { test, expect } from '@playwright/test';
 const PAGES = [
   { slug: 'home', ready: page => page.getByRole('heading', { level: 1 }) },
   { slug: 'play', ready: page => page.getByRole('button', { name: '▶ Start running' }) },
-  { slug: 'history', ready: page => page.getByRole('heading', { name: 'Your Runs, Coins & Breath Sync' }) }
+  { slug: 'history', ready: page => page.getByRole('heading', { level: 1, name: 'Progress' }) }
 ];
 
 for (const { slug, ready } of PAGES) {

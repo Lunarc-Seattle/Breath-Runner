@@ -3,14 +3,14 @@ import { brand } from '../styles/tokens.js';
 /**
  * Every page in the app, keyed by the slug used in the URL hash (#/play, #/history, …).
  * Order and `group` drive the navigation drawer; `code` is the number shown in the UI
- * (01–12 are the original design pages; Run History was added later as 13).
+ * (01–12 are the original design pages; Progress, the saved-run history, was added later as 13).
  */
 export const ROUTES = [
   {
     slug: 'home',
     code: '01',
-    name: 'Welcome & Today',
-    subtitle: 'Resume session, pick map & inline Bluetooth pair',
+    name: 'Home',
+    subtitle: "Today's run, breath sync, trainer & friends",
     badge: brand.teal.DEFAULT,
     group: null
   },
@@ -41,8 +41,8 @@ export const ROUTES = [
   {
     slug: 'history',
     code: '13',
-    name: 'Run History',
-    subtitle: 'Your saved Breath Runner runs, coins & breath sync',
+    name: 'Progress',
+    subtitle: 'Breath sync, runs & coins from your saved runs',
     badge: brand.teal.DEFAULT,
     group: 'Train'
   },

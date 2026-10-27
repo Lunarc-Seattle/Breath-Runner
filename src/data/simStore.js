@@ -125,6 +125,14 @@ export const INITIAL_SIM_STATE = {
     { part: 'Main Body', pct: 25, color: PDF_COLORS.pink, status: 'Clean' }
   ],
   bookedDays: [10, 19, 21, 24, 30],
+  // Set by the Trainer & care booking form: { date: Date, slot: '9 to 11 AM' } (sample, never sent anywhere).
+  disinfectionBooking: null,
+  // Sample friends for the Home leaderboard; the patient's own row is computed from saved runs.
+  friendsThisWeek: [
+    { name: 'Ali', initials: 'A', tone: 'sun', coins: 1020 },
+    { name: 'Bage', initials: 'B', tone: 'coral', coins: 640 },
+    { name: 'Ms. Bai', initials: 'MB', tone: 'white', coins: 410 }
+  ],
   leaseUsedDays: 18,
   leaseQuotaDays: 30,
   regressionRuns: [
