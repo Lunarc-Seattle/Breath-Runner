@@ -93,7 +93,7 @@ Breath Runner is page 04 of a companion-app prototype: home, daily schedule, map
 
 ![Navigation drawer open from the left edge, grouped into Train, Together, Care and You](docs/media/nav-drawer.jpg)
 
-![Run History: total runs, minutes, best breath sync and coins, then a table of saved runs with level, duration, coins, breath sync, falls and laps](docs/media/run-history.jpg)
+![Progress page after two real laps: best breath sync per day, stats for runs, training time, best breath sync and coins, then a table of saved runs with level, duration, coins, breath sync, falls and laps](docs/media/progress.jpg)
 
 **Honest scope:** apart from the game, these pages are interactive prototypes with sample data. Trainer pairing uses the real Web Bluetooth API (Chrome / Edge) and looks for a device named `AeroCare…`. The trainer itself is a design concept, so without one the app says no trainer was found and points you to free-trial mode. The microphone input, the game and the session storage are real.
 

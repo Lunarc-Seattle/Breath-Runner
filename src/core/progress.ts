@@ -34,6 +34,8 @@ export const LEVELS = [
 ] as const;
 
 const RUNNER_SUFFIX = / · Breath Runner$/;
+/** The "all runs" range never shows less than a week, so a few days of runs still read as a trend. */
+const MIN_ALL_DAYS = 7;
 
 const has = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
 
@@ -77,7 +79,7 @@ export function totals(runs: readonly RunLike[]): RunTotals {
 
 /**
  * The best breath sync of each calendar day, oldest first. With `days`, the last `days` days
- * ending today; with null, every day from the first saved run to today.
+ * ending today; with null, every day from the first saved run to today, and at least a week.
  */
 export function dailyBestSync(runs: readonly RunLike[], days: number | null, now: DateInput = new Date()): DayBest[] {
   const best = new Map<string, number>();
@@ -93,8 +95,8 @@ export function dailyBestSync(runs: readonly RunLike[], days: number | null, now
 
   const end = startOfDay(now);
   const cursor = startOfDay(end);
-  if (days !== null) cursor.setDate(cursor.getDate() - (days - 1));
-  else if (first && first < end) cursor.setTime(startOfDay(first).getTime());
+  cursor.setDate(cursor.getDate() - ((days ?? MIN_ALL_DAYS) - 1));
+  if (days === null && first && first < cursor) cursor.setTime(startOfDay(first).getTime());
 
   const out: DayBest[] = [];
   while (cursor <= end) {

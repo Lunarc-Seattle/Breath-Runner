@@ -124,7 +124,7 @@ export function RidgeChart({
           {pines
             .filter(i => i >= 0 && i < n && values[i] !== null && values[i] !== undefined)
             .map(i => (
-              <g key={`pine-${i}`} transform={`translate(${x(i)} ${y(values[i]) - 7})`}>
+              <g key={`pine-${i}`} transform={`translate(${x(i)} ${y(values[i]) - (i === lastIndex ? 11 : 7)})`}>
                 <path d={PINE} fill={chart.line} />
                 <line x1="0" y1="0" x2="0" y2="5" stroke={chart.line} strokeWidth="1.5" />
               </g>

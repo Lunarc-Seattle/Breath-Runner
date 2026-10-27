@@ -64,12 +64,15 @@ test('dailyBestSync takes the best run of each day and leaves empty days null', 
   assert.equal(days[5].best, null);
 });
 
-test('dailyBestSync with no range starts at the first saved run', () => {
-  const days = dailyBestSync([run(22), run(24, { syncPct: undefined }), { completedAt: 'not a date' }], null, now);
-  assert.equal(days[0].dateKey, '2026-10-22');
-  assert.equal(days.length, 5);
+test('dailyBestSync with no range starts at the first saved run, and covers at least a week', () => {
+  const days = dailyBestSync([run(12), run(14, { syncPct: undefined }), { completedAt: 'not a date' }], null, now);
+  assert.equal(days[0].dateKey, '2026-10-12');
+  assert.equal(days.length, 15);
   assert.equal(days[2].best, null);
-  assert.equal(dailyBestSync([], null, now).length, 1);
+  const recent = dailyBestSync([run(25)], null, now);
+  assert.equal(recent.length, 7);
+  assert.equal(recent[0].dateKey, '2026-10-20');
+  assert.equal(dailyBestSync([], null, now).length, 7);
 });
 
 test('weekChange compares the average daily best of two weeks', () => {
