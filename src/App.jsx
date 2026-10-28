@@ -4,6 +4,7 @@ import { ROUTES } from './app/routes.js';
 import { PAGES } from './pages/index.js';
 import { NavDrawer } from './components/NavDrawer.jsx';
 import { ErrorBoundary } from './components/ErrorBoundary.jsx';
+import { VersionMenu } from './components/VersionMenu.jsx';
 
 function TrainerPill() {
   const { state, trainer } = useApp();
@@ -43,6 +44,7 @@ function Shell({ slug }) {
         <div className="max-w-[1380px] mx-auto flex items-center justify-between gap-4">
           <NavDrawer routes={ROUTES} currentSlug={slug} onNavigate={navigate} />
           <div className="flex items-center gap-3">
+            <VersionMenu />
             <TrainerPill />
             <button
               type="button"
