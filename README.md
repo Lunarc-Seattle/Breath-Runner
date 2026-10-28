@@ -40,11 +40,13 @@ Input: hold the screen, hold Space, or **breathe into your microphone**. The mic
 
 Each level trains a different breathing skill instead of just running faster. The start card explains it, and every number below is computed from the level data:
 
-| Level | Skill | Breaths per lap | Avg inhale | Breath refill | Coins | Pace |
+| Level | Skill | Breaths per lap | Avg inhale | Breath refill | Coin reach | Pace |
 |---|---|---|---|---|---|---|
-| Forest · 1 | Learn the jump: only the big gap needs a real breath | 4 | 0.33 s | 1.6 s | 30, as drawn in the illustration | 1.0× |
-| Sunlit Canyon · 2 | Keep a rhythm: short hops between the big jumps | 7 | 0.64 s | 2.2 s | 25 | 1.1× |
-| Glacier Ridge · 3 | Long, controlled breaths: coins at the top of long glides, slow refill | 4 | 1.23 s | 2.8 s | 19 | 1.2× |
+| Forest · 1 | Learn the jump: only the big gap needs a real breath | 4 | 0.33 s | 1.2 s fast | 58 px generous | 1.0× |
+| Sunlit Canyon · 2 | Keep a rhythm: short hops between the big jumps | 7 | 0.64 s | 2.2 s | 42 px | 1.1× |
+| Glacier Ridge · 3 | Long, controlled breaths: coins only at the arc top, slow refill | 4 | 1.23 s | 2.8 s slow | 28 px precise | 1.2× |
+
+The difficulty gap is intentional: Level 1 refills breath in 1.2 s and has a 58 px pickup radius so beginners can experiment freely; Level 3 needs a full exhale before the next breath (2.8 s) and demands precise timing to hit the 28 px coin window at the arc peak.
 
 A test proves the Glacier point: cutting each breath to 0.6 s at the same jump points collects fewer than half the coins.
 
@@ -94,6 +96,17 @@ The game runs on the original `pic/background.ai` file, not on a redrawing of it
 - **A design system in code.** The palette lives in one token file ([`src/styles/tokens.js`](src/styles/tokens.js)) that feeds Tailwind and the JS helpers. Each token documents its role and contrast rule (e.g. white text only on the "deep" variants). Moving 220 hard-coded colors to tokens was verified to change nothing: computed styles matched across 2,325 elements on all 13 pages.
 - **No third-party requests at runtime.** Fonts are self-hosted and React is bundled, so the static build ships a CSP of `default-src 'self'`.
 - **Accessible and fast.** Lighthouse (desktop, checked in CI) scores **100 for Accessibility, Best Practices and SEO** on the home, game and history pages, with Performance 98–100. Filled brand colors use slightly deeper variants wherever they carry white text, so every label meets WCAG AA contrast (4.5:1). The game has an `aria-live` breath cue, labelled controls, focus moved to each card's main action, and reduced-motion support. The navigation drawer is `inert` while closed.
+
+## Recent additions (v3)
+
+- **Home · Today / This week toggle.** The Breath Sync card defaults to a bar chart of today's individual runs, with a count-up animation on the sync %. A pill switches to the 7-day ridge chart. This means a first-time visitor sees real data immediately after one game rather than a blank chart.
+- **Consecutive training streak.** The home card's footer shows the current day-streak computed from saved history (e.g. "7-day streak") so the patient has a daily reason to keep the chain going.
+- **Progress · Achievements.** Five auto-unlocking badges (First Flight, Smooth Rhythm, Coin Collector, Peak Control, Training Habit) sit at the top of the Progress page; locked ones fade to 40 % opacity. Computed from run totals — no separate state.
+- **Progress · Today / This week overview.** A two-column card above the ridge chart shows runs, best sync and coins for today and for the last 7 days side-by-side.
+- **Play · Personal best.** The lap-result card now shows Coins and Breath Sync in equal-sized panels. When the sync beats every prior lap this session, the Sync panel glows teal and shows "Personal best".
+- **Play · Difficulty dots.** Each level selector button shows filled/open dots (● ○ ○, ● ● ○, ● ● ●) and its training tag so the difference is visible before you play.
+- **Demo seed data.** Ten realistic runs from the past 7 days are written to `localStorage` the first time the app loads with no history. Charts are never empty for a first-time reviewer.
+- **PWA manifest.** `manifest.webmanifest` lets Chrome/Safari prompt "Add to Home Screen", making the app installable with one tap.
 
 ## The rest of the app
 

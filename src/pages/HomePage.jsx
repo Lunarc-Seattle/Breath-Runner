@@ -2,7 +2,17 @@ import { useMemo, useState } from 'react';
 import { useApp } from '../app/AppContext.jsx';
 import { useSavedRuns } from '../app/useSavedRuns.js';
 import { getLevel } from '../core/forestLevels.ts';
-import { coinsLast7, dailyBestSync, greeting, runsInRange, todaySlots, totals, weekChange } from '../core/progress.ts';
+import {
+  coinsLast7,
+  currentStreak,
+  dailyBestSync,
+  greeting,
+  runsInRange,
+  todaySlots,
+  totals,
+  weekChange
+} from '../core/progress.ts';
+import { useCountUp } from '../app/useCountUp.js';
 import { SITE_URL } from '../app/versions.js';
 import { RidgeChart } from '../components/RidgeChart.jsx';
 import { Avatar, BatteryIcon, btn, Card, CardHead, Chip, SampleTag } from '../components/ui.jsx';
@@ -111,12 +121,66 @@ function Hero({ name, map, slots, onStart }) {
 
 const RUN_TIME = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
+function TodayHasData({ todaySyncRuns, todayStats, ghostCount, streak }) {
+  const animatedSync = useCountUp(todayStats.bestSync);
+  const animatedStreak = useCountUp(streak > 0 ? streak : null);
+  return (
+    <>
+      <div className="flex items-center gap-3.5 flex-wrap mt-1 mb-4">
+        <span className="text-[40px] font-semibold leading-none tracking-tight tabular-nums text-slate-900">
+          {animatedSync}%<span className="text-base font-normal text-slate-600 ml-1.5">best today</span>
+        </span>
+      </div>
+      <div className="flex items-end gap-2.5 mb-2.5" style={{ height: 128 }}>
+        {todaySyncRuns.map((run, i) => {
+          const pct = run.syncPct;
+          return (
+            <div key={run.id || i} className="flex flex-col items-center gap-1 flex-1 min-w-0">
+              <span className="text-xs font-semibold text-slate-700 tabular-nums">{pct}%</span>
+              <div className="relative w-full" style={{ height: 96 }}>
+                <div
+                  className="absolute inset-x-0 bottom-0 rounded-t-[6px] bg-gradient-to-t from-teal-500/80 to-teal-300/50"
+                  style={{ height: `${(pct / 100) * 96}px` }}
+                />
+              </div>
+              <span className="text-[10px] text-slate-500 truncate w-full text-center">
+                {RUN_TIME.format(new Date(run.completedAt))}
+              </span>
+            </div>
+          );
+        })}
+        {Array.from({ length: ghostCount }, (_, i) => (
+          <div key={`ghost-${i}`} className="flex flex-col items-center gap-1 flex-1 min-w-0" aria-hidden="true">
+            <span className="text-xs text-transparent select-none">0%</span>
+            <div className="relative w-full" style={{ height: 96 }}>
+              <div className="absolute inset-x-0 bottom-0 rounded-t-[6px] bg-slate-100" style={{ height: 3 }} />
+            </div>
+            <span className="text-[10px] text-slate-200">—</span>
+          </div>
+        ))}
+      </div>
+      <p className="text-sm text-slate-500">
+        {todaySyncRuns.length} {todaySyncRuns.length === 1 ? 'run' : 'runs'} today
+        {todayStats.coins > 0 && <> · {nf.format(todayStats.coins)} coins</>}
+        {streak > 1 && (
+          <>
+            {' '}
+            · <span className="font-semibold text-brand-teal-ink">{animatedStreak}-day streak</span>
+          </>
+        )}
+      </p>
+    </>
+  );
+}
+
 function SyncCard({ runs, status, error, onProgress, onPlay }) {
   const [view, setView] = useState('today');
+  const streak = currentStreak(runs);
 
   // Week data
   const days = dailyBestSync(runs, 7);
   const week = totals(runsInRange(runs, 7));
+  const animatedWeekSync = useCountUp(view === 'week' ? week.bestSync : null);
   const change = weekChange(runs);
   const weekValues = days.map(d => d.best);
   const hasWeekData = weekValues.some(v => v !== null);
@@ -194,47 +258,7 @@ function SyncCard({ runs, status, error, onProgress, onPlay }) {
         </div>
       )}
       {status === 'ready' && view === 'today' && hasTodayData && (
-        <>
-          <div className="flex items-center gap-3.5 flex-wrap mt-1 mb-4">
-            <span className="text-[40px] font-semibold leading-none tracking-tight tabular-nums text-slate-900">
-              {todayStats.bestSync}%<span className="text-base font-normal text-slate-600 ml-1.5">best today</span>
-            </span>
-          </div>
-          {/* Individual run bars */}
-          <div className="flex items-end gap-2.5 mb-2.5" style={{ height: 128 }}>
-            {todaySyncRuns.map((run, i) => {
-              const pct = run.syncPct;
-              return (
-                <div key={run.id || i} className="flex flex-col items-center gap-1 flex-1 min-w-0">
-                  <span className="text-xs font-semibold text-slate-700 tabular-nums">{pct}%</span>
-                  <div className="relative w-full" style={{ height: 96 }}>
-                    <div
-                      className="absolute inset-x-0 bottom-0 rounded-t-[6px] bg-gradient-to-t from-teal-500/80 to-teal-300/50"
-                      style={{ height: `${(pct / 100) * 96}px` }}
-                    />
-                  </div>
-                  <span className="text-[10px] text-slate-500 truncate w-full text-center">
-                    {RUN_TIME.format(new Date(run.completedAt))}
-                  </span>
-                </div>
-              );
-            })}
-            {/* Ghost columns so a single bar doesn't float alone */}
-            {Array.from({ length: ghostCount }, (_, i) => (
-              <div key={`ghost-${i}`} className="flex flex-col items-center gap-1 flex-1 min-w-0" aria-hidden="true">
-                <span className="text-xs text-transparent select-none">0%</span>
-                <div className="relative w-full" style={{ height: 96 }}>
-                  <div className="absolute inset-x-0 bottom-0 rounded-t-[6px] bg-slate-100" style={{ height: 3 }} />
-                </div>
-                <span className="text-[10px] text-slate-200">—</span>
-              </div>
-            ))}
-          </div>
-          <p className="text-sm text-slate-500">
-            {todaySyncRuns.length} {todaySyncRuns.length === 1 ? 'run' : 'runs'} today
-            {todayStats.coins > 0 && <> · {nf.format(todayStats.coins)} coins</>}
-          </p>
-        </>
+        <TodayHasData todaySyncRuns={todaySyncRuns} todayStats={todayStats} ghostCount={ghostCount} streak={streak} />
       )}
 
       {/* ── Week view ──────────────────────────────────────── */}
@@ -253,7 +277,7 @@ function SyncCard({ runs, status, error, onProgress, onPlay }) {
         <>
           <div className="flex items-center gap-3.5 flex-wrap mt-1 mb-1.5">
             <span className="text-[40px] font-semibold leading-none tracking-tight tabular-nums text-slate-900">
-              {week.bestSync}%<span className="text-base font-normal text-slate-600 ml-1.5">best</span>
+              {animatedWeekSync}%<span className="text-base font-normal text-slate-600 ml-1.5">best</span>
             </span>
             {change !== null && (
               <Chip tone={change < 0 ? 'coral' : 'teal'}>
