@@ -100,6 +100,33 @@ The game runs on the original `pic/background.ai` file, not on a redrawing of it
 - **No third-party requests at runtime.** Fonts are self-hosted and React is bundled, so the static build ships a CSP of `default-src 'self'`.
 - **Accessible and fast.** Lighthouse (desktop, checked in CI) scores **100 for Accessibility, Best Practices and SEO** on the home, game and history pages, with Performance 98–100. Filled brand colors use slightly deeper variants wherever they carry white text, so every label meets WCAG AA contrast (4.5:1). The game has an `aria-live` breath cue, labelled controls, focus moved to each card's main action, and reduced-motion support. The navigation drawer is `inert` while closed.
 
+## Recent additions (v4)
+
+### SQLite session storage
+
+`server/models/sqliteRepository.js` is a drop-in replacement for the JSON file store, backed by `better-sqlite3`:
+
+- **Schema:** one `sessions` table with an index on `(completedAt DESC, id DESC)`, bringing cursor-paginated queries from O(n) (full scan) to O(log n).
+- **WAL mode** (`PRAGMA journal_mode = WAL`) lets multiple concurrent readers proceed without blocking writes.
+- **Zero-downtime migration:** on first start, if a `.json` file exists alongside the new `.db` path, every row is imported inside a single transaction and the JSON file is renamed to `.json.migrated`. Subsequent starts skip the migration silently.
+- **Activation:** set `USE_SQLITE=1` or point `DATA_FILE` at a `.db` path. The JSON backend remains the default so nothing breaks.
+- **Tested:** 11 unit tests using an in-memory DB cover add/list/clear, normalisation validation, newest-first ordering, cursor pagination, health, and optional field handling.
+
+### Real-time WebSocket co-op
+
+`server/ws/coopServer.js` attaches a `ws`-based WebSocket server to the same HTTP port as Express (`/ws/coop`):
+
+- **Rooms:** ephemeral, in-memory, max 2 players. Room IDs are 4-digit numbers generated server-side or supplied by the client. Rooms are deleted when the last player disconnects.
+- **Protocol:** `join` → `joined/roomUpdate`; `breath` → `breathUpdate` (fan-out to room partner); `leave/close` → `playerLeft`.
+- **`src/app/useCoopRoom.js`:** React hook that owns the WebSocket lifecycle, exposes `connect/sendBreath/disconnect`, and reflects a typed connection-state machine (`idle | connecting | connected | disconnected | error | unavailable`).
+- **`src/pages/CoopPage.jsx`:** replaces the static placeholder. Lobby screen lets the user enter a name and an optional room code; connected screen shows both players' lung-capacity meters animated in real time at ~10 fps via `sendBreath` called from the RAF loop. Room code has a one-click copy button. On GitHub Pages the hook detects the static host and shows a clear offline message instead of timing out.
+
+### CI fix
+
+`tests/seedData.test.js` was importing `seedData.js` after the file was renamed to `.ts` — 5 tests were failing on Linux CI. Fixed by importing `seedData.ts` directly (Node 24 native TypeScript stripping handles it).
+
+---
+
 ## Recent additions (v3)
 
 ### UX & product
