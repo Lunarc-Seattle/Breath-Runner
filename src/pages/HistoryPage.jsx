@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useApp } from '../app/AppContext.jsx';
 import { useSavedRuns } from '../app/useSavedRuns.js';
 import { getSessionRepository } from '../services/apiClient.js';
@@ -16,6 +16,7 @@ import {
 } from '../core/progress.ts';
 import { PineIcon, RidgeChart } from '../components/RidgeChart.jsx';
 import { btn, Card, CardHead, Segmented } from '../components/ui.jsx';
+import { useCountUp } from '../app/useCountUp.js';
 
 const DASH = '—';
 const has = v => typeof v === 'number' && Number.isFinite(v);
@@ -99,17 +100,61 @@ function SyncRidge({ runs, range }) {
   const delta = deltaText(range, runs, days);
   const pines = firstDayOver(days, MILESTONES);
 
+  const animRuns = useCountUp(t.runs);
+  const animSync = useCountUp(t.bestSync);
+  const animCoins = useCountUp(t.coins);
+  const chartRef = useRef(null);
+
+  const exportPng = () => {
+    const svg = chartRef.current;
+    if (!svg) return;
+    const { width, height } = svg.getBoundingClientRect();
+    const svgStr = new XMLSerializer().serializeToString(svg);
+    const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const scale = 2;
+      canvas.width = Math.round(width * scale);
+      canvas.height = Math.round(height * scale);
+      const ctx = canvas.getContext('2d');
+      ctx.scale(scale, scale);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+      ctx.drawImage(img, 0, 0, width, height);
+      URL.revokeObjectURL(url);
+      const link = document.createElement('a');
+      link.download = 'breath-sync.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    };
+    img.src = url;
+  };
+
   return (
     <Card
       className="grid grid-cols-1 lg:grid-cols-[248px_minmax(0,1fr)] gap-x-8 gap-y-1 mb-6"
       aria-labelledby="ridge-title"
     >
       <div>
-        <h2 id="ridge-title" className="text-[17px] font-semibold text-slate-900">
-          Breath sync
-        </h2>
+        <div className="flex items-start justify-between gap-3 mb-0">
+          <h2 id="ridge-title" className="text-[17px] font-semibold text-slate-900">
+            Breath sync
+          </h2>
+          {values.some(v => v !== null) && (
+            <button
+              type="button"
+              onClick={exportPng}
+              className={`${btn.link} shrink-0 text-[13px]`}
+              aria-label="Download breath sync chart as PNG"
+            >
+              Download chart
+            </button>
+          )}
+        </div>
         <p className="text-[40px] font-semibold leading-none tracking-tight tabular-nums text-slate-900 mt-3.5">
-          {t.bestSync === null ? DASH : `${t.bestSync}%`}
+          {t.bestSync === null ? DASH : `${animSync}%`}
           {t.bestSync !== null && <span className="text-base font-normal text-slate-600 ml-1.5">best</span>}
         </p>
         {delta && <p className="mt-2.5 text-sm font-semibold text-brand-teal-ink">{delta}</p>}
@@ -126,6 +171,7 @@ function SyncRidge({ runs, range }) {
       </div>
       {values.some(v => v !== null) ? (
         <RidgeChart
+          svgRef={chartRef}
           values={values}
           min={0}
           max={100}
@@ -144,10 +190,10 @@ function SyncRidge({ runs, range }) {
       )}
       <dl className="lg:col-span-2 grid grid-cols-2 lg:grid-cols-4 gap-y-4 mt-2.5 pt-4 border-t border-slate-200/80">
         {[
-          ['Runs', nf.format(t.runs)],
+          ['Runs', nf.format(animRuns)],
           ['Training time', formatTrainingTime(t.seconds)],
-          ['Best breath sync', t.bestSync === null ? DASH : `${t.bestSync}%`],
-          ['Coins earned', nf.format(t.coins)]
+          ['Best breath sync', t.bestSync === null ? DASH : `${animSync}%`],
+          ['Coins earned', nf.format(animCoins)]
         ].map(([label, value], i) => (
           <div key={label} className={`pr-4 lg:px-5 ${i ? 'lg:border-l lg:border-slate-200/80' : 'lg:pl-0'}`}>
             <dt className="text-[13px] text-slate-600">{label}</dt>
@@ -295,7 +341,7 @@ function Achievements({ runs }) {
             <div
               key={a.id}
               title={a.desc}
-              className={`shrink-0 flex flex-col items-center gap-2 w-[96px] rounded-[18px] border px-3 py-3.5 text-center bg-white ${
+              className={`shrink-0 flex flex-col items-center gap-2 w-[80px] sm:w-[96px] rounded-[18px] border px-2 sm:px-3 py-3 sm:py-3.5 text-center bg-white ${
                 unlocked ? 'border-slate-200/80' : 'border-slate-100'
               }`}
             >
@@ -348,7 +394,7 @@ function TodayOverview({ runs }) {
         {heading}
       </div>
       <div className="text-[13px] text-slate-500 mb-4">{caption}</div>
-      <dl className="grid grid-cols-3 gap-3">
+      <dl className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
         {stats.map(([label, value]) => (
           <div key={label}>
             <dt className="text-[11px] text-slate-500 mb-0.5">{label}</dt>

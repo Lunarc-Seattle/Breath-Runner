@@ -512,7 +512,7 @@ export function ForestRunnerStage({
               return (
                 <div className="absolute inset-0 flex items-center justify-center p-4 bg-game-navy/30 backdrop-blur-[2px]">
                   <div
-                    className={`${GLASS} rounded-3xl max-w-sm w-full p-6 text-center pointer-events-auto`}
+                    className={`${GLASS} rounded-3xl max-w-sm w-full p-4 sm:p-6 text-center pointer-events-auto`}
                     onPointerDown={keepPointer}
                   >
                     <div className="text-[11px] font-mono text-game-mint tracking-widest">
@@ -524,7 +524,7 @@ export function ForestRunnerStage({
                         <div className="text-[10px] font-mono uppercase tracking-wider text-game-coin/70 mb-1.5">
                           Coins
                         </div>
-                        <div className="text-[32px] font-bold text-game-coin leading-none tabular-nums">
+                        <div className="text-[26px] sm:text-[32px] font-bold text-game-coin leading-none tabular-nums">
                           {lapResult.coins}
                         </div>
                         <div className="text-[13px] text-white/45 mt-1">of {lapResult.total}</div>
@@ -538,7 +538,7 @@ export function ForestRunnerStage({
                         <div className="text-[10px] font-mono uppercase tracking-wider text-game-mint/70 mb-1.5">
                           Breath sync
                         </div>
-                        <div className="text-[32px] font-bold text-game-mint leading-none tabular-nums">
+                        <div className="text-[26px] sm:text-[32px] font-bold text-game-mint leading-none tabular-nums">
                           {currentSync}%
                         </div>
                         <div className="text-[11px] mt-1 font-semibold">

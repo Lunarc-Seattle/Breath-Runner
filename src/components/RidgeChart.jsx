@@ -30,7 +30,8 @@ export function RidgeChart({
   target = null,
   dots = false,
   compact = false,
-  label
+  label,
+  svgRef = null
 }) {
   const hostRef = useRef(null);
   const [width, setWidth] = useState(0);
@@ -67,6 +68,7 @@ export function RidgeChart({
     <div ref={hostRef} className="relative w-full" style={{ height }}>
       {width > 0 && (
         <svg
+          ref={svgRef}
           width={width}
           height={height}
           viewBox={`0 0 ${width} ${height}`}

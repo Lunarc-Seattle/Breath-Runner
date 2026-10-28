@@ -120,6 +120,29 @@ function Hero({ name, map, slots, onStart }) {
 }
 
 const RUN_TIME = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+const WEEKLY_GOAL = 3;
+
+function WeeklyGoal({ weekRuns }) {
+  const done = Math.min(weekRuns, WEEKLY_GOAL);
+  return (
+    <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
+      <span className="text-[13px] text-slate-600">Weekly goal</span>
+      <div className="flex items-center gap-2.5 shrink-0">
+        <div className="flex gap-1" role="img" aria-label={`${done} of ${WEEKLY_GOAL} runs completed this week`}>
+          {Array.from({ length: WEEKLY_GOAL }, (_, i) => (
+            <span
+              key={i}
+              className={`w-5 h-1.5 rounded-full transition-colors ${i < done ? 'bg-brand-teal' : 'bg-slate-200'}`}
+            />
+          ))}
+        </div>
+        <span className="text-[13px] font-semibold tabular-nums text-slate-700">
+          {done}/{WEEKLY_GOAL}
+        </span>
+      </div>
+    </div>
+  );
+}
 
 function TodayHasData({ todaySyncRuns, todayStats, ghostCount, streak }) {
   const animatedSync = useCountUp(todayStats.bestSync);
@@ -302,6 +325,8 @@ function SyncCard({ runs, status, error, onProgress, onPlay }) {
           />
         </>
       )}
+
+      {status === 'ready' && week.runs > 0 && <WeeklyGoal weekRuns={week.runs} />}
     </Card>
   );
 }

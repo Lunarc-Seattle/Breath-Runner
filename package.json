@@ -6,6 +6,23 @@
   "type": "module",
   "author": "Jie (Fia) Yin",
   "license": "UNLICENSED",
+  "keywords": [
+    "react",
+    "vite",
+    "tailwindcss",
+    "typescript",
+    "pwa",
+    "canvas",
+    "web-bluetooth",
+    "game",
+    "breathing",
+    "healthcare",
+    "rehabilitation",
+    "spirometry",
+    "gamification",
+    "playwright",
+    "lighthouse"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
