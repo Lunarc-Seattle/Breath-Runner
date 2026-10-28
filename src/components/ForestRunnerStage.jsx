@@ -314,7 +314,7 @@ export function ForestRunnerStage({
             >
               <span className="flex items-center gap-1.5 whitespace-nowrap">
                 {m.name}
-                <span className="font-mono opacity-70">{m.kpa} kPa</span>
+                <span className={`font-mono ${m.id === map.id ? '' : 'text-slate-500'}`}>{m.kpa} kPa</span>
                 <span className="flex items-center gap-0.5 ml-0.5" aria-hidden="true">
                   {maps.map((_, j) => (
                     <span
@@ -324,7 +324,11 @@ export function ForestRunnerStage({
                   ))}
                 </span>
               </span>
-              {m.tag && <span className="block text-[10px] font-mono mt-0.5 opacity-60">{m.tag}</span>}
+              {m.tag && (
+                <span className={`block text-[10px] font-mono mt-0.5 ${m.id === map.id ? '' : 'text-slate-500'}`}>
+                  {m.tag}
+                </span>
+              )}
             </button>
           ))}
         </div>
