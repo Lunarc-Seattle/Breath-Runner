@@ -85,7 +85,10 @@ The game runs on the original `pic/background.ai` file, not on a redrawing of it
   - **Shutdown:** on SIGTERM the server drains in-flight writes before exiting.
   - **The JSON store:** it skips corrupt rows on load and rolls back failed writes, so memory and disk stay consistent even when writes interleave.
 - **Routing and resilience.** Hash routes (`#/play`, `#/history`) make deep links, reload and the back button work on static hosting. Each page sits in its own error boundary.
-- **Tested at three levels.** 78 unit and API tests (`node:test`, 95% line coverage with a CI gate) and 45 Playwright end-to-end tests. One plays a full lap by following the on-screen breath cue, saves it, and checks it on the Progress page. Others cover every route, keyboard and focus behaviour, and API validation.
+- **Tested at three levels.** 83 unit and API tests (`node:test`, 95% line coverage with a CI gate) and 45 Playwright end-to-end tests. One plays a full lap by following the on-screen breath cue, saves it, and checks it on the Progress page. Others cover every route, keyboard and focus behaviour, and API validation.
+- **TypeScript migration.** `App.tsx`, `HomePage.tsx`, `HistoryPage.tsx`, `useCountUp.ts` and `seedData.ts` are now strict TypeScript. Declaration files (`AppContext.d.ts`, `RidgeChart.d.ts`) type the JS modules they wrap without converting their entire codebase. ESLint was extended to enforce TypeScript rules across all `.ts` and `.tsx` files.
+- **Physics off the main thread.** `src/core/physicsWorker.ts` runs `stepRunner()` in a Web Worker. The engine uses a double-buffer: the Worker computes frame N while the main thread renders frame N−1, keeping physics and rendering fully parallel. The Worker pre-loads level geometry on `setMap()` so only the compact `RunnerState` crosses the thread boundary at 60 fps. If the Worker is unavailable (old browser, strict CSP), the engine falls back to synchronous physics transparently.
+- **Route-level code splitting.** All 13 pages use `React.lazy()` + `Suspense`. The initial bundle dropped from **293 KB → 168 KB (−43%)** gzipped; each page loads only when first visited.
 - **CI that gates the deploy, with a public report.** Each push and PR runs these in parallel:
   - lint (ESLint), formatting (Prettier) and type checking;
   - unit tests with coverage, and the production build;
@@ -99,14 +102,26 @@ The game runs on the original `pic/background.ai` file, not on a redrawing of it
 
 ## Recent additions (v3)
 
-- **Home · Today / This week toggle.** The Breath Sync card defaults to a bar chart of today's individual runs, with a count-up animation on the sync %. A pill switches to the 7-day ridge chart. This means a first-time visitor sees real data immediately after one game rather than a blank chart.
-- **Consecutive training streak.** The home card's footer shows the current day-streak computed from saved history (e.g. "7-day streak") so the patient has a daily reason to keep the chain going.
-- **Progress · Achievements.** Five auto-unlocking badges (First Flight, Smooth Rhythm, Coin Collector, Peak Control, Training Habit) sit at the top of the Progress page; locked ones fade to 40 % opacity. Computed from run totals — no separate state.
-- **Progress · Today / This week overview.** A two-column card above the ridge chart shows runs, best sync and coins for today and for the last 7 days side-by-side.
-- **Play · Personal best.** The lap-result card now shows Coins and Breath Sync in equal-sized panels. When the sync beats every prior lap this session, the Sync panel glows teal and shows "Personal best".
-- **Play · Difficulty dots.** Each level selector button shows filled/open dots (● ○ ○, ● ● ○, ● ● ●) and its training tag so the difference is visible before you play.
-- **Demo seed data.** Ten realistic runs from the past 7 days are written to `localStorage` the first time the app loads with no history. Charts are never empty for a first-time reviewer.
-- **PWA manifest.** `manifest.webmanifest` lets Chrome/Safari prompt "Add to Home Screen", making the app installable with one tap.
+### UX & product
+
+- **Home · Today / This week toggle.** The Breath Sync card defaults to a bar chart of today's individual runs, with a count-up animation on the sync %. A pill switches to the 7-day ridge chart. A first-time visitor sees real data after one game instead of a blank chart.
+- **Consecutive training streak.** The home card's footer shows the current day-streak (e.g. "7-day streak"), giving the patient a daily reason to keep the chain going.
+- **Weekly training goal.** A three-segment progress bar at the bottom of the Breath Sync card shows how many of the week's three target sessions are done.
+- **Count-up animations.** Every stat number — sync %, streak, coins, run count — animates from 0 with an ease-out-cubic curve when it first appears or when the view changes.
+- **Progress · Achievements.** Five auto-unlocking badges (First Flight, Smooth Rhythm, Coin Collector, Peak Control, Training Habit) at the top of the Progress page. Locked badges keep their shape and label but render in a lighter color that passes WCAG AA contrast; unlocked ones are teal. Computed entirely from run totals — no separate state.
+- **Progress · Today / This week overview.** A two-column card above the ridge chart shows runs, best sync and coins for today and the last 7 days side-by-side.
+- **Progress · Download chart.** A "Download chart" link on the ridge chart serialises the SVG, renders it at 2× on a canvas element, and triggers a PNG download — no server round-trip.
+- **Play · Personal best.** The lap-result card now shows Coins and Breath Sync in equal-sized panels. When sync improves on any prior lap in the same session, the Sync panel highlights teal and shows "Personal best".
+- **Play · Difficulty dots.** Each level selector button shows filled/open dots (● ○ ○ / ● ● ○ / ● ● ●) and its training tag, so the difference is visible before playing.
+- **Demo seed data.** Ten realistic runs spread over the past 7 days are written to `localStorage` on first load. The progression — L1 sync climbing from 62 % to 85 %, with two L2 attempts — makes every chart look inhabited for a first-time reviewer.
+- **PWA manifest.** `public/manifest.webmanifest` with an SVG icon; Chrome, Edge and Safari will prompt "Add to Home Screen", making the app installable to the desktop or phone dock with one tap.
+
+### Engineering
+
+- **Route-level code splitting.** All 13 pages wrapped in `React.lazy()` + `Suspense`. Initial bundle: **293 KB → 168 KB (−43%)**, gzipped. Each page loads only when first visited.
+- **Physics off the main thread.** `src/core/physicsWorker.ts` runs `stepRunner()` in a Web Worker. A double-buffer keeps the Worker one frame ahead: it computes frame N while the main thread renders frame N−1. The Worker pre-loads level geometry on `setMap()`, so only the compact `RunnerState` (~50 fields) crosses the boundary at 60 fps. Graceful synchronous fallback if the Worker fails to start.
+- **TypeScript migration.** `App.tsx`, `HomePage.tsx`, `HistoryPage.tsx`, `useCountUp.ts` and `seedData.ts` are now strict TypeScript with full prop interfaces. Declaration files (`AppContext.d.ts`, `useHashRoute.d.ts`, `RidgeChart.d.ts`) type the remaining JS modules. ESLint extended to enforce TypeScript rules on all `.ts`/`.tsx` files.
+- **Expanded test suite (78 → 83 tests).** `currentStreak` covered with 7 test cases (empty, broken streak, today, yesterday, multiple same-day). `seedDemoRunsIfEmpty` covered with 5 cases using a `localStorage` mock (write, shape, flag, no-overwrite, idempotency). `progress.ts` now has 100 % line and branch coverage.
 
 ## The rest of the app
 
@@ -130,8 +145,8 @@ npm run dev           # Vite dev server with hot reload (run `npm run server` al
 
 | Command | What it does |
 |---|---|
-| `npm test` | 57 unit and API tests (`npm run test:coverage` adds the coverage gate) |
-| `npm run test:e2e` | 34 Playwright end-to-end tests (builds and starts the server itself) |
+| `npm test` | 83 unit and API tests (`npm run test:coverage` adds the coverage gate) |
+| `npm run test:e2e` | 45 Playwright end-to-end tests (builds and starts the server itself) |
 | `npm run lint` · `npm run typecheck` · `npm run format:check` | the same checks CI runs |
 | `npm run check` | lint, format, types and unit tests with coverage in one go |
 
@@ -150,13 +165,16 @@ python3 scripts/assets/export_forest_ai.py
 pic/background.ai               original illustration (source of truth for the level)
 scripts/assets/                 .ai -> web assets + cliff/coin data
 public/assets/forest/           exported background and sprites
+public/manifest.webmanifest     PWA manifest (installable on desktop/mobile)
 src/core/                       typed game rules, levels, session model, stats (pure, tested)
+src/core/physicsWorker.ts       Web Worker — runs stepRunner() off the main thread
 src/styles/tokens.js            design tokens: the brand palette and its contrast rules
-src/animation/forestEngine.js   canvas renderer, camera, particles
-src/app/                        routes, hash router, app state (useApp)
-src/pages/                      one component per route
+src/animation/forestEngine.js   canvas renderer, camera, particles (uses Worker for physics)
+src/app/                        routes, hash router, app state (useApp), useCountUp hook
+src/pages/                      one .tsx component per route, loaded lazily
 src/components/                 game stage, navigation drawer, error boundary
 src/lib/micBreath.js            microphone breath detector
+src/data/seedData.ts            demo history seeded into localStorage on first load
 server/                         Express API and JSON session store
 config/csp.js                   one Content-Security-Policy for the server header and the static build
 docs/openapi.yaml               API specification
