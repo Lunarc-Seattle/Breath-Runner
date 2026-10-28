@@ -40,19 +40,19 @@ export const ROUTES = [
     group: 'Train'
   },
   {
-    slug: 'history',
-    code: '13',
-    name: 'Progress',
-    subtitle: 'Breath sync, runs & coins from your saved runs',
-    badge: brand.teal.DEFAULT,
-    group: 'Train'
-  },
-  {
     slug: 'spirometry',
     code: '05',
     name: 'Spirometry Lab',
     subtitle: 'Real-time 1,000Hz lung capacity (FVC / FEV1) test',
     badge: brand.purple.DEFAULT,
+    group: 'Train'
+  },
+  {
+    slug: 'history',
+    code: '13',
+    name: 'Progress',
+    subtitle: 'Breath sync, runs & coins from your saved runs',
+    badge: brand.teal.DEFAULT,
     group: 'Train'
   },
   {
