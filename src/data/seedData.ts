@@ -3,11 +3,24 @@
  * with no existing data. This makes the charts and stats look alive for first-time visitors.
  * Safe to call multiple times -- the SEEDED_FLAG prevents duplicate writes.
  */
+import type { LevelId } from '../core/forestLevels.ts';
 
 const SESSIONS_KEY = 'breath-trainer:sessions:v1';
 const SEEDED_FLAG = 'breath-trainer:demo-seeded:v1';
 
-function pastISO(daysBack, hour) {
+interface DemoRun {
+  daysBack: number;
+  hour: number;
+  level: LevelId;
+  name: string;
+  sync: number;
+  coins: number;
+  total: number;
+  falls: number;
+  dur: number;
+}
+
+function pastISO(daysBack: number, hour: number): string {
   const d = new Date();
   d.setDate(d.getDate() - daysBack);
   d.setHours(hour, Math.floor(Math.random() * 50), 0, 0);
@@ -15,7 +28,7 @@ function pastISO(daysBack, hour) {
 }
 
 // Ten runs over 7 days: progressive sync improvement on L1, with a few L2 attempts.
-const DEMO_RUNS = [
+const DEMO_RUNS: DemoRun[] = [
   {
     daysBack: 7,
     hour: 9,
@@ -128,10 +141,10 @@ const DEMO_RUNS = [
   }
 ];
 
-export function seedDemoRunsIfEmpty() {
+export function seedDemoRunsIfEmpty(): void {
   try {
     if (localStorage.getItem(SEEDED_FLAG)) return;
-    const existing = JSON.parse(localStorage.getItem(SESSIONS_KEY) || '[]');
+    const existing: unknown = JSON.parse(localStorage.getItem(SESSIONS_KEY) ?? '[]');
     if (Array.isArray(existing) && existing.length > 0) {
       localStorage.setItem(SEEDED_FLAG, '1');
       return;

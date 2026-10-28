@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useApp } from '../app/AppContext.jsx';
+import type { AppState, Friend, LastMap, Trainer } from '../app/AppContext.d.ts';
 import { useSavedRuns } from '../app/useSavedRuns.js';
 import { getLevel } from '../core/forestLevels.ts';
 import {
@@ -12,7 +13,9 @@ import {
   totals,
   weekChange
 } from '../core/progress.ts';
-import { useCountUp } from '../app/useCountUp.js';
+import type { RunTotals, TodaySlot } from '../core/progress.ts';
+import type { Session } from '../core/session.ts';
+import { useCountUp } from '../app/useCountUp.ts';
 import { SITE_URL } from '../app/versions.js';
 import { RidgeChart } from '../components/RidgeChart.jsx';
 import { Avatar, BatteryIcon, btn, Card, CardHead, Chip, SampleTag } from '../components/ui.jsx';
@@ -34,7 +37,7 @@ const MARKER_AT = {
   afternoon: { left: '72.5%', top: '81.6%' },
   evening: { left: '87%', top: '65.6%' }
 };
-const SLOT_NOTE = { done: 'Done', missed: 'Missed' };
+const SLOT_NOTE: Partial<Record<TodaySlot['state'], string>> = { done: 'Done', missed: 'Missed' };
 
 function CheckIcon() {
   return (
@@ -44,7 +47,7 @@ function CheckIcon() {
   );
 }
 
-function describeSlots(slots) {
+function describeSlots(slots: readonly TodaySlot[]): string {
   return slots
     .map(s => {
       if (s.state === 'done') return `${s.label} done.`;
@@ -54,7 +57,14 @@ function describeSlots(slots) {
     .join(' ');
 }
 
-function Hero({ name, map, slots, onStart }) {
+interface HeroProps {
+  name: string;
+  map: LastMap;
+  slots: TodaySlot[];
+  onStart: () => void;
+}
+
+function Hero({ name, map, slots, onStart }: HeroProps) {
   const now = new Date();
   const level = getLevel(map.id);
   const next = slots.find(s => s.state === 'next');
@@ -122,7 +132,7 @@ function Hero({ name, map, slots, onStart }) {
 const RUN_TIME = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 const WEEKLY_GOAL = 3;
 
-function WeeklyGoal({ weekRuns }) {
+function WeeklyGoal({ weekRuns }: { weekRuns: number }) {
   const done = Math.min(weekRuns, WEEKLY_GOAL);
   return (
     <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
@@ -144,7 +154,14 @@ function WeeklyGoal({ weekRuns }) {
   );
 }
 
-function TodayHasData({ todaySyncRuns, todayStats, ghostCount, streak }) {
+interface TodayHasDataProps {
+  todaySyncRuns: Session[];
+  todayStats: RunTotals;
+  ghostCount: number;
+  streak: number;
+}
+
+function TodayHasData({ todaySyncRuns, todayStats, ghostCount, streak }: TodayHasDataProps) {
   const animatedSync = useCountUp(todayStats.bestSync);
   const animatedStreak = useCountUp(streak > 0 ? streak : null);
   return (
@@ -155,8 +172,8 @@ function TodayHasData({ todaySyncRuns, todayStats, ghostCount, streak }) {
         </span>
       </div>
       <div className="flex items-end gap-2.5 mb-2.5" style={{ height: 128 }}>
-        {todaySyncRuns.map((run, i) => {
-          const pct = run.syncPct;
+        {todaySyncRuns.map((run: Session, i: number) => {
+          const pct = run.syncPct as number; // syncPct is non-null: filtered above
           return (
             <div key={run.id || i} className="flex flex-col items-center gap-1 flex-1 min-w-0">
               <span className="text-xs font-semibold text-slate-700 tabular-nums">{pct}%</span>
@@ -196,7 +213,15 @@ function TodayHasData({ todaySyncRuns, todayStats, ghostCount, streak }) {
   );
 }
 
-function SyncCard({ runs, status, error, onProgress, onPlay }) {
+interface SyncCardProps {
+  runs: Session[];
+  status: string;
+  error: string;
+  onProgress: () => void;
+  onPlay: () => void;
+}
+
+function SyncCard({ runs, status, error, onProgress, onPlay }: SyncCardProps) {
   const [view, setView] = useState('today');
   const streak = currentStreak(runs);
 
@@ -215,8 +240,8 @@ function SyncCard({ runs, status, error, onProgress, onPlay }) {
     const midnight = new Date();
     midnight.setHours(0, 0, 0, 0);
     return runs
-      .filter(r => r.syncPct != null && new Date(r.completedAt) >= midnight)
-      .sort((a, b) => new Date(a.completedAt) - new Date(b.completedAt));
+      .filter((r: Session) => r.syncPct != null && new Date(r.completedAt) >= midnight)
+      .sort((a: Session, b: Session) => new Date(a.completedAt).getTime() - new Date(b.completedAt).getTime());
   }, [runs]);
   const todayStats = totals(todaySyncRuns);
   const hasTodayData = todaySyncRuns.length > 0;
@@ -318,7 +343,7 @@ function SyncCard({ runs, status, error, onProgress, onPlay }) {
             ticks={[floor + (100 - floor) / 2, 100]}
             dots
             compact
-            xlabels={days.map((d, i) => [i, WEEKDAY.format(d.date)])}
+            xlabels={days.map((d, i): [number, string] => [i, WEEKDAY.format(d.date)])}
             label={`Best breath sync each day for the last 7 days: ${days
               .map(d => `${WEEKDAY.format(d.date)} ${d.best === null ? 'no run' : `${d.best}%`}`)
               .join(', ')}`}
@@ -331,7 +356,15 @@ function SyncCard({ runs, status, error, onProgress, onPlay }) {
   );
 }
 
-function TrainerCard({ state, trainer, booking, daysSince, onBook }) {
+interface TrainerCardProps {
+  state: AppState;
+  trainer: Trainer;
+  booking: { date: Date; slot: string } | null;
+  daysSince: number;
+  onBook: () => void;
+}
+
+function TrainerCard({ state, trainer, booking, daysSince, onBook }: TrainerCardProps) {
   const connected = state.bleConnected;
   return (
     <Card tone="warm" className="flex flex-col gap-4" aria-labelledby="trainer-title">
@@ -408,7 +441,13 @@ function TrainerCard({ state, trainer, booking, daysSince, onBook }) {
   );
 }
 
-function FriendsCard({ friends, myCoins, myInitials }) {
+interface FriendsCardProps {
+  friends: Friend[];
+  myCoins: number;
+  myInitials: string;
+}
+
+function FriendsCard({ friends, myCoins, myInitials }: FriendsCardProps) {
   const board = [
     ...friends.map(f => ({ ...f, me: false })),
     { name: 'You', initials: myInitials, tone: 'teal', coins: myCoins, me: true }

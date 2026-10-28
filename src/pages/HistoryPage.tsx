@@ -14,12 +14,14 @@ import {
   totals,
   weekChange
 } from '../core/progress.ts';
+import type { DayBest, RunLike, RunTotals } from '../core/progress.ts';
+import type { Session } from '../core/session.ts';
 import { PineIcon, RidgeChart } from '../components/RidgeChart.jsx';
 import { btn, Card, CardHead, Segmented } from '../components/ui.jsx';
-import { useCountUp } from '../app/useCountUp.js';
+import { useCountUp } from '../app/useCountUp.ts';
 
 const DASH = '—';
-const has = v => typeof v === 'number' && Number.isFinite(v);
+const has = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
 const nf = new Intl.NumberFormat('en-US');
 const WEEKDAY = new Intl.DateTimeFormat('en-US', { weekday: 'short' });
 const SHORT = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' });
@@ -33,14 +35,14 @@ const RANGES = [
 ];
 const MILESTONES = [80, 90];
 
-function formatDuration(sec) {
+function formatDuration(sec: unknown): string {
   if (!has(sec)) return DASH;
   const m = Math.floor(sec / 60);
   const s = Math.round(sec % 60);
   return m ? `${m}m ${String(s).padStart(2, '0')}s` : `${s}s`;
 }
 
-function formatCoins(run) {
+function formatCoins(run: Session): string {
   if (!has(run.coins)) return DASH;
   if (!has(run.totalCoins)) return String(run.coins);
   // totalCoins is per lap; multi-lap runs can collect more than one lap's worth.
@@ -48,7 +50,7 @@ function formatCoins(run) {
 }
 
 /** "Today" / "Yesterday" / "Saturday, Oct 24", plus the time on its own line. */
-function RunDate({ value }) {
+function RunDate({ value }: { value: string }) {
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return DASH;
   const yesterday = new Date();
@@ -64,17 +66,17 @@ function RunDate({ value }) {
 }
 
 /** A handful of evenly spaced date labels, always including the first and last day. */
-function dayLabels(days) {
-  if (days.length <= 7) return days.map((d, i) => [i, WEEKDAY.format(d.date)]);
+function dayLabels(days: DayBest[]): [number, string][] {
+  if (days.length <= 7) return days.map((d, i): [number, string] => [i, WEEKDAY.format(d.date)]);
   const step = Math.ceil((days.length - 1) / 5);
-  const labels = [];
+  const labels: [number, string][] = [];
   for (let i = 0; i < days.length - 1; i += step) labels.push([i, SHORT.format(days[i].date)]);
   if (days.length - 1 - labels[labels.length - 1][0] < step / 2) labels.pop();
   labels.push([days.length - 1, SHORT.format(days[days.length - 1].date)]);
   return labels;
 }
 
-function deltaText(range, runs, days) {
+function deltaText(range: string, runs: readonly RunLike[], days: DayBest[]): string | null {
   if (range === '7') {
     const change = weekChange(runs);
     if (change === null) return null;
@@ -82,7 +84,7 @@ function deltaText(range, runs, days) {
       ? 'Same as last week'
       : `${change > 0 ? 'Up' : 'Down'} ${Math.abs(change)} points from last week`;
   }
-  const withRuns = days.filter(d => d.best !== null);
+  const withRuns = days.filter(d => d.best !== null) as (DayBest & { best: number })[];
   if (withRuns.length < 2) return null;
   const change = withRuns[withRuns.length - 1].best - withRuns[0].best;
   const since = SHORT.format(withRuns[0].date);
@@ -91,8 +93,8 @@ function deltaText(range, runs, days) {
     : `${change > 0 ? 'Up' : 'Down'} ${Math.abs(change)} points since ${since}`;
 }
 
-function SyncRidge({ runs, range }) {
-  const { days: span } = RANGES.find(r => r.value === range);
+function SyncRidge({ runs, range }: { runs: Session[]; range: string }) {
+  const { days: span } = RANGES.find(r => r.value === range)!;
   const inRange = runsInRange(runs, span);
   const days = dailyBestSync(runs, span);
   const values = days.map(d => d.best);
@@ -103,7 +105,7 @@ function SyncRidge({ runs, range }) {
   const animRuns = useCountUp(t.runs);
   const animSync = useCountUp(t.bestSync);
   const animCoins = useCountUp(t.coins);
-  const chartRef = useRef(null);
+  const chartRef = useRef<SVGSVGElement | null>(null);
 
   const exportPng = () => {
     const svg = chartRef.current;
@@ -119,6 +121,7 @@ function SyncRidge({ runs, range }) {
       canvas.width = Math.round(width * scale);
       canvas.height = Math.round(height * scale);
       const ctx = canvas.getContext('2d');
+      if (!ctx) return;
       ctx.scale(scale, scale);
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, width, height);
@@ -205,7 +208,7 @@ function SyncRidge({ runs, range }) {
   );
 }
 
-function RunsTable({ runs }) {
+function RunsTable({ runs }: { runs: Session[] }) {
   const [level, setLevel] = useState('');
   const rows = filterByLevel(runs, level);
   const th = 'px-3 py-2.5 text-[13px] font-semibold text-slate-600 border-b border-slate-200 whitespace-nowrap';
@@ -291,7 +294,17 @@ function RunsTable({ runs }) {
 
 // ── Achievements ──────────────────────────────────────────────────────────────
 
-const ACHIEVEMENTS = [
+type AchievementCheck = (runs: readonly RunLike[], t: RunTotals) => boolean;
+
+interface Achievement {
+  id: string;
+  icon: string;
+  label: string;
+  desc: string;
+  check: AchievementCheck;
+}
+
+const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'first-run',
     icon: 'M12 3L4 9v12h5v-7h6v7h5V9z',
@@ -329,7 +342,7 @@ const ACHIEVEMENTS = [
   }
 ];
 
-function Achievements({ runs }) {
+function Achievements({ runs }: { runs: Session[] }) {
   const t = totals(runs);
   return (
     <div className="mb-6">
@@ -379,7 +392,7 @@ function Achievements({ runs }) {
   );
 }
 
-function TodayOverview({ runs }) {
+function TodayOverview({ runs }: { runs: Session[] }) {
   const midnight = new Date();
   midnight.setHours(0, 0, 0, 0);
   const todayRuns = runs.filter(r => new Date(r.completedAt) >= midnight);
@@ -388,14 +401,22 @@ function TodayOverview({ runs }) {
   const t = totals(todayRuns);
   const w = totals(weekRuns);
 
-  const Col = ({ heading, caption, stats }) => (
+  const Col = ({
+    heading,
+    caption,
+    stats
+  }: {
+    heading: string;
+    caption: string;
+    stats: [string, string | number][];
+  }) => (
     <div className="flex-1 min-w-0 px-5 py-4 sm:py-5">
       <div className="text-[11px] font-mono font-semibold uppercase tracking-widest text-slate-500 mb-0.5">
         {heading}
       </div>
       <div className="text-[13px] text-slate-500 mb-4">{caption}</div>
       <dl className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-        {stats.map(([label, value]) => (
+        {stats.map(([label, value]: [string, string | number]) => (
           <div key={label}>
             <dt className="text-[11px] text-slate-500 mb-0.5">{label}</dt>
             <dd className="text-[22px] font-semibold tabular-nums leading-none text-slate-900">{value}</dd>
@@ -448,7 +469,7 @@ export default function HistoryPage() {
       setRuns([]);
       notify('Run history cleared.');
     } catch (err) {
-      notify(`Could not clear history: ${err.message}`);
+      notify(`Could not clear history: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setClearing(false);
     }
