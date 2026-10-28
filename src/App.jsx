@@ -55,7 +55,7 @@ function Shell({ slug }) {
                 aria-hidden="true"
                 className="w-7 h-7 rounded-full bg-brand-purple-deep text-white flex items-center justify-center text-xs font-bold"
               >
-                XM
+                L
               </span>
               <span className="text-xs font-semibold text-slate-700">{state.userName}</span>
             </button>

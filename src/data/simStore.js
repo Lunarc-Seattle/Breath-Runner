@@ -24,7 +24,7 @@ export const solid = color => SOLIDS[color] || { bg: color, fg: onDeep };
 export const solidStyle = color => ({ backgroundColor: solid(color).bg, color: solid(color).fg });
 
 export const INITIAL_SIM_STATE = {
-  userName: 'Xiaoming',
+  userName: 'Luna',
   userRole: 'Post-Op Thoracic Recovery Patient',
   hospital: 'Peking University Hospital',
   enrolledDate: '15 April 2026',

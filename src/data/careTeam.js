@@ -4,8 +4,8 @@
  * they look the same on every visit.
  */
 
-// Xiao Ming's best breath each day since discharge (mL), starting the day after discharge.
-const XM_SERIES = [
+// Luna's best breath each day since discharge (mL), starting the day after discharge.
+const LUNA_SERIES = [
   2380, 2390, 2430, 2500, 2480, 2580, 2610, 2570, 2660, 2670, 2710, 2760, 2790, 2760, 2820, 2840, 2870, 2810, 2910,
   2860, 2870, 2930, 2970, 2990, 2950, 3010, 2950, 3050, 3000, 3030, 3010, 3010, 3020, 3080, 3090, 3120, 3130, 3100,
   3150, 3070, 3090, 3140
@@ -46,14 +46,14 @@ const daysAgo = n => {
 /** Sessions done on each of the last 7 days (prescription: 3 a day), oldest first. */
 export const CARE_PATIENTS = [
   {
-    id: 'xm',
-    name: 'Xiao Ming',
-    initials: 'XM',
+    id: 'luna',
+    name: 'Luna',
+    initials: 'L',
     tone: 'sun',
     condition: 'Lobectomy',
     discharged: daysAgo(42),
     week: [3, 3, 2, 3, 3, 3, 1],
-    series: XM_SERIES,
+    series: LUNA_SERIES,
     last: ['Today', '8:10 AM'],
     status: ['sun', 'Disinfection due'],
     rx: { sessions: 3, minutes: 10, resistance: 4, target: 3600 }

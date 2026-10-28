@@ -317,7 +317,7 @@ export default function HomePage() {
           daysSince={state.hygiene.daysSince}
           onBook={() => navigate('trainer')}
         />
-        <FriendsCard friends={state.friendsThisWeek} myCoins={coinsLast7(runs)} myInitials="XM" />
+        <FriendsCard friends={state.friendsThisWeek} myCoins={coinsLast7(runs)} myInitials="L" />
       </div>
     </section>
   );
