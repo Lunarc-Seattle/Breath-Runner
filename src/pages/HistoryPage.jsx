@@ -243,6 +243,92 @@ function RunsTable({ runs }) {
   );
 }
 
+// ── Achievements ──────────────────────────────────────────────────────────────
+
+const ACHIEVEMENTS = [
+  {
+    id: 'first-run',
+    icon: 'M12 3L4 9v12h5v-7h6v7h5V9z',
+    label: 'First Flight',
+    desc: 'Save your first run',
+    check: runs => runs.length >= 1
+  },
+  {
+    id: 'smooth-breather',
+    icon: 'M3 12 Q6 6 12 12 Q18 18 21 12',
+    label: 'Smooth Rhythm',
+    desc: 'Reach 75% breath sync',
+    check: (runs, t) => t.bestSync !== null && t.bestSync >= 75
+  },
+  {
+    id: 'coin-collector',
+    icon: 'M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm0 4v8m-3-3 3 3 3-3',
+    label: 'Coin Collector',
+    desc: 'Earn 100 coins',
+    check: (runs, t) => t.coins >= 100
+  },
+  {
+    id: 'peak-control',
+    icon: 'M3 17 L9 11 L13 15 L21 7',
+    label: 'Peak Control',
+    desc: 'Reach 85% breath sync',
+    check: (runs, t) => t.bestSync !== null && t.bestSync >= 85
+  },
+  {
+    id: 'training-habit',
+    icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z',
+    label: 'Training Habit',
+    desc: 'Run on 5 different days',
+    check: runs => new Set(runs.map(r => dateKey(new Date(r.completedAt)))).size >= 5
+  }
+];
+
+function Achievements({ runs }) {
+  const t = totals(runs);
+  return (
+    <div className="mb-6">
+      <h2 className="text-[13px] font-semibold text-slate-500 uppercase tracking-widest mb-3">Achievements</h2>
+      <div className="flex gap-3 overflow-x-auto pb-1">
+        {ACHIEVEMENTS.map(a => {
+          const unlocked = a.check(runs, t);
+          return (
+            <div
+              key={a.id}
+              title={a.desc}
+              className={`shrink-0 flex flex-col items-center gap-2 w-[96px] rounded-[18px] border px-3 py-3.5 text-center transition-opacity ${
+                unlocked ? 'bg-white border-slate-200/80 opacity-100' : 'bg-canvas border-slate-200/60 opacity-40'
+              }`}
+            >
+              <span
+                className={`w-9 h-9 rounded-full flex items-center justify-center ${
+                  unlocked ? 'bg-surface-mint' : 'bg-slate-100'
+                }`}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  className={`w-4.5 h-4.5 ${unlocked ? 'text-brand-teal-ink' : 'text-slate-400'}`}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d={a.icon} />
+                </svg>
+              </span>
+              <div>
+                <div className="text-[11px] font-semibold text-slate-900 leading-tight">{a.label}</div>
+                <div className="text-[10px] text-slate-500 leading-tight mt-0.5">{a.desc}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function TodayOverview({ runs }) {
   const midnight = new Date();
   midnight.setHours(0, 0, 0, 0);
@@ -330,7 +416,7 @@ export default function HistoryPage() {
           >
             Progress
           </h1>
-          <p className="mt-1.5 text-slate-600">From every run you saved with “Save to history”</p>
+          <p className="mt-1.5 text-slate-600">From every run you saved with &quot;Save to history&quot;</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           {ready && <Segmented label="Time range" options={RANGES} value={range} onChange={setRange} />}
@@ -371,8 +457,8 @@ export default function HistoryPage() {
         <Card as="div" flush className="text-center space-y-3 p-10">
           <h2 className="text-[17px] font-semibold text-slate-900">No runs yet</h2>
           <p className="text-sm text-slate-600 max-w-md mx-auto">
-            Finish a lap in the Breath Runner and press “Save to history”: your coins, breath sync and falls will show
-            up here.
+            Finish a lap in the Breath Runner and press &quot;Save to history&quot;: your coins, breath sync and falls
+            will show up here.
           </p>
           <button type="button" onClick={() => navigate('play')} className={btn.primary}>
             Start your first run
@@ -382,6 +468,7 @@ export default function HistoryPage() {
 
       {ready && (
         <>
+          <Achievements runs={runs} />
           <TodayOverview runs={runs} />
           <SyncRidge runs={runs} range={range} />
           <RunsTable runs={runs} />

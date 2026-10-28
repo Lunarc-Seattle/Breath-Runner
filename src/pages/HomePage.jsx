@@ -186,7 +186,7 @@ function SyncCard({ runs, status, error, onProgress, onPlay }) {
       {status === 'ready' && view === 'today' && !hasTodayData && (
         <div className="py-6 space-y-4">
           <p className="text-sm text-slate-600 max-w-sm">
-            No runs yet today. Finish a lap and press "Save to history" — your breath sync shows up here.
+            No runs yet today. Finish a lap and press &quot;Save to history&quot; — your breath sync shows up here.
           </p>
           <button type="button" onClick={onPlay} className={btn.soft}>
             Start a run
@@ -197,8 +197,7 @@ function SyncCard({ runs, status, error, onProgress, onPlay }) {
         <>
           <div className="flex items-center gap-3.5 flex-wrap mt-1 mb-4">
             <span className="text-[40px] font-semibold leading-none tracking-tight tabular-nums text-slate-900">
-              {todayStats.bestSync}%
-              <span className="text-base font-normal text-slate-600 ml-1.5">today's best</span>
+              {todayStats.bestSync}%<span className="text-base font-normal text-slate-600 ml-1.5">best today</span>
             </span>
           </div>
           {/* Individual run bars */}
@@ -242,7 +241,8 @@ function SyncCard({ runs, status, error, onProgress, onPlay }) {
       {status === 'ready' && view === 'week' && !hasWeekData && (
         <div className="py-6 space-y-4">
           <p className="text-sm text-slate-600 max-w-sm">
-            No runs saved in the last 7 days. Finish a lap and press "Save to history": your breath sync shows up here.
+            No runs saved in the last 7 days. Finish a lap and press &quot;Save to history&quot;: your breath sync shows
+            up here.
           </p>
           <button type="button" onClick={onPlay} className={btn.soft}>
             Start a run

@@ -324,9 +324,7 @@ export function ForestRunnerStage({
                   ))}
                 </span>
               </span>
-              {m.tag && (
-                <span className="block text-[10px] font-mono mt-0.5 opacity-60">{m.tag}</span>
-              )}
+              {m.tag && <span className="block text-[10px] font-mono mt-0.5 opacity-60">{m.tag}</span>}
             </button>
           ))}
         </div>
@@ -503,40 +501,78 @@ export function ForestRunnerStage({
           )}
 
           {/* Lap result */}
-          {lapResult && (
-            <div className="absolute inset-0 flex items-center justify-center p-4 bg-game-navy/30 backdrop-blur-[2px]">
-              <div
-                className={`${GLASS} rounded-3xl max-w-sm w-full p-6 text-center pointer-events-auto`}
-                onPointerDown={keepPointer}
-              >
-                <div className="text-[11px] font-mono text-game-mint">LAP {lapResult.lap} COMPLETE</div>
-                <div className="text-4xl font-bold mt-2 text-game-coin">
-                  {lapResult.coins}
-                  <span className="text-lg text-white/60"> / {lapResult.total} coins</span>
-                </div>
-                <div className="text-sm text-white/75 mt-2">
-                  {lapResult.sec.toFixed(1)} s · {h.sync}% breath sync · {h.falls} slips
-                </div>
-                <div className="mt-5 flex gap-2">
-                  <button
-                    type="button"
-                    onClick={saveRun}
-                    className="flex-1 py-3 rounded-2xl bg-white/15 hover:bg-white/25 text-xs font-bold"
+          {lapResult &&
+            (() => {
+              const currentSync = h?.sync ?? 0;
+              const isNewBest = prevBestSyncRef.current !== null && currentSync > prevBestSyncRef.current;
+              return (
+                <div className="absolute inset-0 flex items-center justify-center p-4 bg-game-navy/30 backdrop-blur-[2px]">
+                  <div
+                    className={`${GLASS} rounded-3xl max-w-sm w-full p-6 text-center pointer-events-auto`}
+                    onPointerDown={keepPointer}
                   >
-                    Save to history
-                  </button>
-                  <button
-                    ref={nextLapButtonRef}
-                    type="button"
-                    onClick={begin}
-                    className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-game-ember to-game-ember-amber text-xs font-bold"
-                  >
-                    Next lap →
-                  </button>
+                    <div className="text-[11px] font-mono text-game-mint tracking-widest">
+                      LAP {lapResult.lap} COMPLETE
+                    </div>
+
+                    <div className="mt-3 grid grid-cols-2 gap-2.5">
+                      <div className="rounded-2xl bg-white/10 px-3 py-3">
+                        <div className="text-[10px] font-mono uppercase tracking-wider text-game-coin/70 mb-1.5">
+                          Coins
+                        </div>
+                        <div className="text-[32px] font-bold text-game-coin leading-none tabular-nums">
+                          {lapResult.coins}
+                        </div>
+                        <div className="text-[13px] text-white/45 mt-1">of {lapResult.total}</div>
+                      </div>
+
+                      <div
+                        className={`rounded-2xl px-3 py-3 transition-colors ${
+                          isNewBest ? 'bg-game-mint/20 ring-1 ring-game-mint/40' : 'bg-white/10'
+                        }`}
+                      >
+                        <div className="text-[10px] font-mono uppercase tracking-wider text-game-mint/70 mb-1.5">
+                          Breath sync
+                        </div>
+                        <div className="text-[32px] font-bold text-game-mint leading-none tabular-nums">
+                          {currentSync}%
+                        </div>
+                        <div className="text-[11px] mt-1 font-semibold">
+                          {isNewBest ? (
+                            <span className="text-game-mint">Personal best</span>
+                          ) : (
+                            <span className="text-white/30">{lapResult.sec.toFixed(1)} s</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-2.5 text-[12px] text-white/45 tabular-nums">
+                      {isNewBest && <span>{lapResult.sec.toFixed(1)} s · </span>}
+                      {h.falls} slip{h.falls !== 1 ? 's' : ''}
+                    </div>
+
+                    <div className="mt-4 flex gap-2">
+                      <button
+                        type="button"
+                        onClick={saveRun}
+                        className="flex-1 py-3 rounded-2xl bg-white/15 hover:bg-white/25 text-xs font-bold transition-colors"
+                      >
+                        Save to history
+                      </button>
+                      <button
+                        ref={nextLapButtonRef}
+                        type="button"
+                        onClick={begin}
+                        className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-game-ember to-game-ember-amber text-xs font-bold"
+                      >
+                        Next lap →
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          )}
+              );
+            })()}
         </div>
 
         {/* Bottom breath dock */}
