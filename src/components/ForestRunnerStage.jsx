@@ -56,6 +56,7 @@ export function ForestRunnerStage({
   const keyHandlersRef = useRef(null);
   const startButtonRef = useRef(null);
   const nextLapButtonRef = useRef(null);
+  const prevBestSyncRef = useRef(null); // best sync % from prior laps this session
 
   useEffect(() => {
     const engine = createForestStage({
@@ -124,6 +125,13 @@ export function ForestRunnerStage({
   };
 
   const begin = () => {
+    // Record best sync before discarding the current lap result.
+    if (lapResult !== null && h !== null) {
+      const sync = h.sync ?? 0;
+      if (prevBestSyncRef.current === null || sync > prevBestSyncRef.current) {
+        prevBestSyncRef.current = sync;
+      }
+    }
     unlockAudio();
     setStarted(true);
     setPaused(false);
@@ -240,6 +248,11 @@ export function ForestRunnerStage({
       notify('Run for a few seconds first, then save.');
       return;
     }
+    // Keep session best in sync so "personal best" still works after saving.
+    const sync = snap.sync ?? 0;
+    if (prevBestSyncRef.current === null || sync > prevBestSyncRef.current) {
+      prevBestSyncRef.current = sync;
+    }
     try {
       const repo = await getSessionRepository();
       await repo.add({
@@ -286,21 +299,34 @@ export function ForestRunnerStage({
           <h2 className="text-2xl md:text-3xl font-bold text-slate-900">{map.name}</h2>
         </div>
         <div className="flex gap-2 overflow-x-auto max-w-full pb-1">
-          {maps.map(m => (
+          {maps.map((m, i) => (
             <button
               type="button"
               key={m.id}
               onClick={() => onSelectMap(m)}
               aria-pressed={m.id === map.id}
-              className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-2xl text-xs font-bold transition-all border ${
+              className={`shrink-0 text-left px-4 py-2.5 rounded-2xl text-xs font-bold transition-all border ${
                 m.id === map.id
                   ? 'text-white border-transparent shadow-sm'
                   : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
               }`}
               style={m.id === map.id ? solidStyle(m.color) : undefined}
             >
-              {m.name}
-              <span className="ml-1.5 font-mono">{m.kpa} kPa</span>
+              <span className="flex items-center gap-1.5 whitespace-nowrap">
+                {m.name}
+                <span className="font-mono opacity-70">{m.kpa} kPa</span>
+                <span className="flex items-center gap-0.5 ml-0.5" aria-hidden="true">
+                  {maps.map((_, j) => (
+                    <span
+                      key={j}
+                      className={`w-1.5 h-1.5 rounded-full bg-current ${j <= i ? 'opacity-80' : 'opacity-20'}`}
+                    />
+                  ))}
+                </span>
+              </span>
+              {m.tag && (
+                <span className="block text-[10px] font-mono mt-0.5 opacity-60">{m.tag}</span>
+              )}
             </button>
           ))}
         </div>

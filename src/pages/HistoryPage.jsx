@@ -243,6 +243,59 @@ function RunsTable({ runs }) {
   );
 }
 
+function TodayOverview({ runs }) {
+  const midnight = new Date();
+  midnight.setHours(0, 0, 0, 0);
+  const todayRuns = runs.filter(r => new Date(r.completedAt) >= midnight);
+  const weekRuns = runsInRange(runs, 7);
+  if (!todayRuns.length && !weekRuns.length) return null;
+  const t = totals(todayRuns);
+  const w = totals(weekRuns);
+
+  const Col = ({ heading, caption, stats }) => (
+    <div className="flex-1 min-w-0 px-5 py-4 sm:py-5">
+      <div className="text-[11px] font-mono font-semibold uppercase tracking-widest text-slate-500 mb-0.5">
+        {heading}
+      </div>
+      <div className="text-[13px] text-slate-500 mb-4">{caption}</div>
+      <dl className="grid grid-cols-3 gap-3">
+        {stats.map(([label, value]) => (
+          <div key={label}>
+            <dt className="text-[11px] text-slate-500 mb-0.5">{label}</dt>
+            <dd className="text-[22px] font-semibold tabular-nums leading-none text-slate-900">{value}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+
+  return (
+    <article
+      className="rounded-[22px] border border-slate-200/80 bg-white overflow-hidden flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-slate-200/80 mb-6"
+      aria-label="Today and this week at a glance"
+    >
+      <Col
+        heading="Today"
+        caption={SHORT.format(new Date())}
+        stats={[
+          ['Runs', todayRuns.length || DASH],
+          ['Best sync', t.bestSync !== null ? `${t.bestSync}%` : DASH],
+          ['Coins', todayRuns.length ? nf.format(t.coins) : DASH]
+        ]}
+      />
+      <Col
+        heading="This week"
+        caption="Last 7 days"
+        stats={[
+          ['Runs', weekRuns.length || DASH],
+          ['Best sync', w.bestSync !== null ? `${w.bestSync}%` : DASH],
+          ['Coins', nf.format(w.coins)]
+        ]}
+      />
+    </article>
+  );
+}
+
 /** 13 Progress: breath sync, totals and every saved run, from localStorage or the Express API. */
 export default function HistoryPage() {
   const { navigate, notify } = useApp();
@@ -329,6 +382,7 @@ export default function HistoryPage() {
 
       {ready && (
         <>
+          <TodayOverview runs={runs} />
           <SyncRidge runs={runs} range={range} />
           <RunsTable runs={runs} />
         </>

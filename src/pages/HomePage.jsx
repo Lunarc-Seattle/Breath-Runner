@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useApp } from '../app/AppContext.jsx';
 import { useSavedRuns } from '../app/useSavedRuns.js';
 import { getLevel } from '../core/forestLevels.ts';
@@ -109,22 +109,66 @@ function Hero({ name, map, slots, onStart }) {
   );
 }
 
+const RUN_TIME = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
 function SyncCard({ runs, status, error, onProgress, onPlay }) {
+  const [view, setView] = useState('today');
+
+  // Week data
   const days = dailyBestSync(runs, 7);
   const week = totals(runsInRange(runs, 7));
   const change = weekChange(runs);
-  const values = days.map(d => d.best);
-  const hasData = values.some(v => v !== null);
-  // Zoom the y axis to the week's range (in steps of 10) so day-to-day change stays visible.
-  const lowest = Math.min(100, ...values.filter(v => v !== null));
+  const weekValues = days.map(d => d.best);
+  const hasWeekData = weekValues.some(v => v !== null);
+  const lowest = Math.min(100, ...weekValues.filter(v => v !== null));
   const floor = Math.max(0, Math.floor((lowest - 10) / 10) * 10);
+
+  // Today data: runs saved since midnight, ordered by time, with a sync reading
+  const todaySyncRuns = useMemo(() => {
+    const midnight = new Date();
+    midnight.setHours(0, 0, 0, 0);
+    return runs
+      .filter(r => r.syncPct != null && new Date(r.completedAt) >= midnight)
+      .sort((a, b) => new Date(a.completedAt) - new Date(b.completedAt));
+  }, [runs]);
+  const todayStats = totals(todaySyncRuns);
+  const hasTodayData = todaySyncRuns.length > 0;
+
+  // Ghost bar count so the chart doesn't look sparse with a single run
+  const ghostCount = Math.max(0, 3 - todaySyncRuns.length);
 
   return (
     <Card className="md:col-span-2 xl:col-span-1" aria-labelledby="sync-title">
-      <CardHead id="sync-title" title="Breath sync" caption="Best run each day, last 7 days">
-        <button type="button" onClick={onProgress} className={btn.link}>
-          See all progress
-        </button>
+      <CardHead
+        id="sync-title"
+        title="Breath sync"
+        caption={view === 'today' ? "Today's sessions" : 'Best run each day, last 7 days'}
+      >
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex rounded-full bg-slate-100 p-0.5 text-xs shrink-0">
+            <button
+              type="button"
+              onClick={() => setView('today')}
+              className={`px-2.5 py-0.5 rounded-full font-medium transition-colors ${
+                view === 'today' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              Today
+            </button>
+            <button
+              type="button"
+              onClick={() => setView('week')}
+              className={`px-2.5 py-0.5 rounded-full font-medium transition-colors ${
+                view === 'week' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              This week
+            </button>
+          </div>
+          <button type="button" onClick={onProgress} className={btn.link}>
+            See all progress
+          </button>
+        </div>
       </CardHead>
 
       {status === 'loading' && (
@@ -137,17 +181,75 @@ function SyncCard({ runs, status, error, onProgress, onPlay }) {
           Could not load your runs: {error}
         </p>
       )}
-      {status === 'ready' && !hasData && (
+
+      {/* ── Today view ─────────────────────────────────────── */}
+      {status === 'ready' && view === 'today' && !hasTodayData && (
         <div className="py-6 space-y-4">
           <p className="text-sm text-slate-600 max-w-sm">
-            No runs saved in the last 7 days. Finish a lap and press “Save to history”: your breath sync shows up here.
+            No runs yet today. Finish a lap and press "Save to history" — your breath sync shows up here.
           </p>
           <button type="button" onClick={onPlay} className={btn.soft}>
             Start a run
           </button>
         </div>
       )}
-      {status === 'ready' && hasData && (
+      {status === 'ready' && view === 'today' && hasTodayData && (
+        <>
+          <div className="flex items-center gap-3.5 flex-wrap mt-1 mb-4">
+            <span className="text-[40px] font-semibold leading-none tracking-tight tabular-nums text-slate-900">
+              {todayStats.bestSync}%
+              <span className="text-base font-normal text-slate-600 ml-1.5">today's best</span>
+            </span>
+          </div>
+          {/* Individual run bars */}
+          <div className="flex items-end gap-2.5 mb-2.5" style={{ height: 128 }}>
+            {todaySyncRuns.map((run, i) => {
+              const pct = run.syncPct;
+              return (
+                <div key={run.id || i} className="flex flex-col items-center gap-1 flex-1 min-w-0">
+                  <span className="text-xs font-semibold text-slate-700 tabular-nums">{pct}%</span>
+                  <div className="relative w-full" style={{ height: 96 }}>
+                    <div
+                      className="absolute inset-x-0 bottom-0 rounded-t-[6px] bg-gradient-to-t from-teal-500/80 to-teal-300/50"
+                      style={{ height: `${(pct / 100) * 96}px` }}
+                    />
+                  </div>
+                  <span className="text-[10px] text-slate-500 truncate w-full text-center">
+                    {RUN_TIME.format(new Date(run.completedAt))}
+                  </span>
+                </div>
+              );
+            })}
+            {/* Ghost columns so a single bar doesn't float alone */}
+            {Array.from({ length: ghostCount }, (_, i) => (
+              <div key={`ghost-${i}`} className="flex flex-col items-center gap-1 flex-1 min-w-0" aria-hidden="true">
+                <span className="text-xs text-transparent select-none">0%</span>
+                <div className="relative w-full" style={{ height: 96 }}>
+                  <div className="absolute inset-x-0 bottom-0 rounded-t-[6px] bg-slate-100" style={{ height: 3 }} />
+                </div>
+                <span className="text-[10px] text-slate-200">—</span>
+              </div>
+            ))}
+          </div>
+          <p className="text-sm text-slate-500">
+            {todaySyncRuns.length} {todaySyncRuns.length === 1 ? 'run' : 'runs'} today
+            {todayStats.coins > 0 && <> · {nf.format(todayStats.coins)} coins</>}
+          </p>
+        </>
+      )}
+
+      {/* ── Week view ──────────────────────────────────────── */}
+      {status === 'ready' && view === 'week' && !hasWeekData && (
+        <div className="py-6 space-y-4">
+          <p className="text-sm text-slate-600 max-w-sm">
+            No runs saved in the last 7 days. Finish a lap and press "Save to history": your breath sync shows up here.
+          </p>
+          <button type="button" onClick={onPlay} className={btn.soft}>
+            Start a run
+          </button>
+        </div>
+      )}
+      {status === 'ready' && view === 'week' && hasWeekData && (
         <>
           <div className="flex items-center gap-3.5 flex-wrap mt-1 mb-1.5">
             <span className="text-[40px] font-semibold leading-none tracking-tight tabular-nums text-slate-900">
@@ -162,7 +264,7 @@ function SyncCard({ runs, status, error, onProgress, onPlay }) {
             )}
           </div>
           <RidgeChart
-            values={values}
+            values={weekValues}
             min={floor}
             max={100}
             height={210}
