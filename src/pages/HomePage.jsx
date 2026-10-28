@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useApp } from '../app/AppContext.jsx';
 import { useSavedRuns } from '../app/useSavedRuns.js';
 import { getLevel } from '../core/forestLevels.ts';
 import { coinsLast7, dailyBestSync, greeting, runsInRange, todaySlots, totals, weekChange } from '../core/progress.ts';
+import { SITE_URL } from '../app/versions.js';
 import { RidgeChart } from '../components/RidgeChart.jsx';
 import { Avatar, BatteryIcon, btn, Card, CardHead, Chip, SampleTag } from '../components/ui.jsx';
 
@@ -11,6 +12,11 @@ const WEEKDAY = new Intl.DateTimeFormat('en-US', { weekday: 'short' });
 const LONG_DATE = new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 const SHORT_DATE = new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 const nf = new Intl.NumberFormat('en-US');
+
+// Opens the visitor's email app with an invite ready to send; they fill in the friend's address.
+const INVITE_MAILTO = `mailto:?subject=${encodeURIComponent('Run with me in Breath Runner')}&body=${encodeURIComponent(
+  `I'm training my breathing with Breath Runner: inhale to jump, keep inhaling to glide. Run with me!\n\n${SITE_URL}`
+)}`;
 
 // Marker positions on the hero art, as % of the 2400×1108 illustration (from the design).
 const MARKER_AT = {
@@ -252,7 +258,6 @@ function TrainerCard({ state, trainer, booking, daysSince, onBook }) {
 }
 
 function FriendsCard({ friends, myCoins, myInitials }) {
-  const [invited, setInvited] = useState(false);
   const board = [
     ...friends.map(f => ({ ...f, me: false })),
     { name: 'You', initials: myInitials, tone: 'teal', coins: myCoins, me: true }
@@ -283,12 +288,9 @@ function FriendsCard({ friends, myCoins, myInitials }) {
       <p className="text-[13px] text-slate-600 mb-4">
         Your coins come from your saved runs. Friends are sample players.
       </p>
-      <button type="button" onClick={() => setInvited(true)} className={`${btn.soft} w-full`}>
-        Invite a friend to run together
-      </button>
-      <p role="status" className="text-sm text-brand-teal-ink mt-2.5 empty:hidden">
-        {invited ? 'Inviting friends is not part of this demo yet.' : ''}
-      </p>
+      <a href={INVITE_MAILTO} className={`${btn.soft} w-full`}>
+        Invite a friend by email
+      </a>
     </Card>
   );
 }
