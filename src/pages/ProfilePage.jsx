@@ -116,7 +116,7 @@ export default function ProfilePage() {
             style={{ background: `linear-gradient(135deg, ${brand.teal.DEFAULT}, ${brand.purple.DEFAULT})` }}
             aria-hidden="true"
           >
-            XM
+            L
           </div>
           <div className="space-y-2 flex-1 text-center sm:text-left">
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">

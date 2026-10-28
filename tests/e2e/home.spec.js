@@ -42,6 +42,10 @@ test.describe('home', () => {
     await expect(friends.getByText('Sample data')).toBeVisible();
     await expect(friends.getByRole('listitem')).toHaveCount(4);
     await expect(friends.getByRole('listitem').filter({ hasText: 'You' })).toHaveCount(1);
+    await expect(friends.getByRole('link', { name: 'Invite a friend by email' })).toHaveAttribute(
+      'href',
+      /^mailto:\?subject=/
+    );
   });
 
   test('"Start today’s run" opens the game', async ({ page }) => {
