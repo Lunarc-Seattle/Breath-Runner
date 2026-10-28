@@ -128,7 +128,7 @@ function WeeklyGoal({ weekRuns }) {
     <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
       <span className="text-[13px] text-slate-600">Weekly goal</span>
       <div className="flex items-center gap-2.5 shrink-0">
-        <div className="flex gap-1" role="img" aria-label={`${done} of ${WEEKLY_GOAL} runs completed this week`}>
+        <div className="flex gap-1" aria-hidden="true">
           {Array.from({ length: WEEKLY_GOAL }, (_, i) => (
             <span
               key={i}
