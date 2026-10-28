@@ -214,7 +214,7 @@ function SyncCard({ runs, status, error, onProgress, onPlay }) {
               type="button"
               onClick={() => setView('today')}
               className={`px-2.5 py-0.5 rounded-full font-medium transition-colors ${
-                view === 'today' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                view === 'today' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-800'
               }`}
             >
               Today
@@ -223,7 +223,7 @@ function SyncCard({ runs, status, error, onProgress, onPlay }) {
               type="button"
               onClick={() => setView('week')}
               className={`px-2.5 py-0.5 rounded-full font-medium transition-colors ${
-                view === 'week' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                view === 'week' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-800'
               }`}
             >
               This week
