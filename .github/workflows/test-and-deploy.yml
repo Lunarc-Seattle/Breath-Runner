@@ -16,7 +16,8 @@ concurrency:
 
 # test, e2e and lighthouse run in parallel; each builds the same commit (the build takes ~1s).
 # report always runs and turns their outputs into the quality page + PR summary;
-# deploy (main only) publishes the app with the quality page at /quality/.
+# deploy (main only) publishes the app with the quality page at /quality/ and each tagged
+# web version (web-v1, web-v2, ...) at /v1/, /v2/, ...
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -140,6 +141,14 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      # Full history and tags, to rebuild each tagged web version.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
       - uses: actions/download-artifact@v8
         with:
           name: dist
@@ -148,6 +157,8 @@ jobs:
         with:
           name: quality
           path: dist/quality
+      - name: Each tagged web version at /v1/, /v2/, ... (from web-v* tags)
+        run: scripts/ci/build-versions.sh dist
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:

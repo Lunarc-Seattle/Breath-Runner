@@ -13,6 +13,13 @@ Designed, illustrated and built by **Jie (Fia) Yin**.
 
 ![Breath Runner gameplay: the runner jumps a gap on a long inhale and collects coins](docs/media/breath-runner.gif)
 
+**Versions.** Every web version stays playable, built from its git tag:
+
+| Version | What changed | Play | Source |
+| --- | --- | --- | --- |
+| v2 (current) | The web UI design: new Home, Progress, Trainer & care and Care team pages | [Play v2](https://lunarc-seattle.github.io/breath-runner/v2/) | [`web-v2`](https://github.com/Lunarc-Seattle/breath-runner/tree/web-v2) |
+| v1 | The first release of the app and game | [Play v1](https://lunarc-seattle.github.io/breath-runner/v1/) | [`web-v1`](https://github.com/Lunarc-Seattle/breath-runner/tree/web-v1) |
+
 ---
 
 ## The problem
