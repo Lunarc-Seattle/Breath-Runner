@@ -295,8 +295,8 @@ function Achievements({ runs }) {
             <div
               key={a.id}
               title={a.desc}
-              className={`shrink-0 flex flex-col items-center gap-2 w-[96px] rounded-[18px] border px-3 py-3.5 text-center transition-opacity ${
-                unlocked ? 'bg-white border-slate-200/80 opacity-100' : 'bg-canvas border-slate-200/60 opacity-40'
+              className={`shrink-0 flex flex-col items-center gap-2 w-[96px] rounded-[18px] border px-3 py-3.5 text-center bg-white ${
+                unlocked ? 'border-slate-200/80' : 'border-slate-100'
               }`}
             >
               <span
@@ -306,7 +306,7 @@ function Achievements({ runs }) {
               >
                 <svg
                   viewBox="0 0 24 24"
-                  className={`w-4.5 h-4.5 ${unlocked ? 'text-brand-teal-ink' : 'text-slate-400'}`}
+                  className={`w-[18px] h-[18px] ${unlocked ? 'text-brand-teal-ink' : 'text-slate-400'}`}
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="1.75"
@@ -318,7 +318,11 @@ function Achievements({ runs }) {
                 </svg>
               </span>
               <div>
-                <div className="text-[11px] font-semibold text-slate-900 leading-tight">{a.label}</div>
+                <div
+                  className={`text-[11px] font-semibold leading-tight ${unlocked ? 'text-slate-900' : 'text-slate-500'}`}
+                >
+                  {a.label}
+                </div>
                 <div className="text-[10px] text-slate-500 leading-tight mt-0.5">{a.desc}</div>
               </div>
             </div>
