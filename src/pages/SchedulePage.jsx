@@ -96,7 +96,7 @@ export default function SchedulePage() {
                   <div className="text-xs opacity-80">{task.detail}</div>
                 </div>
               </div>
-              <span className="font-mono text-xs font-semibold">{task.time}</span>
+              <span className="shrink-0 whitespace-nowrap font-mono text-xs font-semibold">{task.time}</span>
             </button>
           ))}
         </div>

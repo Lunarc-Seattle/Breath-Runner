@@ -47,15 +47,15 @@ export default function SpirometryPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="rounded-[32px] bg-white p-7 border border-slate-200/80 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-5 rounded-2xl bg-brand-teal/10">
+        <div className="rounded-[32px] bg-white p-4 sm:p-7 border border-slate-200/80 space-y-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            <div className="p-4 sm:p-5 rounded-2xl bg-brand-teal/10">
               <div className="text-xs text-slate-600">Forced Vital Capacity (FVC)</div>
-              <div className="text-3xl font-bold text-brand-teal-ink mt-1">{liveFvc} L</div>
+              <div className="text-xl sm:text-3xl font-bold text-brand-teal-ink mt-1">{liveFvc}&nbsp;L</div>
             </div>
-            <div className="p-5 rounded-2xl bg-brand-purple/15">
+            <div className="p-4 sm:p-5 rounded-2xl bg-brand-purple/15">
               <div className="text-xs text-slate-600">Peak Expiratory Flow (PEF)</div>
-              <div className="text-3xl font-bold text-brand-purple-ink mt-1">{liveFlow} L/m</div>
+              <div className="text-xl sm:text-3xl font-bold text-brand-purple-ink mt-1">{liveFlow}&nbsp;L/m</div>
             </div>
           </div>
           <svg viewBox="0 0 500 150" className="w-full bg-slate-900 rounded-2xl p-4" aria-hidden="true">

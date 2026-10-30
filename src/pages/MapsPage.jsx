@@ -37,8 +37,8 @@ export default function MapsPage() {
                 {m.name}
               </div>
               <div className="flex justify-between text-xs font-mono text-slate-500">
-                <span>RESISTANCE: {m.kpa} kPa</span>
-                <span>TARGET: {m.targetL} L</span>
+                <span>RESISTANCE: {m.kpa}&nbsp;kPa</span>
+                <span>TARGET: {m.targetL}&nbsp;L</span>
               </div>
               <p className="text-xs text-slate-600 leading-relaxed">{m.desc}</p>
             </div>

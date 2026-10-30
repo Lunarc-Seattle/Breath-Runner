@@ -91,7 +91,7 @@ export default function ProfilePage() {
       </aside>
 
       {/* Right 9 Cols Main Profile Content */}
-      <div className="lg:col-span-9 p-6 lg:p-8 space-y-6">
+      <div className="lg:col-span-9 p-3 sm:p-6 lg:p-8 space-y-6">
         {/* Top Search & Title Bar */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h2 className="text-2xl font-bold text-slate-800">My Profile & Progress</h2>
@@ -110,7 +110,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Profile Header Card (Avatar + Metadata + Social/Hospital Badges) */}
-        <div className="rounded-3xl bg-white p-6 shadow-sm flex flex-col sm:flex-row items-center gap-6">
+        <div className="rounded-3xl bg-white p-4 sm:p-6 shadow-sm flex flex-col sm:flex-row items-center gap-6">
           <div
             className="w-28 h-28 rounded-full flex items-center justify-center text-3xl font-bold text-white shrink-0 shadow-md"
             style={{ background: `linear-gradient(135deg, ${brand.teal.DEFAULT}, ${brand.purple.DEFAULT})` }}
@@ -147,7 +147,7 @@ export default function ProfilePage() {
         {/* Middle Grid: Training Modules Timeline (Left) + Rental Payment & Plan (Right) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* My Training Modules (Mes formations style) */}
-          <div className="lg:col-span-7 rounded-3xl bg-white p-6 shadow-sm space-y-4">
+          <div className="lg:col-span-7 rounded-3xl bg-white p-4 sm:p-6 shadow-sm space-y-4">
             <div className="flex justify-between items-center">
               <h4 className="font-bold text-base text-slate-800">My Breathing Modules</h4>
               <span className="text-xs font-mono text-brand-teal-ink">Total: 200 min</span>
@@ -162,14 +162,14 @@ export default function ProfilePage() {
                   type="button"
                   key={mod.title}
                   onClick={() => navigate('play')}
-                  className="w-full text-left p-4 rounded-2xl bg-canvas hover:bg-brand-purple/15 transition-colors cursor-pointer flex items-center justify-between"
+                  className="w-full text-left p-4 rounded-2xl bg-canvas hover:bg-brand-purple/15 transition-colors cursor-pointer flex items-center justify-between gap-3"
                 >
                   <div>
                     <div className="font-bold text-sm text-slate-800">{mod.title}</div>
                     <div className="text-xs text-slate-600">{mod.sub}</div>
                   </div>
                   <span
-                    className="px-3 py-1 rounded-full text-white text-[10px] font-bold"
+                    className="shrink-0 whitespace-nowrap px-3 py-1 rounded-full text-white text-[10px] font-bold"
                     style={{ backgroundColor: mod.statusColor }}
                   >
                     {mod.status}
@@ -181,7 +181,7 @@ export default function ProfilePage() {
 
           {/* Right Column: Rental Payment Info & Premium Hospital Care Card */}
           <div className="lg:col-span-5 space-y-6">
-            <div className="rounded-3xl bg-white p-6 shadow-sm space-y-3">
+            <div className="rounded-3xl bg-white p-4 sm:p-6 shadow-sm space-y-3">
               <h4 className="font-bold text-sm text-slate-800">Device Rental & Deposit</h4>
               <div className="p-3.5 rounded-2xl bg-slate-50 font-mono text-xs text-slate-600">
                 Hospital Lease Card •••• 9942 (Deposit ¥228)
@@ -197,7 +197,7 @@ export default function ProfilePage() {
             </div>
 
             <div
-              className="rounded-3xl p-6 text-white space-y-3 shadow-sm"
+              className="rounded-3xl p-4 sm:p-6 text-white space-y-3 shadow-sm"
               style={{ backgroundColor: PDF_COLORS.tealDeep }}
             >
               <h4 className="font-bold text-base">Hospital Telehealth Plan</h4>
@@ -218,26 +218,26 @@ export default function ProfilePage() {
         </div>
 
         {/* Bottom Recent Activity Card */}
-        <div className="rounded-3xl bg-white p-6 shadow-sm space-y-3">
+        <div className="rounded-3xl bg-white p-4 sm:p-6 shadow-sm space-y-3">
           <h4 className="font-bold text-base text-slate-800">Recent Recovery Activity</h4>
           <div className="divide-y divide-slate-100 text-xs">
-            <div className="py-2.5 flex justify-between items-center">
+            <div className="py-2.5 flex justify-between items-center gap-3">
               <span>
                 🫁 <strong>Spirometry FVC 3.89L</strong> recorded in Digital Lab
               </span>
-              <span className="text-slate-500">Today • &gt;</span>
+              <span className="shrink-0 whitespace-nowrap text-slate-500">Today • &gt;</span>
             </div>
-            <div className="py-2.5 flex justify-between items-center">
+            <div className="py-2.5 flex justify-between items-center gap-3">
               <span>
                 🌲 <strong>Forest Level 1</strong> breath runner session completed (+320 coins)
               </span>
-              <span className="text-slate-500">Yesterday • &gt;</span>
+              <span className="shrink-0 whitespace-nowrap text-slate-500">Yesterday • &gt;</span>
             </div>
-            <div className="py-2.5 flex justify-between items-center">
+            <div className="py-2.5 flex justify-between items-center gap-3">
               <span>
                 🏅 <strong>Lv.2 Endurance Medal</strong> unlocked (200 total training minutes)
               </span>
-              <span className="text-slate-500">2 days ago • &gt;</span>
+              <span className="shrink-0 whitespace-nowrap text-slate-500">2 days ago • &gt;</span>
             </div>
           </div>
         </div>
