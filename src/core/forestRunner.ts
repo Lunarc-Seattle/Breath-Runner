@@ -305,12 +305,15 @@ export function stepRunner(
     const g = groundAt(map, s.x, s.y, 2);
     return g === null || g > cfg.fallY;
   };
+  // Scripted levels cue "inhale" just before each jump point as a heads-up. Breathing in there
+  // jumps early, so that stretch counts as in sync whatever the player does.
+  let leadIn = false;
   if (cfg.breathCues) {
     // Scripted levels: inhale from just before each scripted jump until its hold ends.
     const pxPerSec = cfg.runSpeed * speedMul;
-    s.cue = cfg.breathCues.some(([cx, hold]) => s.x > cx - cfg.cueLeadPx && s.x < cx + hold * pxPerSec)
-      ? 'inhale'
-      : 'exhale';
+    leadIn = cfg.breathCues.some(([cx]) => s.x > cx - cfg.cueLeadPx && s.x < cx);
+    s.cue =
+      leadIn || cfg.breathCues.some(([cx, hold]) => s.x >= cx && s.x < cx + hold * pxPerSec) ? 'inhale' : 'exhale';
   } else {
     s.cue = !s.onGround
       ? s.vy < 0 || overGap()
@@ -320,7 +323,7 @@ export function stepRunner(
         ? 'inhale'
         : 'exhale';
   }
-  if ((s.cue === 'inhale') === holding) s.syncSec += dt;
+  if (leadIn || (s.cue === 'inhale') === holding) s.syncSec += dt;
 
   if (s.x >= map.width - cfg.endPad) {
     s.events.push({ type: 'lap', lap: s.lap, coins: s.lapCoins, sec: s.lapElapsed, total: map.coins.length });

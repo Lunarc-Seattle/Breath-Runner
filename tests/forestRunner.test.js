@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { FOREST_MAP } from '../src/animation/forestMap.js';
-import { createRunnerState, stepRunner, groundAt, edgeDistance } from '../src/core/forestRunner.ts';
+import { createRunnerState, stepRunner, groundAt, edgeDistance, syncPct } from '../src/core/forestRunner.ts';
 import { FOREST_LEVELS, getLevel } from '../src/core/forestLevels.ts';
 
 const DT = 1 / 60;
@@ -123,6 +123,8 @@ test("following a scripted level's breath cues collects every coin without falli
     }
     assert.equal(s.falls, 0, id);
     assert.equal(s.coins, map.coins.length, id);
+    // The heads-up before each jump point must not count against breathing on the script.
+    assert.ok(syncPct(s) >= 90, `${id}: a perfect lap scored ${syncPct(s)}% sync`);
   }
 });
 
