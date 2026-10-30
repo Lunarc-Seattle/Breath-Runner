@@ -69,7 +69,7 @@ The game runs on the original `pic/background.ai` file, not on a redrawing of it
 
 ## Engineering highlights
 
-- **Art pipeline from the source file.** `scripts/assets/export_forest_ai.py` uses PyMuPDF to read the `.ai`. It deletes the sprite images before rendering the background, samples the cliff paths into top-surface profiles, and writes the coin, runner and arrow positions to `src/animation/forestMap.js`.
+- **Art pipeline from the source file.** `scripts/assets/export_forest_ai.py` uses PyMuPDF to read the `.ai`. It deletes the sprite images before rendering the background, samples the cliff paths into top-surface profiles, and writes the coin, runner and arrow positions to `src/animation/forestMap.js`. `scripts/assets/cut_runner_torso.py` then cuts the legs off the runner sprite, and the engine draws bending legs under her hips: a run cycle, knees tucked on the jump, and a crouch on landing.
 - **Game logic separated from rendering.** `src/core/forestRunner.ts` is a pure, typed step function covering jump, glide, lung, coins, falls and laps, all in the illustration's own coordinates. `src/animation/forestEngine.js` only draws what the state says (type-checked through JSDoc against the core types), so the rules can be unit-tested without a browser.
 - **Levels that are guaranteed to be beatable.** Levels 2 and 3 are written as *breath scripts* (where to inhale, for how long). The physics simulates each script and drops coins along the flight arcs, so every coin is reachable by construction. A test plays each script and checks that it collects every coin with zero falls.
 - **Microphone breath detection.** `src/lib/micBreath.js` band-passes the mic signal, calibrates to the room's noise floor, and uses hysteresis so a fading breath doesn't flicker. The detector is a pure function with its own tests.
@@ -129,6 +129,7 @@ To re-export the level art after editing the illustration:
 ```bash
 python3 -m pip install -r scripts/assets/requirements.txt
 python3 scripts/assets/export_forest_ai.py
+python3 scripts/assets/cut_runner_torso.py
 ```
 
 ## Project map
