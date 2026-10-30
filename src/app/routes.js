@@ -19,7 +19,7 @@ export const ROUTES = [
     slug: 'schedule',
     code: '02',
     name: "Today's Schedule",
-    subtitle: 'Taskly-inspired daily rehab routine & weekly pins',
+    subtitle: 'Daily breathing routine & pinned notes',
     badge: brand.yellow.DEFAULT,
     group: 'Train'
   },
@@ -66,8 +66,8 @@ export const ROUTES = [
   {
     slug: 'ranking',
     code: '07',
-    name: 'Community Ranking',
-    subtitle: 'Friends leaderboard (Ali, Bage, Ms. Bai) & trends',
+    name: 'Friends Ranking',
+    subtitle: "This week's coins, you vs. friends",
     badge: brand.yellow.DEFAULT,
     group: 'Together'
   },

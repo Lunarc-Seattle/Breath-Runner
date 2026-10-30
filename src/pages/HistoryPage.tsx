@@ -17,7 +17,7 @@ import {
 import type { DayBest, RunLike, RunTotals } from '../core/progress.ts';
 import type { Session } from '../core/session.ts';
 import { PineIcon, RidgeChart } from '../components/RidgeChart.jsx';
-import { btn, Card, CardHead, Segmented } from '../components/ui.jsx';
+import { btn, Card, CardHead, EmptyState, Segmented } from '../components/ui.jsx';
 import { useCountUp } from '../app/useCountUp.ts';
 
 const DASH = '—';
@@ -525,15 +525,18 @@ export default function HistoryPage() {
       )}
 
       {status === 'ready' && runs.length === 0 && (
-        <Card as="div" flush className="text-center space-y-3 p-10">
-          <h2 className="text-[17px] font-semibold text-slate-900">No runs yet</h2>
-          <p className="text-sm text-slate-600 max-w-md mx-auto">
+        <Card as="div" flush className="p-10">
+          <EmptyState
+            title="No runs yet"
+            action={
+              <button type="button" onClick={() => navigate('play')} className={btn.primary}>
+                Start your first run
+              </button>
+            }
+          >
             Finish a lap in the Breath Runner and press &quot;Save to history&quot;: your coins, breath sync and falls
             will show up here.
-          </p>
-          <button type="button" onClick={() => navigate('play')} className={btn.primary}>
-            Start your first run
-          </button>
+          </EmptyState>
         </Card>
       )}
 

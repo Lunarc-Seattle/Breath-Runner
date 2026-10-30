@@ -18,7 +18,7 @@ import type { Session } from '../core/session.ts';
 import { useCountUp } from '../app/useCountUp.ts';
 import { SITE_URL } from '../app/versions.js';
 import { RidgeChart } from '../components/RidgeChart.jsx';
-import { Avatar, BatteryIcon, btn, Card, CardHead, Chip, SampleTag } from '../components/ui.jsx';
+import { Avatar, BatteryIcon, btn, Card, CardHead, Chip, EmptyState, SampleTag } from '../components/ui.jsx';
 
 const ASSETS = `${import.meta.env.BASE_URL}assets/`;
 const WEEKDAY = new Intl.DateTimeFormat('en-US', { weekday: 'short' });
@@ -296,14 +296,16 @@ function SyncCard({ runs, status, error, onProgress, onPlay }: SyncCardProps) {
 
       {/* ── Today view ─────────────────────────────────────── */}
       {status === 'ready' && view === 'today' && !hasTodayData && (
-        <div className="py-6 space-y-4">
-          <p className="text-sm text-slate-600 max-w-sm">
-            No runs yet today. Finish a lap and press &quot;Save to history&quot; — your breath sync shows up here.
-          </p>
-          <button type="button" onClick={onPlay} className={btn.soft}>
-            Start a run
-          </button>
-        </div>
+        <EmptyState
+          className="py-8"
+          action={
+            <button type="button" onClick={onPlay} className={btn.soft}>
+              Start a run
+            </button>
+          }
+        >
+          No runs yet today. Finish a lap and press &quot;Save to history&quot; — your breath sync shows up here.
+        </EmptyState>
       )}
       {status === 'ready' && view === 'today' && hasTodayData && (
         <TodayHasData todaySyncRuns={todaySyncRuns} todayStats={todayStats} ghostCount={ghostCount} streak={streak} />
@@ -311,15 +313,17 @@ function SyncCard({ runs, status, error, onProgress, onPlay }: SyncCardProps) {
 
       {/* ── Week view ──────────────────────────────────────── */}
       {status === 'ready' && view === 'week' && !hasWeekData && (
-        <div className="py-6 space-y-4">
-          <p className="text-sm text-slate-600 max-w-sm">
-            No runs saved in the last 7 days. Finish a lap and press &quot;Save to history&quot;: your breath sync shows
-            up here.
-          </p>
-          <button type="button" onClick={onPlay} className={btn.soft}>
-            Start a run
-          </button>
-        </div>
+        <EmptyState
+          className="py-8"
+          action={
+            <button type="button" onClick={onPlay} className={btn.soft}>
+              Start a run
+            </button>
+          }
+        >
+          No runs saved in the last 7 days. Finish a lap and press &quot;Save to history&quot;: your breath sync shows
+          up here.
+        </EmptyState>
       )}
       {status === 'ready' && view === 'week' && hasWeekData && (
         <>
