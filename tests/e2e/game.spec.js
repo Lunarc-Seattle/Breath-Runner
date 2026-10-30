@@ -15,6 +15,8 @@ test('play a lap by following the breath cue, save it, then clear the history', 
   const start = page.getByRole('button', { name: '▶ Start running' });
   await expect(start).toBeFocused(); // the start card moves focus to its primary action
   await start.click();
+  // The 3-2-1 count-in runs first; pause is offered once she is running.
+  await expect(page.getByRole('button', { name: 'Pause' })).toBeEnabled({ timeout: 8000 });
 
   // Play like a person: watch the announced cue and breathe in (hold Space) when it says so.
   const cue = page.getByText(/^(Inhale — jump & glide|Exhale — relax & run)$/);

@@ -87,6 +87,27 @@ body {
 .animate-page {
   animation: fadeSlideUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+/* Breath Runner 3-2-1 count-in: each number swells in, then settles and fades (src/components/ForestRunnerStage.jsx) */
+@keyframes countdown-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  20% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+  35% {
+    transform: scale(1);
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.25;
+    transform: scale(0.94);
+  }
+}
 
 /* Home hero (src/pages/HomePage.jsx): the game's forest art with today's three session markers.
    Stacked copy-over-art below lg; at lg the copy sits on a soft fade over the left of the art. */

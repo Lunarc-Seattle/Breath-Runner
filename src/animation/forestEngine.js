@@ -93,6 +93,10 @@ import { getLevel } from '../core/forestLevels.ts';
 
 const ASSET_BASE = `${import.meta.env.BASE_URL}assets/forest/`;
 const HUD_INTERVAL_MS = 120;
+// Phones draw the artboard at about half scale: keep coins at least this many CSS px across.
+const MIN_COIN_CSS_PX = 24;
+// Narrowest a coin gets mid-spin, as a share of its width; any thinner reads as a smaller coin.
+const MIN_COIN_SPIN = 0.55;
 const RUNNER_W = FOREST_MAP.runner.w;
 const RUNNER_H = FOREST_MAP.runner.h;
 
@@ -422,14 +426,14 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
       if (state.taken[i]) return;
       const bob = Math.sin(time * 3 + i * 0.7) * 5;
       const spin = reducedMotion ? 1 : Math.cos(time * 3.6 + i * 0.5);
-      const size = c.r * 2;
+      const size = Math.round(Math.max(c.r * 2, MIN_COIN_CSS_PX / view.scale)); // rounded: glows are cached by size
       ctx.save();
       ctx.translate(c.x, c.y + bob);
       ctx.fillStyle = coinGlow(size);
       ctx.beginPath();
       ctx.arc(0, 0, size, 0, Math.PI * 2);
       ctx.fill();
-      ctx.scale(Math.max(0.18, Math.abs(spin)), 1);
+      ctx.scale(MIN_COIN_SPIN + (1 - MIN_COIN_SPIN) * Math.abs(spin), 1);
       if (img.complete && img.naturalWidth) ctx.drawImage(img, -size / 2, -size / 2, size, size);
       ctx.restore();
     });
@@ -589,6 +593,8 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
       holding = value;
     },
     setRunning(value) {
+      // A breath already held when the run starts (e.g. through the count-in) doesn't jump; a new one will.
+      if (value && !running) state = { ...state, wasHolding: holding };
       running = value;
       if (onHud) onHud(snapshot());
     },
