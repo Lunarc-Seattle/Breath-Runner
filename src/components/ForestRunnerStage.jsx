@@ -306,7 +306,8 @@ export function ForestRunnerStage({
         </div>
       </div>
 
-      <div className="relative">
+      {/* Holding to inhale is a long press: keep mobile browsers from selecting text or opening a menu. */}
+      <div className="relative select-none no-touch-callout" onContextMenu={e => e.preventDefault()}>
         <div
           ref={stageRef}
           className="relative w-full h-[min(62vh,780px)] md:h-[min(70vh,760px)] min-h-[420px] rounded-[32px] overflow-hidden bg-game-mist select-none touch-none cursor-pointer shadow-[0_24px_60px_rgba(4,33,75,0.18)]"

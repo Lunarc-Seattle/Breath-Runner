@@ -21,6 +21,11 @@ body {
 .font-mono {
   font-family: 'JetBrains Mono', monospace;
 }
+/* iOS Safari: no "copy / look up" callout on a long press (the game's hold-to-inhale) */
+.no-touch-callout {
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
 /* Hover-reveal navigation drawer (src/components/NavDrawer.jsx) */
 .nav-drawer {
   opacity: 0;
