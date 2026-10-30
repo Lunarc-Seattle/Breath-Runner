@@ -167,3 +167,41 @@ test('unknown or prototype level ids fall back to Forest · Level 1', () => {
     assert.equal(getLevel(id).id, 'MAP-FOREST-01', String(id));
   }
 });
+
+/** Runs without breathing until she walks off the first edge; returns that first airborne state. */
+function walkOffFirstEdge(map, config, speed) {
+  let s = createRunnerState(map);
+  while (s.onGround) s = stepRunner(s, DT, false, map, config, speed);
+  return s;
+}
+
+test('coyote time: an inhale just after walking off an edge still jumps', () => {
+  const { map, config, speed } = FOREST_LEVELS['MAP-FOREST-01'];
+  let s = walkOffFirstEdge(map, config, speed);
+  s = stepRunner(s, DT, false, map, config, speed); // a frame late
+  s = stepRunner(s, DT, true, map, config, speed);
+  assert.ok(
+    s.events.some(e => e.type === 'jump'),
+    'late inhale jumps'
+  );
+  assert.ok(s.vy < 0);
+
+  let late = walkOffFirstEdge(map, config, speed);
+  for (let t = 0; t < config.coyoteSec + 0.05; t += DT) late = stepRunner(late, DT, false, map, config, speed);
+  late = stepRunner(late, DT, true, map, config, speed);
+  assert.ok(!late.events.some(e => e.type === 'jump'), 'too late: no jump');
+});
+
+test('she falls faster than she rises', () => {
+  const { map, config, speed } = FOREST_LEVELS['MAP-FOREST-01'];
+  let s = stepRunner(createRunnerState(map), DT, true, map, config, speed);
+  const y0 = s.y;
+  let up = 0;
+  let down = 0;
+  for (let i = 0; i < 200 && (s.vy < 0 || !s.onGround); i++) {
+    s = stepRunner(s, DT, false, map, config, speed);
+    if (s.vy < 0) up += DT;
+    else if (s.y < y0 + 1) down += DT;
+  }
+  assert.ok(down < up, `rise ${up.toFixed(2)}s, fall ${down.toFixed(2)}s`);
+});
