@@ -4,9 +4,9 @@
  *  - A canvas on top draws everything that moves: runner, pacer arrow, coins, mist, birds, particles.
  * Game rules live in src/core/forestRunner.ts; this file only animates what the state says.
  *
- * Type-checked via JSDoc (`@ts-check`). The typedefs below are exported, e.g. for a consumer:
- *   @import { ForestStage, HudSnapshot, StageEvent } from '../animation/forestEngine.js'
- * inside a JSDoc comment, or `import('../animation/forestEngine.js').ForestStage` in a type.
+ * Type-checked via JSDoc (`@ts-check`). The typedefs below are exported; a consumer can write
+ * `import('../animation/forestEngine.js').ForestStage` in a type, or a JSDoc `@import` tag such as
+ * `{ ForestStage, HudSnapshot, StageEvent } from '../animation/forestEngine.js'`.
  */
 // @ts-check
 import { FOREST_MAP } from './forestMap.js';
