@@ -1,3 +1,12 @@
+// Type checking only (`npm run typecheck`); nothing is emitted. Vite strips types for the browser,
+// Node 24 strips them natively for the server and tests.
+//
+// Two TypeScript packages are installed on purpose:
+// - `typescript-7` (npm alias of typescript@7, the native Go compiler) runs `npm run typecheck`.
+//   Its `typescript` entry point only exports the version, so it cannot serve tools that use the JS API.
+// - `typescript` (5.9) provides that JS API for typescript-eslint (peer range `<6.1.0`) and the editor.
+// Use `npm run typecheck`, not `npx tsc`: both packages ship a `tsc` binary.
+// Drop `typescript` 5.9 once typescript-eslint supports TypeScript 7.
 {
   "compilerOptions": {
     "target": "ES2022",
