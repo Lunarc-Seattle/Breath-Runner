@@ -194,6 +194,30 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
   /** Current leg pose, eased toward the target each frame. */
   const legs = { ...LEG_POSES.idle };
 
+  // ── Web Worker for off-main-thread physics ──────────────────────────────
+  /** @type {Worker | null} */
+  let physicsWorker = null;
+  /** @type {import('../core/forestRunner.ts').RunnerState | null} */
+  let pendingState = null;
+  let workerBusy = false;
+
+  try {
+    physicsWorker = new Worker(new URL('../core/physicsWorker.ts', import.meta.url), { type: 'module' });
+    physicsWorker.onmessage = ({ data }) => {
+      if (data.type === 'stepped') {
+        pendingState = data.state;
+        workerBusy = false;
+      }
+    };
+    physicsWorker.onerror = () => {
+      // Worker failed to load (unsupported, CSP, etc.) — fall back to synchronous physics.
+      physicsWorker = null;
+    };
+  } catch {
+    physicsWorker = null;
+  }
+  // ────────────────────────────────────────────────────────────────────────
+
   // Reduced motion: ambient scenery (mist, birds, sparks) holds still and coins don't spin.
   // Gameplay (runner, arrow, coins, particles) is unchanged.
   const motionQuery = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
@@ -356,8 +380,23 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
   function update(dt) {
     time += dt;
     if (running) {
-      state = stepRunner(state, dt, holding, level.map, level.config, speedMul * level.speed);
-      handleEvents(state.events);
+      if (physicsWorker) {
+        // Off-main-thread path: apply buffered result from the previous frame, then
+        // dispatch the next step immediately so the Worker stays one frame ahead.
+        if (pendingState) {
+          handleEvents(pendingState.events);
+          state = pendingState;
+          pendingState = null;
+        }
+        if (!workerBusy) {
+          workerBusy = true;
+          physicsWorker.postMessage({ type: 'step', state, dt, holding, speed: speedMul });
+        }
+      } else {
+        // Synchronous fallback (Worker unavailable or blocked by CSP).
+        state = stepRunner(state, dt, holding, level.map, level.config, speedMul * level.speed);
+        handleEvents(state.events);
+      }
       if (state.onGround && !state.respawnSec && Math.random() < dt * 9) {
         dust.push({
           x: state.x - 18,
@@ -727,11 +766,15 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
       const nextLevel = getLevel(id);
       if (nextLevel !== level) {
         level = nextLevel;
+        // Tell the Worker about the new level so it pre-loads the right map.
+        if (physicsWorker) physicsWorker.postMessage({ type: 'setMap', mapId: id });
         this.restart();
       }
     },
     restart() {
       state = createRunnerState(level.map);
+      pendingState = null;
+      workerBusy = false;
       camX = 0;
       particles.length = 0;
       if (onHud) onHud(snapshot());
@@ -740,6 +783,8 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
     destroy() {
       cancelAnimationFrame(raf);
       raf = 0;
+      physicsWorker?.terminate();
+      physicsWorker = null;
       document.removeEventListener('visibilitychange', onVisibility);
       motionQuery?.removeEventListener?.('change', onMotionChange);
       resizeObserver.disconnect();

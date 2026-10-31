@@ -24,7 +24,7 @@ function HouseIcon({ className }) {
   );
 }
 
-/** AeroCare mark: doubles as the Home button. */
+/** Breath Runner mark: doubles as the Home button. */
 function HomeMark({ active, onClick }) {
   return (
     <button
@@ -37,14 +37,14 @@ function HomeMark({ active, onClick }) {
       <span className="relative w-8 h-8 rounded-xl bg-gradient-to-br from-brand-teal to-brand-blue flex items-center justify-center shadow-sm">
         <HouseIcon className="w-[18px] h-[18px] text-white" />
       </span>
-      {/* Accessible name = the visible "AeroCare HOME"; screen-reader-only text covers phones, where it's hidden. */}
-      <span className="sr-only sm:hidden">AeroCare home</span>
+      {/* Accessible name = the visible "Breath Runner home"; screen-reader-only text covers phones, where it's hidden. */}
+      <span className="sr-only sm:hidden">Breath Runner home</span>
       <span className="hidden sm:flex flex-col items-start leading-none">
-        <span className="text-sm font-bold text-slate-900">AeroCare</span>{' '}
+        <span className="text-sm font-bold text-slate-900">Breath Runner</span>{' '}
         <span
-          className={`text-[10px] font-mono mt-0.5 transition-colors ${active ? 'text-brand-teal-ink' : 'text-slate-500 group-hover:text-brand-teal-ink'}`}
+          className={`text-[11px] font-medium mt-1 transition-colors ${active ? 'text-brand-teal-ink' : 'text-slate-600 group-hover:text-brand-teal-ink'}`}
         >
-          HOME
+          home
         </span>
       </span>
     </button>
@@ -178,7 +178,7 @@ export function NavDrawer({ routes, currentSlug, onNavigate }) {
 
       {createPortal(
         <>
-          {/* Left-edge hover zone with a faint handle hinting that something lives there */}
+          {/* Left-edge hover zone: its handle only shows while the pointer is on the edge */}
           <div
             className="fixed left-0 top-[72px] bottom-0 w-3 z-40 hidden md:flex items-center group"
             onMouseEnter={show}
@@ -186,7 +186,7 @@ export function NavDrawer({ routes, currentSlug, onNavigate }) {
             aria-hidden="true"
           >
             <span
-              className={`ml-1 w-1 h-14 rounded-full bg-slate-400/40 transition-all duration-500 group-hover:h-24 group-hover:bg-brand-teal/70 ${open ? 'opacity-0' : ''}`}
+              className={`ml-1 w-1 h-14 rounded-full bg-brand-teal/70 opacity-0 transition-all duration-500 group-hover:h-24 group-hover:opacity-100 ${open ? '!opacity-0' : ''}`}
             ></span>
           </div>
 

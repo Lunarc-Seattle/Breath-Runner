@@ -64,6 +64,7 @@ export function ForestRunnerStage({
   const keyHandlersRef = useRef(null);
   const startButtonRef = useRef(null);
   const nextLapButtonRef = useRef(null);
+  const prevBestSyncRef = useRef(null); // best sync % from prior laps this session
 
   useEffect(() => {
     const engine = createForestStage({
@@ -141,6 +142,13 @@ export function ForestRunnerStage({
   // Count 3-2-1 at a breathing pace, then run. Used for the first start, every lap and resume.
   const begin = () => {
     if (countdownTimer.current) return;
+    // Record best sync before discarding the current lap result.
+    if (lapResult !== null && h !== null) {
+      const sync = h.sync ?? 0;
+      if (prevBestSyncRef.current === null || sync > prevBestSyncRef.current) {
+        prevBestSyncRef.current = sync;
+      }
+    }
     unlockAudio();
     setStarted(true);
     setPaused(false);
@@ -283,6 +291,11 @@ export function ForestRunnerStage({
       notify('Run for a few seconds first, then save.');
       return;
     }
+    // Keep session best in sync so "personal best" still works after saving.
+    const sync = snap.sync ?? 0;
+    if (prevBestSyncRef.current === null || sync > prevBestSyncRef.current) {
+      prevBestSyncRef.current = sync;
+    }
     try {
       const repo = await getSessionRepository();
       await repo.add({
@@ -330,21 +343,36 @@ export function ForestRunnerStage({
           <h2 className="text-2xl md:text-3xl font-bold text-slate-900">{map.name}</h2>
         </div>
         <div className="flex gap-2 overflow-x-auto max-w-full pb-1">
-          {maps.map(m => (
+          {maps.map((m, i) => (
             <button
               type="button"
               key={m.id}
               onClick={() => onSelectMap(m)}
               aria-pressed={m.id === map.id}
-              className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-2xl text-xs font-bold transition-all border ${
+              className={`shrink-0 text-left px-4 py-2.5 rounded-2xl text-xs font-bold transition-all border ${
                 m.id === map.id
                   ? 'text-white border-transparent shadow-sm'
                   : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
               }`}
               style={m.id === map.id ? solidStyle(m.color) : undefined}
             >
-              {m.name}
-              <span className="ml-1.5 font-mono">{m.kpa} kPa</span>
+              <span className="flex items-center gap-1.5 whitespace-nowrap">
+                {m.name}
+                <span className={`font-mono ${m.id === map.id ? '' : 'text-slate-500'}`}>{m.kpa} kPa</span>
+                <span className="flex items-center gap-0.5 ml-0.5" aria-hidden="true">
+                  {maps.map((_, j) => (
+                    <span
+                      key={j}
+                      className={`w-1.5 h-1.5 rounded-full bg-current ${j <= i ? 'opacity-80' : 'opacity-20'}`}
+                    />
+                  ))}
+                </span>
+              </span>
+              {m.tag && (
+                <span className={`block text-[10px] font-mono mt-0.5 ${m.id === map.id ? '' : 'text-slate-500'}`}>
+                  {m.tag}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -549,41 +577,81 @@ export function ForestRunnerStage({
           )}
 
           {/* Lap result */}
-          {lapResult && (
-            <div className="absolute inset-0 flex items-center justify-center p-4 bg-game-navy/30 backdrop-blur-[2px]">
-              <div
-                className={`${GLASS} rounded-3xl max-w-sm w-full p-6 text-center pointer-events-auto`}
-                onPointerDown={keepPointer}
-              >
-                <div className="text-[11px] font-mono text-game-mint">LAP {lapResult.lap} COMPLETE</div>
-                <div className="text-4xl font-bold mt-2 text-game-coin">
-                  {lapResult.coins}
-                  <span className="text-lg text-white/60"> / {lapResult.total} coins</span>
-                </div>
-                <div className="text-sm text-white/75 mt-2">
-                  {lapResult.sec.toFixed(1)} s · {h.sync}% breath sync · {h.falls} slips
-                </div>
-                <div className="text-[11px] text-white/55 mt-1">Breath sync: time your breath matched the arrow</div>
-                <div className="mt-5 flex gap-2">
-                  <button
-                    type="button"
-                    onClick={saveRun}
-                    className="flex-1 py-3 rounded-2xl bg-white/15 hover:bg-white/25 text-xs font-bold"
+          {lapResult &&
+            (() => {
+              const currentSync = h?.sync ?? 0;
+              const isNewBest = prevBestSyncRef.current !== null && currentSync > prevBestSyncRef.current;
+              return (
+                <div className="absolute inset-0 flex items-center justify-center p-4 bg-game-navy/30 backdrop-blur-[2px]">
+                  <div
+                    className={`${GLASS} rounded-3xl max-w-sm w-full p-4 sm:p-6 text-center pointer-events-auto`}
+                    onPointerDown={keepPointer}
                   >
-                    Save to history
-                  </button>
-                  <button
-                    ref={nextLapButtonRef}
-                    type="button"
-                    onClick={begin}
-                    className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-game-ember to-game-ember-amber text-xs font-bold"
-                  >
-                    Next lap →
-                  </button>
+                    <div className="text-[11px] font-mono text-game-mint tracking-widest">
+                      LAP {lapResult.lap} COMPLETE
+                    </div>
+
+                    <div className="mt-3 grid grid-cols-2 gap-2.5">
+                      <div className="rounded-2xl bg-white/10 px-3 py-3">
+                        <div className="text-[10px] font-mono uppercase tracking-wider text-game-coin/70 mb-1.5">
+                          Coins
+                        </div>
+                        <div className="text-[26px] sm:text-[32px] font-bold text-game-coin leading-none tabular-nums">
+                          {lapResult.coins}
+                        </div>
+                        <div className="text-[13px] text-white/45 mt-1">of {lapResult.total}</div>
+                      </div>
+
+                      <div
+                        className={`rounded-2xl px-3 py-3 transition-colors ${
+                          isNewBest ? 'bg-game-mint/20 ring-1 ring-game-mint/40' : 'bg-white/10'
+                        }`}
+                      >
+                        <div className="text-[10px] font-mono uppercase tracking-wider text-game-mint/70 mb-1.5">
+                          Breath sync
+                        </div>
+                        <div className="text-[26px] sm:text-[32px] font-bold text-game-mint leading-none tabular-nums">
+                          {currentSync}%
+                        </div>
+                        <div className="text-[11px] mt-1 font-semibold">
+                          {isNewBest ? (
+                            <span className="text-game-mint">Personal best</span>
+                          ) : (
+                            <span className="text-white/30">{lapResult.sec.toFixed(1)} s</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-2.5 text-[12px] text-white/45 tabular-nums">
+                      {isNewBest && <span>{lapResult.sec.toFixed(1)} s · </span>}
+                      {h.falls} slip{h.falls !== 1 ? 's' : ''}
+                    </div>
+                    <div className="mt-1 text-[11px] text-white/55">
+                      Breath sync: time your breath matched the arrow
+                    </div>
+
+                    <div className="mt-4 flex gap-2">
+                      <button
+                        type="button"
+                        onClick={saveRun}
+                        className="flex-1 py-3 rounded-2xl bg-white/15 hover:bg-white/25 text-xs font-bold transition-colors"
+                      >
+                        Save to history
+                      </button>
+                      <button
+                        ref={nextLapButtonRef}
+                        type="button"
+                        onClick={begin}
+                        className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-game-ember to-game-ember-amber text-xs font-bold"
+                      >
+                        Next lap →
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          )}
+              );
+            })()}
         </div>
 
         {/* Bottom breath dock */}

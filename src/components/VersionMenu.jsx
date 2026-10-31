@@ -34,13 +34,13 @@ export function VersionMenu() {
         aria-expanded={open}
         aria-controls="version-menu"
         title="Versions of this app"
-        className={`flex items-center gap-1.5 px-3 py-2 rounded-2xl text-xs font-mono font-medium transition-colors ${
+        className={`flex items-center gap-1.5 px-3 py-2 rounded-2xl text-xs font-medium transition-colors ${
           open ? 'bg-ink text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
         }`}
       >
         <span className="sr-only">Version </span>
         {CURRENT_VERSION.id}
-        <span className="hidden md:inline"> · versions</span>
+        <span className="hidden md:inline"> · Versions</span>
       </button>
 
       {open && (

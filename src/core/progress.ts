@@ -187,6 +187,27 @@ export function coinsLast7(runs: readonly RunLike[], now: DateInput = new Date()
   return totals(runsInRange(runs, 7, now)).coins;
 }
 
+/**
+ * Current training streak: consecutive calendar days ending on or before today that each
+ * have at least one saved run. Returns 0 when the most recent run was 2+ days ago.
+ */
+export function currentStreak(runs: readonly RunLike[], now: DateInput = new Date()): number {
+  if (!runs.length) return 0;
+  const runDays = new Set(runs.map(r => dateKey(new Date(r.completedAt))));
+  const cursor = startOfDay(now);
+  // If nothing today, check if yesterday starts a streak; otherwise it is broken.
+  if (!runDays.has(dateKey(cursor))) {
+    cursor.setDate(cursor.getDate() - 1);
+    if (!runDays.has(dateKey(cursor))) return 0;
+  }
+  let streak = 0;
+  while (runDays.has(dateKey(cursor))) {
+    streak++;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return streak;
+}
+
 /** 1,180 s -> "19 min"; 4,260 s -> "1 h 11 min"; under a minute -> "42 s". */
 export function formatTrainingTime(seconds: number): string {
   const sec = Math.max(0, Math.round(seconds));

@@ -19,7 +19,7 @@ export const ROUTES = [
     slug: 'schedule',
     code: '02',
     name: "Today's Schedule",
-    subtitle: 'Taskly-inspired daily rehab routine & weekly pins',
+    subtitle: 'Daily breathing routine & pinned notes',
     badge: brand.yellow.DEFAULT,
     group: 'Train'
   },
@@ -40,19 +40,19 @@ export const ROUTES = [
     group: 'Train'
   },
   {
-    slug: 'history',
-    code: '13',
-    name: 'Progress',
-    subtitle: 'Breath sync, runs & coins from your saved runs',
-    badge: brand.teal.DEFAULT,
-    group: 'Train'
-  },
-  {
     slug: 'spirometry',
     code: '05',
     name: 'Spirometry Lab',
     subtitle: 'Real-time 1,000Hz lung capacity (FVC / FEV1) test',
     badge: brand.purple.DEFAULT,
+    group: 'Train'
+  },
+  {
+    slug: 'history',
+    code: '13',
+    name: 'Progress',
+    subtitle: 'Breath sync, runs & coins from your saved runs',
+    badge: brand.teal.DEFAULT,
     group: 'Train'
   },
   {
@@ -66,8 +66,8 @@ export const ROUTES = [
   {
     slug: 'ranking',
     code: '07',
-    name: 'Community Ranking',
-    subtitle: 'Friends leaderboard (Ali, Bage, Ms. Bai) & trends',
+    name: 'Friends Ranking',
+    subtitle: "This week's coins, you vs. friends",
     badge: brand.yellow.DEFAULT,
     group: 'Together'
   },

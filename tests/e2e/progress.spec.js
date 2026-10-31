@@ -34,9 +34,10 @@ test.describe('progress', () => {
     await page.goto('/#/history');
     await expect(page.getByRole('heading', { level: 1, name: 'Progress' })).toBeVisible();
 
-    const stats = page.locator('dl');
-    await expect(stats.getByText('Runs', { exact: true })).toBeVisible();
-    await expect(stats).toContainText(`Best breath sync${best}%`);
+    // Scope to the Breath sync card (TodayOverview also renders <dl> elements on this page).
+    const syncCard = page.getByRole('article', { name: 'Breath sync' });
+    await expect(syncCard.getByText('Runs', { exact: true })).toBeVisible();
+    await expect(syncCard).toContainText(`Best breath sync${best}%`);
     await expect(page.getByRole('img', { name: /^Best breath sync each day/ })).toBeVisible();
 
     const range = page.getByRole('group', { name: 'Time range' });

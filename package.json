@@ -6,6 +6,23 @@
   "type": "module",
   "author": "Jie (Fia) Yin",
   "license": "UNLICENSED",
+  "keywords": [
+    "react",
+    "vite",
+    "tailwindcss",
+    "typescript",
+    "pwa",
+    "canvas",
+    "web-bluetooth",
+    "game",
+    "breathing",
+    "healthcare",
+    "rehabilitation",
+    "spirometry",
+    "gamification",
+    "playwright",
+    "lighthouse"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -26,13 +43,15 @@
   "dependencies": {
     "@fontsource/jetbrains-mono": "5.3.0",
     "@fontsource/plus-jakarta-sans": "5.3.0",
+    "better-sqlite3": "^13.0.3",
     "express": "5.3.0",
     "express-rate-limit": "8.7.1",
     "helmet": "8.3.0",
     "pino": "10.4.0",
     "pino-http": "10.5.0",
     "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "react-dom": "18.3.1",
+    "ws": "^8.22.0"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",
