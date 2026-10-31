@@ -1,7 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { FOREST_MAP } from '../src/animation/forestMap.js';
-import { createRunnerState, stepRunner, groundAt, edgeDistance, syncPct } from '../src/core/forestRunner.ts';
+import {
+  createRunnerState,
+  stepRunner,
+  stepRunnerFor,
+  MAX_STEP_SEC,
+  groundAt,
+  edgeDistance,
+  syncPct
+} from '../src/core/forestRunner.ts';
 import { FOREST_LEVELS, getLevel } from '../src/core/forestLevels.ts';
 
 const DT = 1 / 60;
@@ -204,4 +212,37 @@ test('she falls faster than she rises', () => {
     else if (s.y < y0 + 1) down += DT;
   }
   assert.ok(down < up, `rise ${up.toFixed(2)}s, fall ${down.toFixed(2)}s`);
+});
+
+test('stepRunnerFor: one frame is exactly one stepRunner call', () => {
+  const { map, config, speed } = FOREST_LEVELS['MAP-CANYON-02'];
+  const s = createRunnerState(map);
+  assert.deepEqual(stepRunnerFor(s, DT, true, map, config, speed), stepRunner(s, DT, true, map, config, speed));
+});
+
+test('stepRunnerFor: time owed from busy frames is caught up in steps, keeping every event', () => {
+  const { map, config, speed } = FOREST_LEVELS['MAP-FOREST-01'];
+  const s = createRunnerState(map);
+  const owed = 0.2; // four steps of MAX_STEP_SEC
+  const caughtUp = stepRunnerFor(s, owed, true, map, config, speed);
+  let stepped = s;
+  const events = [];
+  for (let i = 0; i < 4; i++) {
+    stepped = stepRunner(stepped, MAX_STEP_SEC, true, map, config, speed);
+    events.push(...stepped.events);
+  }
+  assert.equal(caughtUp.x, stepped.x);
+  assert.equal(caughtUp.y, stepped.y);
+  assert.ok(Math.abs(caughtUp.elapsed - owed) < 1e-9, 'all of the owed time is simulated');
+  // The jump starts in the first step; it must survive into the merged events.
+  assert.ok(events.some(e => e.type === 'jump'));
+  assert.deepEqual(caughtUp.events, events);
+});
+
+test('stepRunnerFor: no time, no change', () => {
+  const { map, config, speed } = FOREST_LEVELS['MAP-FOREST-01'];
+  const s = createRunnerState(map);
+  const same = stepRunnerFor(s, 0, true, map, config, speed);
+  assert.equal(same.x, s.x);
+  assert.deepEqual(same.events, []);
 });

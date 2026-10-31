@@ -200,11 +200,16 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
   /** @type {import('../core/forestRunner.ts').RunnerState | null} */
   let pendingState = null;
   let workerBusy = false;
+  // Run time not yet sent to the Worker: frames that passed while a step was still in flight.
+  let owedSec = 0;
+  const MAX_OWED_SEC = 0.25; // after a long stall, catch up a little rather than jump far ahead
+  // Bumped whenever the main thread replaces `state`, so a step computed from the old state is dropped.
+  let stepGen = 0;
 
   try {
     physicsWorker = new Worker(new URL('../core/physicsWorker.ts', import.meta.url), { type: 'module' });
     physicsWorker.onmessage = ({ data }) => {
-      if (data.type === 'stepped') {
+      if (data.type === 'stepped' && data.gen === stepGen) {
         pendingState = data.state;
         workerBusy = false;
       }
@@ -388,9 +393,11 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
           state = pendingState;
           pendingState = null;
         }
+        owedSec = Math.min(MAX_OWED_SEC, owedSec + dt);
         if (!workerBusy) {
           workerBusy = true;
-          physicsWorker.postMessage({ type: 'step', state, dt, holding, speed: speedMul });
+          physicsWorker.postMessage({ type: 'step', state, dt: owedSec, holding, speed: speedMul, gen: stepGen });
+          owedSec = 0;
         }
       } else {
         // Synchronous fallback (Worker unavailable or blocked by CSP).
@@ -746,6 +753,19 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
   }
   document.addEventListener('visibilitychange', onVisibility);
 
+  /**
+   * Swap in a state the main thread made itself. A Worker step still in flight was computed from
+   * the old one, so it is dropped (and its result ignored when it arrives).
+   * @param {import('../core/forestRunner.ts').RunnerState} next
+   */
+  function replaceState(next) {
+    state = next;
+    stepGen += 1;
+    pendingState = null;
+    workerBusy = false;
+    owedSec = 0;
+  }
+
   /** @type {ForestStage} */
   const api = {
     setHolding(value) {
@@ -753,7 +773,7 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
     },
     setRunning(value) {
       // A breath already held when the run starts (e.g. through the count-in) doesn't jump; a new one will.
-      if (value && !running) state = { ...state, wasHolding: holding };
+      if (value && !running) replaceState({ ...state, wasHolding: holding });
       running = value;
       if (onHud) onHud(snapshot());
     },
@@ -772,9 +792,7 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
       }
     },
     restart() {
-      state = createRunnerState(level.map);
-      pendingState = null;
-      workerBusy = false;
+      replaceState(createRunnerState(level.map));
       camX = 0;
       particles.length = 0;
       if (onHud) onHud(snapshot());
