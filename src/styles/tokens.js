@@ -2,9 +2,9 @@
  * Breath Runner colour tokens: the single source of truth for the designer's palette.
  *
  * Plain data, consumed in two places:
- *  - tailwind.config.js puts `colors` in theme.extend.colors, so nested keys become classes:
- *    brand.teal.DEFAULT -> `bg-brand-teal`, brand.teal.ink -> `text-brand-teal-ink`,
- *    game.navy.DEFAULT -> `bg-game-navy/60` (opacity modifiers work because every value is hex).
+ *  - Tailwind: `npm run tokens` writes `colors` into src/styles/theme.css as a v4 `@theme` block, so nested
+ *    keys become classes: brand.teal.DEFAULT -> `bg-brand-teal`, brand.teal.ink -> `text-brand-teal-ink`,
+ *    game.navy.DEFAULT -> `bg-game-navy/60` (every value must be #RRGGBB). A unit test fails when it is stale.
  *  - JS (inline styles, SVG attributes, simStore's PDF_COLORS / solid()) imports the same objects.
  *
  * Contrast rule (WCAG AA, 4.5:1 for body text):

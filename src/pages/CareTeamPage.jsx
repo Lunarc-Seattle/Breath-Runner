@@ -32,7 +32,7 @@ function WeekBars({ week }) {
       {week.map((b, i) => (
         <i
           key={i}
-          className={`block w-1.5 rounded-sm ${b ? 'bg-brand-teal' : 'bg-brand-pink'}`}
+          className={`block w-1.5 rounded-xs ${b ? 'bg-brand-teal' : 'bg-brand-pink'}`}
           style={{ height: b ? 6 + b * 5.3 : 4, opacity: b === 1 ? 0.36 : b === 2 ? 0.62 : b ? 1 : 0.9 }}
         />
       ))}
@@ -60,7 +60,7 @@ function Stepper({ field, value, onChange }) {
   return (
     <div className="flex items-center justify-between gap-3 py-2 border-b border-slate-100 last:border-b-0 text-sm">
       <span className="text-slate-900">{field.label}</span>
-      <span className="inline-flex items-center rounded-xl shadow-[inset_0_0_0_1px_theme(colors.slate.200)]">
+      <span className="inline-flex items-center rounded-xl shadow-[inset_0_0_0_1px_var(--color-slate-200)]">
         <button
           type="button"
           aria-label={field.less}
@@ -154,7 +154,7 @@ function PatientDetail({ patient, rx, onRx }) {
         value={note}
         onChange={e => setNote(e.target.value)}
         placeholder={`Write a note for ${patient.name}`}
-        className="block w-full min-h-[74px] mt-2 px-3 py-2.5 rounded-xl bg-canvas shadow-[inset_0_0_0_1px_theme(colors.slate.200)] text-sm resize-y placeholder:text-slate-600"
+        className="block w-full min-h-[74px] mt-2 px-3 py-2.5 rounded-xl bg-canvas shadow-[inset_0_0_0_1px_var(--color-slate-200)] text-sm resize-y placeholder:text-slate-600"
       />
       <div className="flex flex-wrap gap-2.5 mt-4">
         <button
@@ -162,11 +162,11 @@ function PatientDetail({ patient, rx, onRx }) {
           onClick={() =>
             setStatus(`Demo only: the prescription for ${patient.name} is kept on this page and not saved.`)
           }
-          className={`${btn.primary} h-[42px] px-4 text-sm`}
+          className={`${btn.primary} h-[42px] px-4 text-sm!`}
         >
           Save prescription
         </button>
-        <button type="button" onClick={send} className={`${btn.soft} h-[42px] px-4 text-sm`}>
+        <button type="button" onClick={send} className={`${btn.soft} h-[42px] px-4 text-sm!`}>
           Send note
         </button>
       </div>
@@ -209,7 +209,7 @@ export default function CareTeamPage() {
             {CARE_PATIENTS.length} in home rehab, {attention} need attention. Sample patients for the care team view.
           </p>
         </div>
-        <label className="flex items-center gap-2.5 h-[42px] w-full md:w-auto md:min-w-[280px] px-3.5 rounded-xl bg-white shadow-[inset_0_0_0_1px_theme(colors.slate.200)] focus-within:shadow-[inset_0_0_0_2px_theme(colors.brand.teal.deep)] text-slate-600">
+        <label className="flex items-center gap-2.5 h-[42px] w-full md:w-auto md:min-w-[280px] px-3.5 rounded-xl bg-white shadow-[inset_0_0_0_1px_var(--color-slate-200)] focus-within:shadow-[inset_0_0_0_2px_var(--color-brand-teal-deep)] text-slate-600">
           <svg
             viewBox="0 0 24 24"
             className="w-5 h-5 shrink-0"
@@ -229,7 +229,7 @@ export default function CareTeamPage() {
             onChange={e => setQuery(e.target.value)}
             placeholder="Search patients"
             autoComplete="off"
-            className="flex-1 min-w-0 bg-transparent outline-none text-sm text-slate-900 placeholder:text-slate-600"
+            className="flex-1 min-w-0 bg-transparent outline-hidden text-sm text-slate-900 placeholder:text-slate-600"
           />
         </label>
       </header>
@@ -247,7 +247,7 @@ export default function CareTeamPage() {
               className={`h-9 px-3.5 rounded-full text-sm ${
                 pressed
                   ? 'bg-ink text-white'
-                  : 'bg-white text-slate-700 shadow-[inset_0_0_0_1px_theme(colors.slate.200)]'
+                  : 'bg-white text-slate-700 shadow-[inset_0_0_0_1px_var(--color-slate-200)]'
               }`}
             >
               {f.label}

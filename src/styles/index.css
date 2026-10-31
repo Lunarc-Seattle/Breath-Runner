@@ -1,17 +1,163 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+/* Brand and game colours, generated from tokens.js (the single source of truth): `npm run tokens`. */
+@import './theme.css';
+
+/*
+ * Tailwind v4 compatibility: keep the v3 look exactly (no visual change in the upgrade).
+ */
+
+/* v4's default palette is OKLCH (and can render more saturated on wide-gamut screens); pin the v3 sRGB values
+   of every palette colour the UI uses (the slate scale, plus neutral-200 and teal-300/500 on Home and Trainer).
+   `inline` keeps opacity modifiers (border-slate-200/80, bg-white/10) as plain hex instead of color-mix(). */
+@theme inline {
+  --color-white: #fff;
+  --color-black: #000;
+  --color-neutral-200: #e5e5e5;
+  --color-teal-300: #5eead4;
+  --color-teal-500: #14b8a6;
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #64748b;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  --color-slate-800: #1e293b;
+  --color-slate-900: #0f172a;
+  --color-slate-950: #020617;
+}
+
+/* v3 font sizes carried a fixed line height (text-sm: 1.25rem) that children with an arbitrary size
+   (text-[10px]) inherit; v4 uses unitless ratios. Keep the v3 values. */
+@theme {
+  --text-xs--line-height: 1rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl--line-height: 2rem;
+  --text-3xl--line-height: 2.25rem;
+  --text-4xl--line-height: 2.5rem;
+  --text-5xl--line-height: 1;
+}
+
+/* v4 adds outline-color (so the focus ring fades in) and the gradient stops to these lists; keep v3's, plus
+   the translate/scale/rotate properties v4 uses for transforms (scale-95, -translate-x-1/2). */
+@utility transition {
+  transition-property:
+    color,
+    background-color,
+    border-color,
+    text-decoration-color,
+    fill,
+    stroke,
+    opacity,
+    box-shadow,
+    transform,
+    translate,
+    scale,
+    rotate,
+    filter,
+    -webkit-backdrop-filter,
+    backdrop-filter;
+}
+@utility transition-colors {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+}
+
+/* v3 applied `hover:` on every device; v4 wraps it in @media (hover: hover), which drops the hover look on
+   touch screens. Keep v3 behaviour. */
+@custom-variant hover (&:hover);
+
+/* Gradients: v4 interpolates `bg-linear-*` in oklab, which shifts the mid tones. The markup uses the
+   `/srgb` modifier (bg-linear-to-r/srgb) to keep v3's sRGB blend. */
+
+/* space-y-* / divide-y: v4 puts the gap on the bottom of every child but the last, with zero specificity, so a
+   child's own mt-* now adds to the gap (v3 replaced it). Restore v3's rule: the gap sits on top of every
+   visible child after the first, and wins over the child's own margin. The :first-child rules cancel v4's
+   own rule on the first child (no first child sets its own bottom margin or border). */
+@utility space-y-* {
+  & > :not([hidden]) ~ :not([hidden]) {
+    margin-top: calc(var(--spacing) * --value(number));
+    margin-bottom: 0;
+  }
+  & > :first-child {
+    margin-bottom: 0;
+  }
+}
+@utility divide-y {
+  & > :not([hidden]) ~ :not([hidden]) {
+    border-top-width: 1px;
+    border-bottom-width: 0;
+  }
+  & > :first-child {
+    border-bottom-width: 0;
+  }
+}
+/* History's summary card switches from divide-y to sm:divide-y-0 sm:divide-x: both need the same v3 rule so the
+   breakpoint variant can turn the divide-y border back off. */
+@utility divide-y-0 {
+  & > :not([hidden]) ~ :not([hidden]) {
+    border-top-width: 0;
+    border-bottom-width: 0;
+  }
+}
+@utility divide-x {
+  & > :not([hidden]) ~ :not([hidden]) {
+    border-left-width: 1px;
+    border-right-width: 0;
+  }
+  & > :first-child {
+    border-right-width: 0;
+  }
+}
+/* Divider colour on the same children; the second line carries an opacity modifier (divide-slate-200/80). */
+@utility divide-* {
+  & > :not([hidden]) ~ :not([hidden]) {
+    border-color: --value(--color-*);
+    border-color: --alpha(--value(--color-*) / calc(--modifier(integer) * 1%));
+  }
+  & > :first-child {
+    border-color: revert-layer;
+  }
+}
+
+@layer base {
+  /* v3 preflight defaults that v4 changed */
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: #e5e7eb; /* v3 gray-200; v4 uses currentcolor */
+  }
+  input::placeholder,
+  textarea::placeholder {
+    opacity: 1;
+    color: #9ca3af; /* v3 gray-400; v4 uses currentcolor at 50% */
+  }
+  input,
+  select,
+  textarea {
+    background-color: revert; /* v4 makes form controls transparent; v3 kept the browser default */
+  }
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer; /* v4 resets buttons to cursor: default */
+  }
+}
 
 :root {
-  --pdf-teal: #13a4a9;
-  --pdf-purple: #8e90c6;
-  --pdf-yellow: #f0c754;
-  --pdf-pink: #f0a7ab;
-  --pdf-blue: #96c7d2;
+  --pdf-teal: var(--color-brand-teal);
+  --pdf-purple: var(--color-brand-purple);
+  --pdf-yellow: var(--color-brand-yellow);
+  --pdf-pink: var(--color-brand-pink);
+  --pdf-blue: var(--color-brand-blue);
 }
 body {
-  background-color: #f4f6fa;
-  color: #1e2432;
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
   font-family:
     'Plus Jakarta Sans',
     -apple-system,
@@ -116,8 +262,8 @@ body {
   overflow: hidden;
   isolation: isolate;
   border-radius: 28px;
-  background: theme('colors.canvas');
-  border: 1px solid theme('colors.slate.200 / 80%');
+  background: var(--color-canvas);
+  border: 1px solid color-mix(in srgb, var(--color-slate-200) 80%, transparent);
   display: flex;
   flex-direction: column;
 }
@@ -168,7 +314,7 @@ body {
   padding: 6px 13px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.94);
-  color: theme('colors.slate.900');
+  color: var(--color-slate-900);
   font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
@@ -177,7 +323,7 @@ body {
 .home-wp-label em {
   font-style: normal;
   font-weight: 400;
-  color: theme('colors.slate.600');
+  color: var(--color-slate-600);
 }
 .home-wp-dot {
   width: 20px;
@@ -199,11 +345,11 @@ body {
   stroke-linejoin: round;
 }
 .home-wp.is-done .home-wp-dot {
-  background: theme('colors.brand.teal.deep');
+  background: var(--color-brand-teal-deep);
 }
 .home-wp.is-next .home-wp-dot {
   background: #fff;
-  border-color: theme('colors.brand.teal.deep');
+  border-color: var(--color-brand-teal-deep);
   box-shadow:
     0 0 0 6px rgba(255, 255, 255, 0.45),
     0 2px 8px rgba(20, 40, 50, 0.28);
@@ -215,7 +361,7 @@ body {
 .home-hero-today {
   margin: -12px 0 20px;
   font-size: 14px;
-  color: theme('colors.slate.600');
+  color: var(--color-slate-600);
 }
 .home-photo-mask {
   -webkit-mask-image: radial-gradient(ellipse 72% 84% at 50% 48%, #000 64%, transparent 100%);

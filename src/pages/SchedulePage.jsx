@@ -9,7 +9,7 @@ function CheckMark({ done }) {
     <span
       aria-hidden="true"
       className={`w-6 h-6 shrink-0 rounded-full grid place-items-center transition-colors ${
-        done ? 'bg-brand-teal-deep text-white' : 'shadow-[inset_0_0_0_1.5px_theme(colors.slate.300)]'
+        done ? 'bg-brand-teal-deep text-white' : 'shadow-[inset_0_0_0_1.5px_var(--color-slate-300)]'
       }`}
     >
       {done && (
@@ -63,7 +63,7 @@ export default function SchedulePage() {
                   onClick={() => toggleTask(task)}
                   className={`w-full text-left px-4 py-4 rounded-2xl flex items-center gap-4 transition-colors ${
                     task === next
-                      ? 'bg-surface-mint/60 shadow-[inset_0_0_0_1.5px_theme(colors.brand.teal.DEFAULT)]'
+                      ? 'bg-surface-mint/60 shadow-[inset_0_0_0_1.5px_var(--color-brand-teal)]'
                       : 'bg-canvas hover:bg-slate-100'
                   }`}
                 >

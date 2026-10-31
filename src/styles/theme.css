@@ -1,0 +1,44 @@
+/* GENERATED from src/styles/tokens.js by scripts/tokens/theme-css.mjs: do not edit, run `npm run tokens`. */
+
+/*
+ * `inline`: utilities get the literal hex rather than var(--color-…), so opacity modifiers
+ * (bg-brand-teal/10) compile to plain #RRGGBBAA colours instead of color-mix(). Plain CSS can still
+ * use var(--color-…): Tailwind defines each referenced variable on :root.
+ */
+@theme inline {
+  --color-brand-teal: #13a4a9;
+  --color-brand-teal-deep: #0f8387;
+  --color-brand-teal-ink: #0b7377;
+  --color-brand-teal-light: #5fc0c4;
+  --color-brand-teal-hover: #0f8f94;
+  --color-brand-purple: #8e90c6;
+  --color-brand-purple-deep: #71739e;
+  --color-brand-purple-ink: #5d5fa0;
+  --color-brand-yellow: #f0c754;
+  --color-brand-yellow-ink: #8a6500;
+  --color-brand-pink: #f0a7ab;
+  --color-brand-pink-ink: #b4424a;
+  --color-brand-blue: #96c7d2;
+  --color-brand-gold: #b8860b;
+  --color-ink: #1e2432;
+  --color-canvas: #f4f6fa;
+  --color-surface-lavender: #eef0f8;
+  --color-surface-mint: #ddf0f0;
+  --color-surface-warm: #f7efe9;
+  --color-surface-coral: #fce8e8;
+  --color-surface-sun: #fbf0cf;
+  --color-chart-ridge: #bcdcde;
+  --color-chart-line: #2a4860;
+  --color-chart-grid: #e3eced;
+  --color-status-error: #b23a26;
+  --color-game-navy: #04214b;
+  --color-game-navy-panel: #0b2a4f;
+  --color-game-mist: #cfdfe0;
+  --color-game-coin: #fde047;
+  --color-game-coin-soft: #fde68a;
+  --color-game-mint: #a7f3d0;
+  --color-game-go: #34d399;
+  --color-game-sky: #7accf3;
+  --color-game-ember: #f15a24;
+  --color-game-ember-amber: #fbb03b;
+}

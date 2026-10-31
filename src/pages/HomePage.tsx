@@ -179,7 +179,7 @@ function TodayHasData({ todaySyncRuns, todayStats, ghostCount, streak }: TodayHa
               <span className="text-xs font-semibold text-slate-700 tabular-nums">{pct}%</span>
               <div className="relative w-full" style={{ height: 96 }}>
                 <div
-                  className="absolute inset-x-0 bottom-0 rounded-t-[6px] bg-gradient-to-t from-teal-500/80 to-teal-300/50"
+                  className="absolute inset-x-0 bottom-0 rounded-t-[6px] bg-linear-to-t/srgb from-teal-500/80 to-teal-300/50"
                   style={{ height: `${(pct / 100) * 96}px` }}
                 />
               </div>
@@ -262,7 +262,7 @@ function SyncCard({ runs, status, error, onProgress, onPlay }: SyncCardProps) {
               type="button"
               onClick={() => setView('today')}
               className={`px-2.5 py-0.5 rounded-full font-medium transition-colors ${
-                view === 'today' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-800'
+                view === 'today' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-800'
               }`}
             >
               Today
@@ -271,7 +271,7 @@ function SyncCard({ runs, status, error, onProgress, onPlay }: SyncCardProps) {
               type="button"
               onClick={() => setView('week')}
               className={`px-2.5 py-0.5 rounded-full font-medium transition-colors ${
-                view === 'week' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-800'
+                view === 'week' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-800'
               }`}
             >
               This week
@@ -419,7 +419,7 @@ function TrainerCard({ state, trainer, booking, daysSince, onBook }: TrainerCard
           type="button"
           onClick={connected ? trainer.disconnect : trainer.pair}
           disabled={state.bleScanning}
-          className={`${btn.soft} h-10 px-5 text-sm`}
+          className={`${btn.soft} h-10 px-5 text-sm!`}
         >
           {connected ? 'Disconnect trainer' : 'Pair Bluetooth trainer'}
         </button>

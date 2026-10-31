@@ -109,7 +109,7 @@ function DeviceCard({ state, trainer, lease }) {
           type="button"
           onClick={connected ? trainer.disconnect : trainer.pair}
           disabled={state.bleScanning}
-          className={`${btn.soft} mt-4 h-10 px-5 text-sm`}
+          className={`${btn.soft} mt-4 h-10 px-5 text-sm!`}
         >
           {connected ? 'Disconnect trainer' : 'Pair Bluetooth trainer'}
         </button>
@@ -138,7 +138,7 @@ function DeviceCard({ state, trainer, lease }) {
           <button
             type="button"
             onClick={() => setStatus('Extension requests are not connected in this demo, so nothing was sent.')}
-            className={`${btn.soft} mt-4 h-10 px-5 text-sm`}
+            className={`${btn.soft} mt-4 h-10 px-5 text-sm!`}
           >
             Ask to extend
           </button>
@@ -314,9 +314,9 @@ function BookingCard({ deviceName, booking, onBook }) {
                     pressed
                       ? 'bg-brand-teal-deep text-white font-semibold'
                       : available
-                        ? 'bg-surface-mint text-brand-teal-ink hover:shadow-[inset_0_0_0_1.5px_theme(colors.brand.teal.DEFAULT)]'
+                        ? 'bg-surface-mint text-brand-teal-ink hover:shadow-[inset_0_0_0_1.5px_var(--color-brand-teal)]'
                         : 'text-slate-500'
-                  } ${isToday ? 'shadow-[inset_0_0_0_1.5px_theme(colors.slate.500)]' : ''}`}
+                  } ${isToday ? 'shadow-[inset_0_0_0_1.5px_var(--color-slate-500)]' : ''}`}
                 >
                   {i + 1}
                 </button>
@@ -344,10 +344,10 @@ function BookingCard({ deviceName, booking, onBook }) {
                   }}
                   className={`h-[42px] px-[18px] rounded-full text-sm ${
                     s === slot
-                      ? 'bg-surface-mint text-brand-teal-ink font-semibold shadow-[inset_0_0_0_1.5px_theme(colors.brand.teal.DEFAULT)]'
+                      ? 'bg-surface-mint text-brand-teal-ink font-semibold shadow-[inset_0_0_0_1.5px_var(--color-brand-teal)]'
                       : isFull
                         ? 'bg-canvas text-slate-600 line-through'
-                        : 'bg-white text-slate-900 shadow-[inset_0_0_0_1px_theme(colors.slate.200)]'
+                        : 'bg-white text-slate-900 shadow-[inset_0_0_0_1px_var(--color-slate-200)]'
                   }`}
                 >
                   {s}

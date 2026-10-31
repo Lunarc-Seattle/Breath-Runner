@@ -25,7 +25,7 @@ function Stat({ label, value, tone, hint }) {
   return (
     <div className="min-w-[52px] sm:min-w-[64px]">
       <div className="text-[9px] sm:text-[10px] uppercase tracking-wider text-white/60 font-mono">{label}</div>
-      <div className={`text-base sm:text-lg font-bold font-mono leading-tight ${tone}`}>{value}</div>
+      <div className={`text-base leading-tight sm:text-lg sm:leading-7 font-bold font-mono ${tone}`}>{value}</div>
       {hint && <div className="hidden sm:block text-[10px] text-white/55 leading-tight">{hint}</div>}
     </div>
   );
@@ -361,7 +361,7 @@ export function ForestRunnerStage({
               aria-pressed={m.id === map.id}
               className={`shrink-0 text-left px-4 py-2.5 rounded-2xl text-xs font-bold transition-all border ${
                 m.id === map.id
-                  ? 'text-white border-transparent shadow-sm'
+                  ? 'text-white border-transparent shadow-xs'
                   : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
               }`}
               style={m.id === map.id ? solidStyle(m.color) : undefined}
@@ -459,7 +459,7 @@ export function ForestRunnerStage({
                 <span className="hidden sm:inline text-white/60">ROUTE</span>
                 <div className="w-16 sm:w-28 md:w-40 h-1.5 rounded-full bg-white/20 overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-game-mint via-game-sky to-game-coin"
+                    className="h-full bg-linear-to-r/srgb from-game-mint via-game-sky to-game-coin"
                     style={{ width: `${Math.round(h.progress * 100)}%` }}
                   ></div>
                 </div>
@@ -585,7 +585,7 @@ export function ForestRunnerStage({
                   ref={startButtonRef}
                   type="button"
                   onClick={begin}
-                  className="mt-4 sm:mt-5 shrink-0 w-full py-3.5 rounded-2xl bg-gradient-to-r from-brand-teal to-game-sky text-game-navy font-bold text-sm hover:brightness-110 transition"
+                  className="mt-4 sm:mt-5 shrink-0 w-full py-3.5 rounded-2xl bg-linear-to-r/srgb from-brand-teal to-game-sky text-game-navy font-bold text-sm hover:brightness-110 transition"
                 >
                   ▶ Start running
                 </button>
@@ -660,7 +660,7 @@ export function ForestRunnerStage({
                         ref={nextLapButtonRef}
                         type="button"
                         onClick={begin}
-                        className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-game-ember to-game-ember-amber text-xs font-bold"
+                        className="flex-1 py-3 rounded-2xl bg-linear-to-r/srgb from-game-ember to-game-ember-amber text-xs font-bold"
                       >
                         Next lap →
                       </button>
@@ -712,7 +712,7 @@ export function ForestRunnerStage({
               className={`pointer-events-auto flex-1 py-3.5 rounded-2xl font-bold text-sm transition-all touch-none ${
                 holding
                   ? 'bg-game-sky text-game-navy scale-[0.98]'
-                  : 'bg-gradient-to-r from-game-ember to-game-ember-amber text-white'
+                  : 'bg-linear-to-r/srgb from-game-ember to-game-ember-amber text-white'
               }`}
             >
               {holding ? '▲ Inhaling…' : counting ? 'Get ready…' : started ? 'Hold to inhale' : 'Tap to start'}

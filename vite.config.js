@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import { CSP_DIRECTIVES, cspString } from './config/csp.js';
 
 /**
@@ -22,7 +23,7 @@ function cspMetaPlugin() {
 }
 
 export default defineConfig({
-  plugins: [react(), cspMetaPlugin()],
+  plugins: [react(), tailwindcss(), cspMetaPlugin()],
   // Relative base: the same build works at / (npm run server) and at /<repo>/ on GitHub Pages.
   base: './',
   server: {
