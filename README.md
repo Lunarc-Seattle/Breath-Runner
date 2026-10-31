@@ -81,14 +81,15 @@ The game runs on the original `pic/background.ai` file, not on a redrawing of it
 - **Typed core, small React shell.** Vite + React 18. The game rules, levels, session model and stats in `src/core/` are TypeScript with domain types (`RunnerState`, a discriminated `RunnerEvent` union, `ForestMap`, `Session`). Node 24 runs the same `.ts` files directly for the server and tests, so the browser and the API share one validator.
 - **Versioned releases you can still play.** Work happens on feature branches and lands on `main` through pull requests that must pass lint, type checks, unit tests, Playwright and Lighthouse. Every merge to `main` deploys automatically. Each web release is an annotated git tag (`web-v1`, `web-v2`, …), and the deploy ([`scripts/ci/build-versions.sh`](scripts/ci/build-versions.sh)) rebuilds every tag at its own URL (`/v1/`, `/v2/`, …) with an "archived version" banner. Because of the relative base and hash routing, an old build works unchanged in a subfolder. The app's header names the version you're on and links to the others.
 - **One codebase, two storage backends.** On GitHub Pages, runs are saved in `localStorage`. Under `npm start`, they go through an Express REST API documented in [`docs/openapi.yaml`](docs/openapi.yaml) and served at `/api/v1/openapi.yaml`. The client probes for the API and falls back on its own.
-- **A production-shaped API, before there's a database.**
+- **A production-shaped API.**
   - **Validation:** the server generates ids and rejects impossible results (coins above what a run allows, future timestamps), returning 400s with reasons, 413 for oversized bodies and 429 from the write rate limit.
   - **Paging:** cursor pagination is stable even when timestamps tie.
   - **Hardening:** helmet security headers with a strict CSP, structured pino request logs that never contain bodies, and a health check that verifies storage is writable.
   - **Shutdown:** on SIGTERM the server drains in-flight writes before exiting.
-  - **The JSON store:** it skips corrupt rows on load and rolls back failed writes, so memory and disk stay consistent even when writes interleave.
+  - **Storage:** the default JSON store skips corrupt rows on load and rolls back failed writes, so memory and disk stay consistent even when writes interleave. Set `USE_SQLITE=1` (or a `.db` `DATA_FILE`) to use SQLite instead ([`server/models/sqliteRepository.js`](server/models/sqliteRepository.js)): WAL mode, an index that serves the paged query, and a one-time migration that imports an existing JSON file in a single transaction.
+- **Real-time co-op.** A WebSocket server shares the API's port (`/ws/coop`) and pairs two players per room, relaying each player's breath about 10 times a second. The `useCoopRoom` hook tracks the connection as a typed state machine. On GitHub Pages, where there is no server, the Co-op page says so instead of timing out.
 - **Routing and resilience.** Hash routes (`#/play`, `#/history`) make deep links, reload and the back button work on static hosting. Each page sits in its own error boundary.
-- **Tested at three levels.** 83 unit and API tests (`node:test`, 95% line coverage with a CI gate) and 45 Playwright end-to-end tests. One plays a full lap by following the on-screen breath cue, saves it, and checks it on the Progress page. Others cover every route, keyboard and focus behaviour, and API validation.
+- **Tested at three levels.** 106 unit and API tests (`node:test`, about 93% line coverage, gated at 85% in CI) and 59 Playwright end-to-end tests. One plays a full lap by following the on-screen breath cue, saves it, and checks it on the Progress page. Others cover every route, keyboard and focus behaviour, and API validation.
 - **TypeScript migration.** `App.tsx`, `HomePage.tsx`, `HistoryPage.tsx`, `useCountUp.ts` and `seedData.ts` are now strict TypeScript. Declaration files (`AppContext.d.ts`, `RidgeChart.d.ts`) type the JS modules they wrap without converting their entire codebase. ESLint was extended to enforce TypeScript rules across all `.ts` and `.tsx` files.
 - **Physics off the main thread.** `src/core/physicsWorker.ts` runs `stepRunner()` in a Web Worker. The engine uses a double-buffer: the Worker computes frame N while the main thread renders frame N−1, keeping physics and rendering fully parallel. The Worker pre-loads level geometry on `setMap()` so only the compact `RunnerState` crosses the thread boundary at 60 fps. If the Worker is unavailable (old browser, strict CSP), the engine falls back to synchronous physics transparently.
 - **Route-level code splitting.** All 13 pages use `React.lazy()` + `Suspense`. The initial bundle dropped from **293 KB → 168 KB (−43%)** gzipped; each page loads only when first visited.
@@ -98,64 +99,36 @@ The game runs on the original `pic/background.ai` file, not on a redrawing of it
   - the e2e suite;
   - Lighthouse CI, which fails the build if any of the three key pages drops below 100 accessibility.
 
-  A report job turns the results into a summary on every PR and, on `main`, into the public [quality report](https://lunarc-seattle.github.io/breath-runner/quality/). The report shows every e2e test by name, coverage per file and the full Lighthouse reports, and it feeds the badges above. `main` is protected: changes land only through pull requests with passing checks, and only `main` deploys. Dependabot batches dependency updates weekly; major versions are upgraded deliberately.
+  A report job turns the results into a summary on every PR and, on `main`, into the public [quality report](https://lunarc-seattle.github.io/breath-runner/quality/). The report shows every e2e test by name, coverage per file and the full Lighthouse reports, and it feeds the badges above. `main` is protected: changes land only through pull requests with passing checks, and only `main` deploys. Dependencies are updated by hand on their own branch, and major versions one at a time.
 - **A design system in code.** The palette lives in one token file ([`src/styles/tokens.js`](src/styles/tokens.js)) that feeds Tailwind and the JS helpers. Each token documents its role and contrast rule (e.g. white text only on the "deep" variants). Moving 220 hard-coded colors to tokens was verified to change nothing: computed styles matched across 2,325 elements on all 13 pages.
 - **No third-party requests at runtime.** Fonts are self-hosted and React is bundled, so the static build ships a CSP of `default-src 'self'`.
 - **Accessible and fast.** Lighthouse (desktop, checked in CI) scores **100 for Accessibility, Best Practices and SEO** on the home, game and history pages, with Performance 98–100. Filled brand colors use slightly deeper variants wherever they carry white text, so every label meets WCAG AA contrast (4.5:1). The game has an `aria-live` breath cue, labelled controls, focus moved to each card's main action, and reduced-motion support. The navigation drawer is `inert` while closed.
 
-## Recent additions (v4)
+## What's new since v2
 
-### SQLite session storage
+Live on the main site now. It will be tagged and archived as **v3** once the last game change lands.
 
-`server/models/sqliteRepository.js` is a drop-in replacement for the JSON file store, backed by `better-sqlite3`:
+**The game**
+- **Fairer jumps and landings.** An inhale up to 0.2 s after walking off a cliff edge still jumps, which also covers slow breath onsets and the mic's delay. Falls are quicker when you exhale; gliding is unchanged.
+- **A 3-2-1 count-in** before every run, lap and resume, paced like a breath and asking you to breathe out first.
+- **Breath sync that means what it says.** It no longer reads 0% at the start, and the arrow's lead-in before each jump counts as in sync, so a clean lap now scores 97–99%.
+- **A runner with real legs.** The legs are drawn in code under the sprite, so she strides, tucks on the jump and crouches on landing.
+- **Personal best and difficulty dots** on the lap card and level picker.
 
-- **Schema:** one `sessions` table with an index on `(completedAt DESC, id DESC)`, bringing cursor-paginated queries from O(n) (full scan) to O(log n).
-- **WAL mode** (`PRAGMA journal_mode = WAL`) lets multiple concurrent readers proceed without blocking writes.
-- **Zero-downtime migration:** on first start, if a `.json` file exists alongside the new `.db` path, every row is imported inside a single transaction and the JSON file is renamed to `.json.migrated`. Subsequent starts skip the migration silently.
-- **Activation:** set `USE_SQLITE=1` or point `DATA_FILE` at a `.db` path. The JSON backend remains the default so nothing breaks.
-- **Tested:** 11 unit tests using an in-memory DB cover add/list/clear, normalisation validation, newest-first ordering, cursor pagination, health, and optional field handling.
+**The app**
+- **One design across every page.** Schedule, Choose a map, My profile and Friends ranking now use the same cards, type and colors as Home and Progress.
+- **Home:** a Today / This week toggle for breath sync, a day streak and a weekly goal of three sessions.
+- **Progress:** five achievements computed from your runs, a today-vs-week overview and a "Download chart" PNG export.
+- **A first visit isn't empty.** Ten demo runs are seeded locally on first load, and pages without data show what will appear there.
+- **Installable** as a PWA, and laid out for phones down to 320 px.
 
-### Real-time WebSocket co-op
-
-`server/ws/coopServer.js` attaches a `ws`-based WebSocket server to the same HTTP port as Express (`/ws/coop`):
-
-- **Rooms:** ephemeral, in-memory, max 2 players. Room IDs are 4-digit numbers generated server-side or supplied by the client. Rooms are deleted when the last player disconnects.
-- **Protocol:** `join` → `joined/roomUpdate`; `breath` → `breathUpdate` (fan-out to room partner); `leave/close` → `playerLeft`.
-- **`src/app/useCoopRoom.js`:** React hook that owns the WebSocket lifecycle, exposes `connect/sendBreath/disconnect`, and reflects a typed connection-state machine (`idle | connecting | connected | disconnected | error | unavailable`).
-- **`src/pages/CoopPage.jsx`:** replaces the static placeholder. Lobby screen lets the user enter a name and an optional room code; connected screen shows both players' lung-capacity meters animated in real time at ~10 fps via `sendBreath` called from the RAF loop. Room code has a one-click copy button. On GitHub Pages the hook detects the static host and shows a clear offline message instead of timing out.
-
-### CI fix
-
-`tests/seedData.test.js` was importing `seedData.js` after the file was renamed to `.ts` — 5 tests were failing on Linux CI. Fixed by importing `seedData.ts` directly (Node 24 native TypeScript stripping handles it).
-
----
-
-## Recent additions (v3)
-
-### UX & product
-
-- **Home · Today / This week toggle.** The Breath Sync card defaults to a bar chart of today's individual runs, with a count-up animation on the sync %. A pill switches to the 7-day ridge chart. A first-time visitor sees real data after one game instead of a blank chart.
-- **Consecutive training streak.** The home card's footer shows the current day-streak (e.g. "7-day streak"), giving the patient a daily reason to keep the chain going.
-- **Weekly training goal.** A three-segment progress bar at the bottom of the Breath Sync card shows how many of the week's three target sessions are done.
-- **Count-up animations.** Every stat number — sync %, streak, coins, run count — animates from 0 with an ease-out-cubic curve when it first appears or when the view changes.
-- **Progress · Achievements.** Five auto-unlocking badges (First Flight, Smooth Rhythm, Coin Collector, Peak Control, Training Habit) at the top of the Progress page. Locked badges keep their shape and label but render in a lighter color that passes WCAG AA contrast; unlocked ones are teal. Computed entirely from run totals — no separate state.
-- **Progress · Today / This week overview.** A two-column card above the ridge chart shows runs, best sync and coins for today and the last 7 days side-by-side.
-- **Progress · Download chart.** A "Download chart" link on the ridge chart serialises the SVG, renders it at 2× on a canvas element, and triggers a PNG download — no server round-trip.
-- **Play · Personal best.** The lap-result card now shows Coins and Breath Sync in equal-sized panels. When sync improves on any prior lap in the same session, the Sync panel highlights teal and shows "Personal best".
-- **Play · Difficulty dots.** Each level selector button shows filled/open dots (● ○ ○ / ● ● ○ / ● ● ●) and its training tag, so the difference is visible before playing.
-- **Demo seed data.** Ten realistic runs spread over the past 7 days are written to `localStorage` on first load. The progression — L1 sync climbing from 62 % to 85 %, with two L2 attempts — makes every chart look inhabited for a first-time reviewer.
-- **PWA manifest.** `public/manifest.webmanifest` with an SVG icon; Chrome, Edge and Safari will prompt "Add to Home Screen", making the app installable to the desktop or phone dock with one tap.
-
-### Engineering
-
-- **Route-level code splitting.** All 13 pages wrapped in `React.lazy()` + `Suspense`. Initial bundle: **293 KB → 168 KB (−43%)**, gzipped. Each page loads only when first visited.
-- **Physics off the main thread.** `src/core/physicsWorker.ts` runs `stepRunner()` in a Web Worker. A double-buffer keeps the Worker one frame ahead: it computes frame N while the main thread renders frame N−1. The Worker pre-loads level geometry on `setMap()`, so only the compact `RunnerState` (~50 fields) crosses the boundary at 60 fps. Graceful synchronous fallback if the Worker fails to start.
-- **TypeScript migration.** `App.tsx`, `HomePage.tsx`, `HistoryPage.tsx`, `useCountUp.ts` and `seedData.ts` are now strict TypeScript with full prop interfaces. Declaration files (`AppContext.d.ts`, `useHashRoute.d.ts`, `RidgeChart.d.ts`) type the remaining JS modules. ESLint extended to enforce TypeScript rules on all `.ts`/`.tsx` files.
-- **Expanded test suite (78 → 83 tests).** `currentStreak` covered with 7 test cases (empty, broken streak, today, yesterday, multiple same-day). `seedDemoRunsIfEmpty` covered with 5 cases using a `localStorage` mock (write, shape, flag, no-overwrite, idempotency). `progress.ts` now has 100 % line and branch coverage.
+**Under the hood**
+- **SQLite storage** and **real-time two-player co-op over WebSockets** on the server (details under [Engineering highlights](#engineering-highlights)).
+- **Physics in a Web Worker**, **route-level code splitting** (initial bundle −43%) and more of the app in strict TypeScript.
 
 ## The rest of the app
 
-Breath Runner is page 04 of a companion-app prototype: home, daily schedule, map choice, spirometry lab, co-op mode, leaderboard, trainer & care (hygiene booking and device loan), a care team view, physician guidance, recovery journey and profile. **Home** and **Progress** are driven by your saved runs: today's three sessions, breath sync over the last week, a ridge chart of each day's best breath sync, and a table of runs with coins, falls and laps. Everything else (friends, the trainer loan, hygiene, the care team's patients) is sample data and says so on the page. Navigation hides in a drawer that eases in when you hover the page pill or the left edge of the screen; the AeroCare mark is always Home.
+Breath Runner is page 04 of a companion-app prototype: home, daily schedule, map choice, spirometry lab, co-op mode, leaderboard, trainer & care (hygiene booking and device loan), a care team view, physician guidance, recovery journey and profile. **Home** and **Progress** are driven by your saved runs: today's three sessions, breath sync over the last week, a ridge chart of each day's best breath sync, and a table of runs with coins, falls and laps. Everything else (friends, the trainer loan, hygiene, the care team's patients) is sample data and says so on the page. Navigation hides in a drawer that eases in when you hover the page pill or the left edge of the screen; the Breath Runner mark is always Home.
 
 ![Navigation drawer open from the left edge, grouped into Train, Together, Care and You](docs/media/nav-drawer.jpg)
 
@@ -175,12 +148,12 @@ npm run dev           # Vite dev server with hot reload (run `npm run server` al
 
 | Command | What it does |
 |---|---|
-| `npm test` | 83 unit and API tests (`npm run test:coverage` adds the coverage gate) |
-| `npm run test:e2e` | 45 Playwright end-to-end tests (builds and starts the server itself) |
+| `npm test` | 106 unit and API tests (`npm run test:coverage` adds the coverage gate) |
+| `npm run test:e2e` | 59 Playwright end-to-end tests (builds and starts the server itself) |
 | `npm run lint` · `npm run typecheck` · `npm run format:check` | the same checks CI runs |
 | `npm run check` | lint, format, types and unit tests with coverage in one go |
 
-Server settings (environment variables): `PORT` (default 4000), `DATA_FILE` (session JSON file), `LOG_LEVEL` (pino level, default `info`), `RATE_LIMIT_PER_MIN` (writes per client per minute, default 30), `TRUST_PROXY` (set when running behind a reverse proxy).
+Server settings (environment variables): `PORT` (default 4000), `DATA_FILE` (session file; a `.db` path uses SQLite), `USE_SQLITE` (`1` for SQLite), `LOG_LEVEL` (pino level, default `info`), `RATE_LIMIT_PER_MIN` (writes per client per minute, default 30), `TRUST_PROXY` (set when running behind a reverse proxy).
 
 To re-export the level art after editing the illustration:
 
