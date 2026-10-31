@@ -392,24 +392,17 @@ function Achievements({ runs }: { runs: Session[] }) {
   );
 }
 
-function TodayOverview({ runs }: { runs: Session[] }) {
-  const midnight = new Date();
-  midnight.setHours(0, 0, 0, 0);
-  const todayRuns = runs.filter(r => new Date(r.completedAt) >= midnight);
-  const weekRuns = runsInRange(runs, 7);
-  if (!todayRuns.length && !weekRuns.length) return null;
-  const t = totals(todayRuns);
-  const w = totals(weekRuns);
-
-  const Col = ({
-    heading,
-    caption,
-    stats
-  }: {
-    heading: string;
-    caption: string;
-    stats: [string, string | number][];
-  }) => (
+/** One column of the today / this week overview. */
+function OverviewColumn({
+  heading,
+  caption,
+  stats
+}: {
+  heading: string;
+  caption: string;
+  stats: [string, string | number][];
+}) {
+  return (
     <div className="flex-1 min-w-0 px-5 py-4 sm:py-5">
       <div className="text-[11px] font-mono font-semibold uppercase tracking-widest text-slate-500 mb-0.5">
         {heading}
@@ -425,13 +418,23 @@ function TodayOverview({ runs }: { runs: Session[] }) {
       </dl>
     </div>
   );
+}
+
+function TodayOverview({ runs }: { runs: Session[] }) {
+  const midnight = new Date();
+  midnight.setHours(0, 0, 0, 0);
+  const todayRuns = runs.filter(r => new Date(r.completedAt) >= midnight);
+  const weekRuns = runsInRange(runs, 7);
+  if (!todayRuns.length && !weekRuns.length) return null;
+  const t = totals(todayRuns);
+  const w = totals(weekRuns);
 
   return (
     <article
       className="rounded-[22px] border border-slate-200/80 bg-white overflow-hidden flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-slate-200/80 mb-6"
       aria-label="Today and this week at a glance"
     >
-      <Col
+      <OverviewColumn
         heading="Today"
         caption={SHORT.format(new Date())}
         stats={[
@@ -440,7 +443,7 @@ function TodayOverview({ runs }: { runs: Session[] }) {
           ['Coins', todayRuns.length ? nf.format(t.coins) : DASH]
         ]}
       />
-      <Col
+      <OverviewColumn
         heading="This week"
         caption="Last 7 days"
         stats={[
