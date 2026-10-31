@@ -12,7 +12,7 @@ from pathlib import Path
 from PIL import Image
 
 FPS = 30
-WIDTH = 960
+WIDTH = 720
 
 # (output name, level, first frame, last frame): three moments per level.
 CLIPS = [
