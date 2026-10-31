@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getSessionRepository } from '../services/apiClient.js';
+import { seedDemoRunsIfEmpty } from '../data/seedData.js';
+
+// Seed demo history into localStorage on first load if no runs exist yet.
+seedDemoRunsIfEmpty();
 
 /**
  * Saved Breath Runner runs from the session repository (Express API or localStorage), newest first.

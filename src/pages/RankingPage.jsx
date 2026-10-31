@@ -1,61 +1,85 @@
-import { solidStyle } from '../data/simStore.js';
-import { brand } from '../styles/tokens.js';
+import { useApp } from '../app/AppContext.jsx';
+import { useSavedRuns } from '../app/useSavedRuns.js';
+import { coinsLast7 } from '../core/progress.ts';
+import { Avatar, btn, Card, CardHead, PageHeader, SampleTag } from '../components/ui.jsx';
 
-const CHART_BARS = [60, 90, 125, 105, 145, 165, 150, 180];
+const nf = new Intl.NumberFormat('en-US');
 
-const FRIENDS = [
-  { name: 'Ali', score: '4,308 pts', color: brand.teal.DEFAULT },
-  { name: 'Bage', score: '4,120 pts', color: brand.purple.DEFAULT },
-  { name: 'Ms. Bai', score: '3,890 pts', color: brand.yellow.DEFAULT },
-  { name: 'Mr. Bi', score: '3,640 pts', color: brand.pink.DEFAULT }
-];
-
+/** 07 Friends ranking: this week's coins, the same board as the Home friends card, drawn as bars. */
 export default function RankingPage() {
+  const { state, navigate } = useApp();
+  const { runs, status } = useSavedRuns();
+  const myCoins = status === 'ready' ? coinsLast7(runs) : 0;
+
+  const board = [...state.friendsThisWeek, { name: 'You', initials: 'L', tone: 'teal', coins: myCoins, me: true }].sort(
+    (a, b) => b.coins - a.coins
+  );
+  const top = Math.max(1, ...board.map(r => r.coins));
+  const myRank = board.findIndex(r => r.me) + 1;
+  const ahead = board[myRank - 2];
+
   return (
-    <section className="space-y-6 animate-page">
-      <h2 className="text-3xl font-bold text-slate-900">07 Community & Friends Data Ranking</h2>
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-7 p-7 rounded-[32px] bg-white border border-slate-200/80 space-y-4">
-          <div className="text-xs font-mono text-slate-500">FRIENDS RANKING MULTI-SERIES CHART</div>
-          <svg viewBox="0 0 520 200" className="w-full" aria-hidden="true">
-            {CHART_BARS.map((h, i) => (
-              <g key={i}>
-                <rect x={35 + i * 58} y={185 - h} width="14" height={h} rx="4" fill={brand.teal.DEFAULT} />
-                <rect
-                  x={52 + i * 58}
-                  y={185 - h * 0.8}
-                  width="14"
-                  height={h * 0.8}
-                  rx="4"
-                  fill={brand.purple.DEFAULT}
-                />
-              </g>
-            ))}
-            <polyline
-              points="42,105 100,80 158,55 216,70 274,38 332,26 390,40 448,18"
-              fill="none"
-              stroke={brand.yellow.DEFAULT}
-              strokeWidth="3.5"
-            />
-          </svg>
-        </div>
-        <div className="lg:col-span-5 p-7 rounded-[32px] bg-white border border-slate-200/80 space-y-3">
-          <div className="text-xs font-mono text-slate-500">FRIENDS LEADERBOARD (A - Z)</div>
-          {FRIENDS.map((f, idx) => (
-            <div key={f.name} className="p-4 rounded-2xl bg-slate-50 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span
-                  className="w-7 h-7 rounded-full text-white text-xs font-bold flex items-center justify-center"
-                  style={solidStyle(f.color)}
-                >
-                  {idx + 1}
+    <section className="animate-page" aria-labelledby="ranking-title">
+      <PageHeader
+        id="ranking-title"
+        title="Friends ranking"
+        tag={<SampleTag>Sample friends</SampleTag>}
+        caption="Coins from saved runs in the last 7 days. Your row comes from your own runs."
+      />
+
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,8fr)_minmax(0,4fr)] gap-6 items-start">
+        <Card aria-labelledby="board-title">
+          <CardHead id="board-title" title="This week" caption="Coins collected, highest first" />
+          <ol className="space-y-1">
+            {board.map((r, i) => (
+              <li
+                key={r.name}
+                title={`${r.name}: ${nf.format(r.coins)} coins`}
+                className={`grid grid-cols-[1.5rem_auto_minmax(0,1fr)_auto] items-center gap-3 px-3 py-3 rounded-2xl ${
+                  r.me ? 'bg-surface-mint/60' : ''
+                }`}
+              >
+                <span className="text-sm font-semibold tabular-nums text-slate-600">{i + 1}</span>
+                {/* The white avatar tint is for the lavender Home card; on this white card it would vanish. */}
+                <Avatar initials={r.initials} tone={r.tone === 'white' ? 'lavender' : r.tone} />
+                <span className="min-w-0 space-y-1.5">
+                  <span
+                    className={`block text-sm truncate ${r.me ? 'font-semibold text-slate-900' : 'font-medium text-slate-800'}`}
+                  >
+                    {r.name}
+                  </span>
+                  <span className="block h-2 rounded-full bg-canvas overflow-hidden">
+                    <span
+                      className={`block h-full rounded-full ${r.me ? 'bg-chart-line' : 'bg-brand-teal-deep'}`}
+                      style={{ width: `${Math.max(2, (r.coins / top) * 100)}%` }}
+                    />
+                  </span>
                 </span>
-                <span className="font-bold text-sm">{f.name}</span>
-              </div>
-              <span className="font-mono text-xs font-semibold">{f.score}</span>
-            </div>
-          ))}
-        </div>
+                <span className="w-14 text-right text-sm font-semibold tabular-nums text-slate-900">
+                  {nf.format(r.coins)}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </Card>
+
+        <Card tone="lavender" aria-labelledby="you-title">
+          <CardHead id="you-title" title="Your week" />
+          <p className="text-[40px] font-semibold leading-none tracking-tight tabular-nums text-slate-900">
+            #{myRank}
+            <span className="text-base font-normal text-slate-600 ml-2">of {board.length}</span>
+          </p>
+          <p className="text-sm text-slate-700 mt-3 mb-5">
+            {status !== 'ready'
+              ? 'Loading your saved runs…'
+              : ahead
+                ? `${nf.format(ahead.coins - myCoins)} coins behind ${ahead.name}.`
+                : 'You are ahead of every friend this week.'}
+          </p>
+          <button type="button" onClick={() => navigate('play')} className={`${btn.primary} w-full`}>
+            Play a run
+          </button>
+        </Card>
       </div>
     </section>
   );

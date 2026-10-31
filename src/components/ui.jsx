@@ -134,3 +134,48 @@ export const btn = {
   soft: 'inline-flex items-center justify-center gap-2 h-11 px-6 rounded-full bg-white text-brand-teal-ink text-[15px] font-semibold whitespace-nowrap shadow-[inset_0_0_0_1px_theme(colors.slate.200)] hover:shadow-[inset_0_0_0_1.5px_theme(colors.brand.teal.DEFAULT)] transition-shadow disabled:opacity-60',
   link: 'text-sm font-semibold text-brand-teal-ink hover:underline whitespace-nowrap'
 };
+
+/**
+ * Page title row: h1 + caption on the left, optional actions on the right (as on Progress and Trainer & care).
+ * @param {{ id: string, title: import('react').ReactNode, caption?: import('react').ReactNode, tag?: import('react').ReactNode, children?: import('react').ReactNode }} props
+ */
+export function PageHeader({ id, title, caption, tag, children }) {
+  return (
+    <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6 mb-6">
+      <div className="min-w-0">
+        <div className="flex items-center gap-3 flex-wrap">
+          <h1 id={id} className="text-[26px] md:text-[30px] font-semibold leading-tight tracking-tight text-slate-900">
+            {title}
+          </h1>
+          {tag}
+        </div>
+        {caption && <p className="mt-1.5 text-slate-600">{caption}</p>}
+      </div>
+      {children && <div className="flex flex-wrap items-center gap-3">{children}</div>}
+    </header>
+  );
+}
+
+/**
+ * No data yet: the runner on a mint disc, a short line of what will show up here, and the next step.
+ * @param {{ title?: import('react').ReactNode, children: import('react').ReactNode, action?: import('react').ReactNode, className?: string }} props
+ */
+export function EmptyState({ title, children, action, className = '' }) {
+  return (
+    <div className={`flex flex-col items-center text-center gap-3 ${className}`}>
+      <span aria-hidden="true" className="w-24 h-24 rounded-full bg-surface-mint grid place-items-end overflow-hidden">
+        <img
+          src={`${import.meta.env.BASE_URL}assets/ui/runner-jump.webp`}
+          alt=""
+          width="509"
+          height="560"
+          loading="lazy"
+          className="w-[78px] h-auto mx-auto translate-y-1"
+        />
+      </span>
+      {title && <h2 className="text-[17px] font-semibold text-slate-900 mt-1">{title}</h2>}
+      <p className="text-sm text-slate-600 max-w-sm">{children}</p>
+      {action && <div className="mt-1">{action}</div>}
+    </div>
+  );
+}

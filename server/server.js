@@ -6,6 +6,7 @@ import { dirname, resolve } from 'node:path';
 import pino from 'pino';
 import { createApp } from './app.js';
 import { createSessionRepository } from './models/sessionRepository.js';
+import { createCoopServer } from './ws/coopServer.js';
 
 const PORT = Number(process.env.PORT) || 4000;
 const DATA_FILE = process.env.DATA_FILE || resolve(dirname(fileURLToPath(import.meta.url)), 'data', 'sessions.json');
@@ -20,7 +21,15 @@ const logger = pino({
   redact: ['req.headers.cookie', 'req.headers.authorization']
 });
 
-const repository = await createSessionRepository({ filePath: DATA_FILE, log: logger });
+// Use SQLite if USE_SQLITE=1 or if DATA_FILE ends in .db.
+const useSqlite = process.env.USE_SQLITE === '1' || DATA_FILE.endsWith('.db');
+let repository;
+if (useSqlite) {
+  const { createSqliteRepository } = await import('./models/sqliteRepository.js');
+  repository = await createSqliteRepository({ filePath: DATA_FILE, log: logger });
+} else {
+  repository = await createSessionRepository({ filePath: DATA_FILE, log: logger });
+}
 const app = createApp({
   repository,
   logger,
@@ -31,6 +40,9 @@ if (TRUST_PROXY) app.set('trust proxy', /^\d+$/.test(TRUST_PROXY) ? Number(TRUST
 const server = app.listen(PORT, () => {
   logger.info({ port: PORT, dataFile: DATA_FILE }, `[Breath Trainer] http://localhost:${PORT}`);
 });
+
+// Attach WebSocket co-op server to the same HTTP server.
+createCoopServer(server, { log: logger });
 
 let shuttingDown = false;
 

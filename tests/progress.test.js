@@ -12,7 +12,8 @@ import {
   todaySlots,
   greeting,
   coinsLast7,
-  formatTrainingTime
+  formatTrainingTime,
+  currentStreak
 } from '../src/core/progress.ts';
 
 const now = new Date(2026, 9, 26, 14, 0); // Mon Oct 26 2026, 2 PM local time
@@ -116,4 +117,46 @@ test('formatTrainingTime', () => {
   assert.equal(formatTrainingTime(1180), '19 min');
   assert.equal(formatTrainingTime(4260), '1 h 11 min');
   assert.equal(formatTrainingTime(-5), '0 s');
+});
+
+test('currentStreak is 0 with no runs', () => {
+  assert.equal(currentStreak([], now), 0);
+});
+
+test('currentStreak is 0 when the last run was 2+ days ago', () => {
+  // now = Oct 26; run on Oct 24 (2 days ago) — streak is broken
+  assert.equal(currentStreak([run(24)], now), 0);
+});
+
+test('currentStreak counts consecutive days ending yesterday', () => {
+  // Runs on Oct 23, 24, 25 (yesterday) with a gap before = streak 3
+  const runs = [run(23), run(24), run(25)];
+  assert.equal(currentStreak(runs, now), 3);
+});
+
+test('currentStreak counts today when there is a run today', () => {
+  // Run on Oct 25 and Oct 26 (today at 2 PM) = streak 2
+  const runs = [run(25), run(26, { completedAt: new Date(2026, 9, 26, 8).toISOString() })];
+  assert.equal(currentStreak(runs, now), 2);
+});
+
+test('currentStreak stops at the first gap', () => {
+  // Runs on Oct 22, 23, 25 — gap on 24 breaks the chain from today's perspective
+  const runs = [run(22), run(23), run(25)];
+  assert.equal(currentStreak(runs, now), 1); // only yesterday (25) counts
+});
+
+test('currentStreak ignores future runs', () => {
+  const runs = [run(27), run(26, { completedAt: new Date(2026, 9, 26, 8).toISOString() })];
+  // run(27) is a future date relative to `now`; still counts streak from today backwards
+  assert.ok(currentStreak(runs, now) >= 1);
+});
+
+test('currentStreak handles multiple runs on the same day', () => {
+  const runs = [
+    run(25),
+    run(25, { completedAt: new Date(2026, 9, 25, 20).toISOString() }),
+    run(26, { completedAt: new Date(2026, 9, 26, 8).toISOString() })
+  ];
+  assert.equal(currentStreak(runs, now), 2);
 });

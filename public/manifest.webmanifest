@@ -1,0 +1,20 @@
+{
+  "name": "Breath Runner",
+  "short_name": "Breath Runner",
+  "description": "Inhale to jump, keep inhaling to glide. A breathing-rehab game for lung recovery.",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f8fafc",
+  "theme_color": "#13A4A9",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["health", "games"],
+  "lang": "en"
+}

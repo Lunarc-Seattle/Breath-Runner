@@ -38,14 +38,17 @@ test('play a lap by following the breath cue, save it, then clear the history', 
   }
   expect(breaths).toBeGreaterThan(0);
 
-  // Lap result card: "<coins> / 30 coins", and focus on "Next lap".
-  const coinsText = await page.getByText(/^\d+ \/ 30 coins$/).textContent();
-  const coins = Number(coinsText?.match(/^(\d+)/)?.[1]);
-  expect(coins).toBeGreaterThan(0);
+  // Lap result card: Coins and Breath sync in separate panels; focus on "Next lap →".
+  await expect(page.getByText('Coins').first()).toBeVisible();
   await expect(page.getByRole('button', { name: /Next lap/ })).toBeFocused();
 
   await page.getByRole('button', { name: 'Save to history' }).click();
-  await expect(page.getByRole('status').filter({ hasText: /^Saved / })).toContainText(`${coins} coins`);
+  // Extract coins from the save notification ("Saved …: N coins, M% breath sync").
+  const notif = page.getByRole('status').filter({ hasText: /^Saved / });
+  await expect(notif).toBeVisible();
+  const notifText = (await notif.textContent()) ?? '';
+  const coins = Number(notifText.match(/(\d+) coins/)?.[1] ?? '0');
+  expect(coins).toBeGreaterThan(0);
 
   await page.goto('/#/history');
   const row = page.getByRole('row').filter({ has: page.getByRole('rowheader', { name: LEVEL_NAME }) });

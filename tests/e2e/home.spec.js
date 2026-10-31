@@ -29,6 +29,8 @@ test.describe('home', () => {
     await expect(page.locator('.home-hero-today')).toContainText(`${slot} done.`);
 
     const sync = page.getByRole('article', { name: 'Breath sync' });
+    // Card defaults to Today view; switch to This week to see the ridge chart.
+    await sync.getByRole('button', { name: 'This week' }).click();
     await expect(sync.getByText(/^100%\s*best$/)).toBeVisible();
     await expect(sync.getByRole('img')).toHaveAccessibleName(/100%/);
   });

@@ -22,7 +22,7 @@ test.describe('trainer & care', () => {
     await booking.getByRole('button', { name: 'Book disinfection' }).click();
     await expect(booking.getByRole('status')).toContainText('Disinfection booked for');
 
-    await page.getByRole('button', { name: /^AeroCare home$/i }).click();
+    await page.getByRole('button', { name: /^Breath Runner home$/i }).click();
     await expect(page.getByText('Disinfection booked')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Change' })).toBeVisible();
   });
