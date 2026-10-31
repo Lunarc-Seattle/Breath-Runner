@@ -42,13 +42,21 @@ Each level trains a different breathing skill instead of just running faster. Th
 
 | Level | Skill | Breaths per lap | Avg inhale | Breath refill | Coin reach | Pace |
 |---|---|---|---|---|---|---|
-| Forest · 1 | Learn the jump: only the big gap needs a real breath | 4 | 0.33 s | 1.2 s fast | 58 px generous | 1.0× |
+| Forest · 1 | Learn the jump: only the big gap needs a real breath | 4 | 0.43 s | 1.2 s fast | 58 px generous | 1.0× |
 | Sunlit Canyon · 2 | Keep a rhythm: short hops between the big jumps | 7 | 0.64 s | 2.2 s | 42 px | 1.1× |
 | Glacier Ridge · 3 | Long, controlled breaths: coins only at the arc top, slow refill | 4 | 1.23 s | 2.8 s slow | 28 px precise | 1.2× |
 
 The difficulty gap is intentional: Level 1 refills breath in 1.2 s and has a 58 px pickup radius so beginners can experiment freely; Level 3 needs a full exhale before the next breath (2.8 s) and demands precise timing to hit the 28 px coin window at the arc peak.
 
 A test proves the Glacier point: cutting each breath to 0.6 s at the same jump points collects fewer than half the coins.
+
+Each level, recorded from one clean lap in a real browser (start, a glide, and the lap result):
+
+| | Start | Glide | Finish |
+|---|---|---|---|
+| **Forest · 1** | ![Level 1: the first jump](docs/media/level1-first-jump.gif) | ![Level 1: a long inhale glides across the big gap](docs/media/level1-glide.gif) | ![Level 1: the last cliffs and the lap result card](docs/media/level1-finish.gif) |
+| **Sunlit Canyon · 2** | ![Level 2: short hops in rhythm](docs/media/level2-rhythm.gif) | ![Level 2: a glide between the hops](docs/media/level2-glide.gif) | ![Level 2: the last jumps and the lap result card](docs/media/level2-finish.gif) |
+| **Glacier Ridge · 3** | ![Level 3: a long breath lifts her to the coins](docs/media/level3-long-breath.gif) | ![Level 3: coins at the top of a long glide](docs/media/level3-glide.gif) | ![Level 3: the last glide and the lap result card](docs/media/level3-finish.gif) |
 
 <p>
   <img src="docs/media/level1-forest.jpg" alt="Level 1 in play: HUD with coins and breath sync, runner on the cliffs, breath dock at the bottom" width="49%" />
@@ -192,6 +200,7 @@ python3 scripts/assets/cut_runner_torso.py
 ```
 pic/background.ai               original illustration (source of truth for the level)
 scripts/assets/                 .ai -> web assets + cliff/coin data
+scripts/media/                  records a lap of each level frame by frame -> README GIFs
 public/assets/forest/           exported background and sprites
 public/manifest.webmanifest     PWA manifest (installable on desktop/mobile)
 src/core/                       typed game rules, levels, session model, stats (pure, tested)
