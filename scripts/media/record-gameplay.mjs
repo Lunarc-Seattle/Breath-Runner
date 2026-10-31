@@ -27,8 +27,13 @@ const LEVEL_TABS = {
   'MAP-GLACIER-03': /^Glacier Ridge · Level 3/
 };
 
-/** Runs in the page before the app: animation frames fire only when __step() is called. */
+/**
+ * Runs in the page before the app: animation frames fire only when __step() is called. Physics
+ * would otherwise step in a Web Worker and answer a frame later, on its own clock, so the Worker is
+ * removed and the engine uses its synchronous fallback.
+ */
 function frameDriver() {
+  delete window.Worker;
   let now = 0;
   let nextId = 0;
   let queue = new Map();
@@ -110,15 +115,15 @@ async function recordLevel(browser, baseUrl, level, outDir) {
     }
   }
   // The lap card confirms the browser played the plan: same coins, no slips.
-  const card = await page.getByText(/ s · \d+% breath sync · \d+ slips$/).textContent();
+  const slips = await page.getByText(/\d+ slips?$/).textContent();
   const coins = Number(
     await page
-      .getByText(/^\d+ \/ \d+ coins$/)
+      .getByText(/^of \d+$/)
+      .locator('xpath=preceding-sibling::div[1]')
       .textContent()
-      .then(t => t.split(' ')[0])
   );
-  console.log(`  played: ${coins} coins, ${card}`);
-  if (coins !== plan.coins || !card.endsWith(' 0 slips')) throw new Error(`${level.id}: browser run left the plan`);
+  console.log(`  played: ${coins} coins, ${slips}`);
+  if (coins !== plan.coins || !/(^|\D)0 slips$/.test(slips)) throw new Error(`${level.id}: browser run left the plan`);
   writeFileSync(join(outDir, 'plan.json'), JSON.stringify({ ...plan, frames: undefined, shots: shot }));
   await page.close();
 }
