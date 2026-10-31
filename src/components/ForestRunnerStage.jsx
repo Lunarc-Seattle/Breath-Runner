@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { createForestStage, FOREST_BACKGROUND_URL } from '../animation/forestEngine.js';
 import { getSessionRepository } from '../services/apiClient.js';
 import { playChime, playCoin, unlockAudio } from '../lib/audio.js';
@@ -70,7 +70,22 @@ export function ForestRunnerStage({
   const keyHandlersRef = useRef(null);
   const startButtonRef = useRef(null);
   const nextLapButtonRef = useRef(null);
-  const prevBestSyncRef = useRef(null); // best sync % from prior laps this session
+  const [prevBestSync, setPrevBestSync] = useState(null); // best sync % from prior laps this session
+  // Keep the higher of the session best and a new sync %.
+  const recordBestSync = sync => setPrevBestSync(best => (best === null || sync > best ? sync : best));
+  // Latest HUD from the engine, with placeholders before the first frame.
+  const h = hud || {
+    coins: 0,
+    totalCoins: 30,
+    lapCoins: 0,
+    combo: 0,
+    lap: 1,
+    sync: 100,
+    lung: 1,
+    cue: 'exhale',
+    progress: 0,
+    falls: 0
+  };
 
   useEffect(() => {
     const engine = createForestStage({
@@ -108,6 +123,12 @@ export function ForestRunnerStage({
     return () => engine.destroy();
   }, []);
 
+  const stopCountdown = () => {
+    clearTimeout(countdownTimer.current);
+    countdownTimer.current = null;
+    setCountdown(null);
+  };
+
   // Switching level: new coin layout, back to the start card.
   useEffect(() => {
     const engine = engineRef.current;
@@ -139,22 +160,11 @@ export function ForestRunnerStage({
     applyHolding();
   };
 
-  const stopCountdown = () => {
-    clearTimeout(countdownTimer.current);
-    countdownTimer.current = null;
-    setCountdown(null);
-  };
-
   // Count 3-2-1 at a breathing pace, then run. Used for the first start, every lap and resume.
   const begin = () => {
     if (countdownTimer.current) return;
     // Record best sync before discarding the current lap result.
-    if (lapResult !== null && h !== null) {
-      const sync = h.sync ?? 0;
-      if (prevBestSyncRef.current === null || sync > prevBestSyncRef.current) {
-        prevBestSyncRef.current = sync;
-      }
-    }
+    if (lapResult !== null && h !== null) recordBestSync(h.sync ?? 0);
     unlockAudio();
     setStarted(true);
     setPaused(false);
@@ -200,12 +210,15 @@ export function ForestRunnerStage({
     setHolding(true);
   };
 
-  // Re-bound every render so the mic loop always sees current state.
-  micChangeRef.current = active => {
-    micHoldRef.current = active;
-    if (active && !started) begin();
-    applyHolding();
-  };
+  // Re-bound after every commit so the mic loop always sees current state. A layout effect (not a render-time
+  // write) runs before any later event or animation frame, and never exposes handlers from an uncommitted render.
+  useLayoutEffect(() => {
+    micChangeRef.current = active => {
+      micHoldRef.current = active;
+      if (active && !started) begin();
+      applyHolding();
+    };
+  });
 
   const toggleMic = async () => {
     if (micStatus === 'asking') return;
@@ -240,19 +253,23 @@ export function ForestRunnerStage({
       notify(describeMicError(err));
     }
   };
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    // Reset on (re)mount: StrictMode runs this cleanup once in dev and then mounts again.
+    unmountedRef.current = false;
+    return () => {
       unmountedRef.current = true;
       micStopRef.current?.();
       clearTimeout(fallHintTimer.current);
       clearTimeout(countdownTimer.current);
-    },
-    []
-  );
+    };
+  }, []);
   const micLabel = { off: 'Mic', asking: 'Allow mic…', calibrating: 'Stay quiet…', on: 'Mic on' }[micStatus];
 
-  // Hold Space (or ↑) to inhale. Bound once; the listeners read the latest handlers through a ref.
-  keyHandlersRef.current = { pressStart, setHolding };
+  // Hold Space (or ↑) to inhale. Bound once; the listeners read the latest handlers through a ref, refreshed
+  // after every commit. Layout effects run before passive ones, so the ref is set before the listeners attach.
+  useLayoutEffect(() => {
+    keyHandlersRef.current = { pressStart, setHolding };
+  });
   useEffect(() => {
     const isBreathKey = e => e.code === 'Space' || e.code === 'ArrowUp';
     const down = e => {
@@ -298,10 +315,7 @@ export function ForestRunnerStage({
       return;
     }
     // Keep session best in sync so "personal best" still works after saving.
-    const sync = snap.sync ?? 0;
-    if (prevBestSyncRef.current === null || sync > prevBestSyncRef.current) {
-      prevBestSyncRef.current = sync;
-    }
+    recordBestSync(snap.sync ?? 0);
     try {
       const repo = await getSessionRepository();
       await repo.add({
@@ -323,18 +337,6 @@ export function ForestRunnerStage({
 
   const stopHold = () => setHolding(false);
   const keepPointer = e => e.stopPropagation();
-  const h = hud || {
-    coins: 0,
-    totalCoins: 30,
-    lapCoins: 0,
-    combo: 0,
-    lap: 1,
-    sync: 100,
-    lung: 1,
-    cue: 'exhale',
-    progress: 0,
-    falls: 0
-  };
   const inhaleCue = h.cue === 'inhale';
   const level = getLevel(map.id);
 
@@ -595,7 +597,7 @@ export function ForestRunnerStage({
           {lapResult &&
             (() => {
               const currentSync = h?.sync ?? 0;
-              const isNewBest = prevBestSyncRef.current !== null && currentSync > prevBestSyncRef.current;
+              const isNewBest = prevBestSync !== null && currentSync > prevBestSync;
               return (
                 <div className="absolute inset-0 flex items-center justify-center p-4 bg-game-navy/30 backdrop-blur-[2px]">
                   <div

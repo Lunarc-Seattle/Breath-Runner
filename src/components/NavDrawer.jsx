@@ -93,7 +93,8 @@ export function NavDrawer({ routes, currentSlug, onNavigate }) {
   }, []);
 
   // Closed drawer: out of the tab order and hidden from assistive tech.
-  const hiddenProps = open ? {} : { inert: '', 'aria-hidden': 'true' };
+  // React 19 treats `inert` as a boolean attribute: `true` renders inert="", and an empty string would be dropped.
+  const hiddenProps = open ? {} : { inert: true, 'aria-hidden': 'true' };
 
   let order = 0;
   const item = r => {
