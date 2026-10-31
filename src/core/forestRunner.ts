@@ -361,3 +361,27 @@ export function stepRunner(
 
   return s;
 }
+
+/** Longest single physics step; a frame's dt is clamped to this, so most calls take one step. */
+export const MAX_STEP_SEC = 0.05;
+
+/**
+ * Advance by any dt, in steps of at most MAX_STEP_SEC, with the same breath throughout. `events`
+ * lists everything that happened across the steps. For time that piled up while a step was busy.
+ */
+export function stepRunnerFor(
+  prev: RunnerState,
+  dt: number,
+  holding: boolean,
+  map: ForestMap,
+  cfg: RunnerConfig = RUNNER_CONFIG,
+  speedMul = 1
+): RunnerState {
+  let s = prev;
+  const events: RunnerEvent[] = [];
+  for (let left = dt; left > 1e-9; left -= MAX_STEP_SEC) {
+    s = stepRunner(s, Math.min(left, MAX_STEP_SEC), holding, map, cfg, speedMul);
+    events.push(...s.events);
+  }
+  return s === prev ? { ...prev, events: [] } : { ...s, events };
+}
