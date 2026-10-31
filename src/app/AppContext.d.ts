@@ -2,7 +2,7 @@
  * Type declarations for AppContext.jsx so .tsx consumers get proper types
  * without converting the full context to TypeScript.
  */
-import type { ReactNode } from 'react';
+import type { JSX, ReactNode } from 'react';
 
 export interface TrainingMap {
   id: string;

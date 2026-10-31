@@ -253,15 +253,16 @@ export function ForestRunnerStage({
       notify(describeMicError(err));
     }
   };
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    // Reset on (re)mount: StrictMode runs this cleanup once in dev and then mounts again.
+    unmountedRef.current = false;
+    return () => {
       unmountedRef.current = true;
       micStopRef.current?.();
       clearTimeout(fallHintTimer.current);
       clearTimeout(countdownTimer.current);
-    },
-    []
-  );
+    };
+  }, []);
   const micLabel = { off: 'Mic', asking: 'Allow mic…', calibrating: 'Stay quiet…', on: 'Mic on' }[micStatus];
 
   // Hold Space (or ↑) to inhale. Bound once; the listeners read the latest handlers through a ref, refreshed

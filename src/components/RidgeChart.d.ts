@@ -1,4 +1,4 @@
-import type { RefObject } from 'react';
+import type { JSX, RefObject } from 'react';
 
 export interface RidgeChartProps {
   values: (number | null)[];
