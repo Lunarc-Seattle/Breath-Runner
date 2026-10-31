@@ -100,6 +100,29 @@ const MIN_COIN_SPIN = 0.55;
 const RUNNER_W = FOREST_MAP.runner.w;
 const RUNNER_H = FOREST_MAP.runner.h;
 
+// The runner's legs are drawn in code under runner-torso.png (cut by scripts/assets/cut_runner_torso.py),
+// so they can bend; leg geometry is in that sprite's 512 px frame.
+const SPRITE_PX = 512;
+/** @type {{ back: [number, number], front: [number, number] }} */
+const LEG_HIPS = { back: [235, 255], front: [300, 262] };
+const LEG_EASE = 16; // how fast the legs catch up to a new pose, per second
+// Off the run cycle: each leg's thigh angle from straight down (+ forward) and knee bend, radians.
+/** @typedef {{ backThigh: number, backKnee: number, frontThigh: number, frontKnee: number }} LegPose */
+/** @type {Record<'idle' | 'rise' | 'fall' | 'land', LegPose>} */
+const LEG_POSES = {
+  idle: { backThigh: -0.15, backKnee: 0.2, frontThigh: 0.15, frontKnee: 0.2 },
+  rise: { backThigh: 0.2, backKnee: 1.9, frontThigh: 1.2, frontKnee: 1.7 }, // knees tucked
+  fall: { backThigh: -0.25, backKnee: 0.5, frontThigh: 0.45, frontKnee: 0.4 }, // reaching for the ground
+  land: { backThigh: 0.35, backKnee: 1.3, frontThigh: 0.75, frontKnee: 1.4 } // crouched
+};
+const THIGH_PX = 105;
+const SHIN_PX = 125;
+const FOOT_GROUND_PX = 497; // where a straight-legged foot touches the ground
+const PANTS = '#fd7914';
+const PANTS_BACK = '#e4690f';
+const PANTS_EDGE = '#02315f';
+const SKIN = '#ffbcab';
+
 // Per-map look: the Forest art is the .ai as drawn; other scenes re-grade it until their own art exists.
 // Difficulty (coin layout, pace, lung size) lives in src/core/forestLevels.ts.
 /** @type {Record<LevelId, MapTheme>} */
@@ -149,7 +172,8 @@ export const FOREST_BACKGROUND_URL = ASSET_BASE + 'background.jpg';
  */
 export function createForestStage({ stage, background, canvas, onHud, onEvent }) {
   const ctx = get2dContext(canvas);
-  const sprites = { runner: loadImage('runner.png'), arrow: loadImage('arrow.png'), coin: loadImage('coin.png') };
+  const sprites = { arrow: loadImage('arrow.png'), coin: loadImage('coin.png') };
+  const torsoSprite = loadImage('runner-torso.png');
   const W = FOREST_MAP.width;
   const H = FOREST_MAP.height;
 
@@ -167,6 +191,8 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
   let last = performance.now();
   let lastHud = 0;
   let landSquash = 0;
+  /** Current leg pose, eased toward the target each frame. */
+  const legs = { ...LEG_POSES.idle };
 
   // ── Web Worker for off-main-thread physics ──────────────────────────────
   /** @type {Worker | null} */
@@ -382,6 +408,7 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
       }
     }
     landSquash = Math.max(0, landSquash - dt * 4);
+    updateLegs(dt);
 
     const visW = view.w / view.scale;
     const target = Math.min(Math.max(0, state.x - visW * 0.32), Math.max(0, W - visW));
@@ -508,8 +535,99 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
     ctx.restore();
   }
 
+  function runPhase() {
+    return state.elapsed * 11 * speedMul;
+  }
+
+  /** What the legs are doing: running, rising, falling, landing or standing. */
+  function legPhase() {
+    if (!state.onGround) return state.vy < 0 ? 'rise' : 'fall';
+    if (landSquash > 0.25) return 'land';
+    return running && !state.respawnSec ? 'run' : 'idle';
+  }
+
+  /** @param {number} dt */
+  function updateLegs(dt) {
+    const phase = legPhase();
+    let target = phase === 'run' ? null : LEG_POSES[phase];
+    if (!target) {
+      // Opposite legs, one stride per two body bounces; each knee bends most while its leg swings forward.
+      const p = runPhase();
+      const leg = (/** @type {number} */ phi) => [0.6 * Math.sin(phi), 0.3 + 1.2 * Math.max(0, Math.cos(phi))];
+      const [frontThigh, frontKnee] = leg(p);
+      const [backThigh, backKnee] = leg(p + Math.PI);
+      target = { backThigh, backKnee, frontThigh, frontKnee };
+    }
+    const k = 1 - Math.exp(-dt * LEG_EASE);
+    legs.backThigh += (target.backThigh - legs.backThigh) * k;
+    legs.backKnee += (target.backKnee - legs.backKnee) * k;
+    legs.frontThigh += (target.frontThigh - legs.frontThigh) * k;
+    legs.frontKnee += (target.frontKnee - legs.frontKnee) * k;
+  }
+
+  /**
+   * Knee and ankle of a leg, in sprite px.
+   * @param {[number, number]} hip
+   * @param {number} thigh
+   * @param {number} knee
+   */
+  function legJoints(hip, thigh, knee) {
+    const kx = hip[0] + Math.sin(thigh) * THIGH_PX;
+    const ky = hip[1] + Math.cos(thigh) * THIGH_PX;
+    const shin = thigh - knee;
+    return { knee: [kx, ky], ankle: [kx + Math.sin(shin) * SHIN_PX, ky + Math.cos(shin) * SHIN_PX], shin };
+  }
+
+  /**
+   * One leg: a wide pants leg with a navy edge and a bare foot.
+   * @param {[number, number]} hip
+   * @param {number} thigh
+   * @param {number} knee
+   * @param {string} color
+   */
+  function drawLeg(hip, thigh, knee, color) {
+    const j = legJoints(hip, thigh, knee);
+    const down = [Math.sin(j.shin), Math.cos(j.shin)];
+    const fwd = [Math.cos(j.shin), -Math.sin(j.shin)];
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = SKIN;
+    ctx.lineWidth = 20;
+    ctx.beginPath();
+    ctx.moveTo(j.ankle[0], j.ankle[1]);
+    ctx.lineTo(j.ankle[0] + down[0] * 14 + fwd[0] * 42, j.ankle[1] + down[1] * 14 + fwd[1] * 42);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(hip[0], hip[1]);
+    ctx.lineTo(j.knee[0], j.knee[1]);
+    ctx.lineTo(j.ankle[0] - down[0] * 8, j.ankle[1] - down[1] * 8);
+    ctx.strokeStyle = PANTS_EDGE;
+    ctx.lineWidth = 68;
+    ctx.stroke();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 62;
+    ctx.stroke();
+  }
+
+  /** How far the lowest foot is above the ground, in sprite px (bent knees on the ground). */
+  function footGap() {
+    const b = legJoints(LEG_HIPS.back, legs.backThigh, legs.backKnee).ankle[1];
+    const f = legJoints(LEG_HIPS.front, legs.frontThigh, legs.frontKnee).ankle[1];
+    return FOOT_GROUND_PX - (Math.max(b, f) + 14);
+  }
+
+  /** The runner at the origin, feet on y = 0: legs first, then the torso over their tops. */
+  function drawBody() {
+    ctx.save();
+    ctx.translate(-RUNNER_W / 2, -RUNNER_H);
+    ctx.scale(RUNNER_W / SPRITE_PX, RUNNER_H / SPRITE_PX);
+    drawLeg(LEG_HIPS.back, legs.backThigh, legs.backKnee, PANTS_BACK);
+    drawLeg(LEG_HIPS.front, legs.frontThigh, legs.frontKnee, PANTS);
+    if (torsoSprite.complete && torsoSprite.naturalWidth) ctx.drawImage(torsoSprite, 0, 0, SPRITE_PX, SPRITE_PX);
+    ctx.restore();
+  }
+
   function drawRunner() {
-    const img = sprites.runner;
     const ground = groundAt(FOREST_MAP, state.x, state.y, 2);
     if (ground !== null && ground < RUNNER_CONFIG.fallY) {
       const lift = Math.max(0, ground - state.y);
@@ -527,14 +645,16 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
       ctx.fill();
     });
 
-    const runPhase = state.elapsed * 11 * speedMul;
-    const bounce = state.onGround && running && !state.respawnSec ? Math.abs(Math.sin(runPhase)) * 7 : 0;
-    const lean = state.onGround ? 0.05 + Math.sin(runPhase) * 0.035 : state.vy < 0 ? -0.12 : 0.1;
+    const phase = runPhase();
+    const bounce = state.onGround && running && !state.respawnSec ? Math.abs(Math.sin(phase)) * 7 : 0;
+    // Bent knees on the ground lower her so the feet stay planted.
+    const plant = state.onGround ? (footGap() * RUNNER_H) / SPRITE_PX : 0;
+    const lean = state.onGround ? 0.05 + Math.sin(phase) * 0.035 : state.vy < 0 ? -0.12 : 0.1;
     const squashY = 1 - landSquash * 0.12 + (!state.onGround && state.vy < 0 ? 0.05 : 0);
     const squashX = 1 + landSquash * 0.1;
 
     ctx.save();
-    ctx.translate(state.x, state.y - bounce);
+    ctx.translate(state.x, state.y - bounce + plant);
     ctx.rotate(lean);
     ctx.scale(squashX, squashY);
     if (holding && !state.onGround && state.lung > 0) {
@@ -548,7 +668,7 @@ export function createForestStage({ stage, background, canvas, onHud, onEvent })
       ctx.fill();
     }
     if (state.respawnSec > 0) ctx.globalAlpha = Math.sin(time * 18) > 0 ? 1 : 0.3; // "get ready" blink
-    if (img.complete && img.naturalWidth) ctx.drawImage(img, -RUNNER_W / 2, -RUNNER_H, RUNNER_W, RUNNER_H);
+    drawBody();
     ctx.globalAlpha = 1;
     ctx.restore();
   }
