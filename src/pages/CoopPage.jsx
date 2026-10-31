@@ -44,7 +44,7 @@ function Lobby({ onConnect, errorMsg, status }) {
           Breathe in sync with a training partner in real time.
           <br />
           <span className="text-brand-teal-ink font-medium">Requires the local server</span> — run{' '}
-          <code className="text-[11px] bg-slate-100 px-1.5 py-0.5 rounded font-mono">npm start</code> in the project
+          <code className="text-[11px] bg-slate-100 px-1.5 py-0.5 rounded-sm font-mono">npm start</code> in the project
           directory.
         </p>
       </div>
@@ -61,7 +61,7 @@ function Lobby({ onConnect, errorMsg, status }) {
             placeholder="Luna"
             value={name}
             onChange={e => setName(e.target.value)}
-            className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-teal/40"
+            className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-sm text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-brand-teal/40"
           />
         </div>
 
@@ -76,7 +76,7 @@ function Lobby({ onConnect, errorMsg, status }) {
             placeholder="e.g. 4821"
             value={roomInput}
             onChange={e => setRoomInput(e.target.value.replace(/\D/g, ''))}
-            className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-sm text-slate-900 font-mono focus:outline-none focus:ring-2 focus:ring-brand-teal/40"
+            className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-sm text-slate-900 font-mono focus:outline-hidden focus:ring-2 focus:ring-brand-teal/40"
           />
         </div>
       </div>

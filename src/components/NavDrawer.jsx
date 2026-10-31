@@ -34,7 +34,7 @@ function HomeMark({ active, onClick }) {
       aria-current={active ? 'page' : undefined}
       className={`group flex items-center gap-2.5 pl-1.5 pr-3 py-1.5 rounded-2xl transition-colors ${active ? 'bg-brand-teal/10' : 'hover:bg-slate-100'}`}
     >
-      <span className="relative w-8 h-8 rounded-xl bg-gradient-to-br from-brand-teal to-brand-blue flex items-center justify-center shadow-sm">
+      <span className="relative w-8 h-8 rounded-xl bg-linear-to-br/srgb from-brand-teal to-brand-blue flex items-center justify-center shadow-xs">
         <HouseIcon className="w-[18px] h-[18px] text-white" />
       </span>
       {/* Accessible name = the visible "Breath Runner home"; screen-reader-only text covers phones, where it's hidden. */}
@@ -186,7 +186,7 @@ export function NavDrawer({ routes, currentSlug, onNavigate }) {
             aria-hidden="true"
           >
             <span
-              className={`ml-1 w-1 h-14 rounded-full bg-brand-teal/70 opacity-0 transition-all duration-500 group-hover:h-24 group-hover:opacity-100 ${open ? '!opacity-0' : ''}`}
+              className={`ml-1 w-1 h-14 rounded-full bg-brand-teal/70 opacity-0 transition-all duration-500 group-hover:h-24 group-hover:opacity-100 ${open ? 'opacity-0!' : ''}`}
             ></span>
           </div>
 
@@ -212,7 +212,7 @@ export function NavDrawer({ routes, currentSlug, onNavigate }) {
               style={{ '--d': open ? '30ms' : '0ms' }}
               className={`nav-item w-full text-left p-3 rounded-2xl flex items-center gap-3 ${
                 onHome
-                  ? 'bg-gradient-to-r from-brand-teal to-brand-teal-light text-white'
+                  ? 'bg-linear-to-r/srgb from-brand-teal to-brand-teal-light text-white'
                   : 'bg-brand-teal/5 text-brand-teal-ink hover:bg-brand-teal/15'
               }`}
             >

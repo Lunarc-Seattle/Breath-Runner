@@ -107,7 +107,7 @@ export function Segmented({ label, options, value, onChange }) {
     <div
       role="group"
       aria-label={label}
-      className="inline-flex p-1 rounded-full bg-white shadow-[inset_0_0_0_1px_theme(colors.slate.200)]"
+      className="inline-flex p-1 rounded-full bg-white shadow-[inset_0_0_0_1px_var(--color-slate-200)]"
     >
       {options.map(o => (
         <button
@@ -131,7 +131,7 @@ export function Segmented({ label, options, value, onChange }) {
 export const btn = {
   primary:
     'inline-flex items-center justify-center gap-2 h-11 px-6 rounded-full bg-brand-teal-deep hover:bg-brand-teal-ink text-white text-[15px] font-semibold whitespace-nowrap transition-colors disabled:opacity-60',
-  soft: 'inline-flex items-center justify-center gap-2 h-11 px-6 rounded-full bg-white text-brand-teal-ink text-[15px] font-semibold whitespace-nowrap shadow-[inset_0_0_0_1px_theme(colors.slate.200)] hover:shadow-[inset_0_0_0_1.5px_theme(colors.brand.teal.DEFAULT)] transition-shadow disabled:opacity-60',
+  soft: 'inline-flex items-center justify-center gap-2 h-11 px-6 rounded-full bg-white text-brand-teal-ink text-[15px] font-semibold whitespace-nowrap shadow-[inset_0_0_0_1px_var(--color-slate-200)] hover:shadow-[inset_0_0_0_1.5px_var(--color-brand-teal)] transition-shadow disabled:opacity-60',
   link: 'text-sm font-semibold text-brand-teal-ink hover:underline whitespace-nowrap'
 };
 

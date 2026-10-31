@@ -149,7 +149,7 @@ function SyncRidge({ runs, range }: { runs: Session[]; range: string }) {
             <button
               type="button"
               onClick={exportPng}
-              className={`${btn.link} shrink-0 text-[13px]`}
+              className={`${btn.link} shrink-0`}
               aria-label="Download breath sync chart as PNG"
             >
               Download chart
@@ -221,7 +221,7 @@ function RunsTable({ runs }: { runs: Session[] }) {
           <select
             value={level}
             onChange={e => setLevel(e.target.value)}
-            className="appearance-none h-10 pl-3.5 pr-9 rounded-xl bg-canvas shadow-[inset_0_0_0_1px_theme(colors.slate.200)] text-sm text-slate-900 cursor-pointer"
+            className="appearance-none h-10 pl-3.5 pr-9 rounded-xl bg-canvas shadow-[inset_0_0_0_1px_var(--color-slate-200)] text-sm text-slate-900 cursor-pointer"
           >
             <option value="">All levels</option>
             {LEVELS.map(l => (
