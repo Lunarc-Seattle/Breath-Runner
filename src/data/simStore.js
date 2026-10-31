@@ -29,7 +29,7 @@ export const INITIAL_SIM_STATE = {
   hospital: 'Peking University Hospital',
   enrolledDate: '15 April 2026',
   birthDate: '16/12/1992',
-  email: 'xiaoming.rehab@pku-hospital.org',
+  email: 'luna.rehab@pku-hospital.org',
   phone: '+86 138 0013 8000',
   // No trainer is paired until the user pairs one over Web Bluetooth.
   bleConnected: false,

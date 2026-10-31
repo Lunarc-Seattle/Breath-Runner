@@ -21,14 +21,14 @@ function TrainerPill() {
     ? 'Searching…'
     : state.bleConnected
       ? `${state.deviceName}${state.batteryPct !== null ? ` • ${state.batteryPct}%` : ''}`
-      : 'No trainer · Pair';
+      : 'Pair trainer';
   return (
     <button
       type="button"
       onClick={state.bleConnected ? undefined : trainer.pair}
       disabled={state.bleScanning}
       title={state.bleConnected ? 'Trainer connected' : 'Pair your AeroCare trainer'}
-      className={`hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-2xl text-xs font-mono font-medium transition-colors ${
+      className={`hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-2xl text-xs font-medium transition-colors ${
         state.bleConnected
           ? 'bg-brand-teal/10 text-brand-teal-ink hover:bg-brand-teal/20'
           : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -74,7 +74,7 @@ function Shell({ slug }: { slug: string }) {
 
       <div role="status" aria-live="polite" className="fixed bottom-6 right-6 z-50">
         {toast && (
-          <div className="bg-ink text-white px-5 py-3.5 rounded-2xl shadow-xl border border-white/15 flex items-center gap-3 font-mono text-xs max-w-md">
+          <div className="bg-ink text-white px-5 py-3.5 rounded-2xl shadow-xl border border-white/15 flex items-center gap-3 text-sm max-w-md">
             <span aria-hidden="true" className="w-2.5 h-2.5 shrink-0 rounded-full bg-brand-yellow" />
             <span>{toast}</span>
           </div>
