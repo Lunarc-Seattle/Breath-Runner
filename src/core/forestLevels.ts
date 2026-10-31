@@ -76,8 +76,7 @@ const DT = 1 / 60;
 const LEVEL_SPECS: Record<LevelId, LevelSpec> = {
   'MAP-FOREST-01': {
     skill: 'Learn the jump',
-    focus:
-      'Jump at each gap and glide across. Coins sit right on your path, pickups are very generous and your breath refills fast — plenty of room to experiment.',
+    focus: 'Coins sit right on your path and your breath refills fast, so there is room to experiment.',
     speed: 1,
     lungSec: 2.7,
     refillSec: 1.2,
@@ -85,8 +84,7 @@ const LEVEL_SPECS: Record<LevelId, LevelSpec> = {
   },
   'MAP-CANYON-02': {
     skill: 'Keep a rhythm',
-    focus:
-      'Short hops between big jumps — no rest on the long flat cliffs. The coins land exactly where a steady rhythm puts you, so match the arrow or you will miss them.',
+    focus: "Short hops between the big jumps. Keep to the arrow's rhythm and you land on the coins.",
     speed: 1.1,
     lungSec: 2.2,
     refillSec: 2.2,
@@ -105,8 +103,7 @@ const LEVEL_SPECS: Record<LevelId, LevelSpec> = {
   },
   'MAP-GLACIER-03': {
     skill: 'Long, controlled breaths',
-    focus:
-      'Fast pace, tiny pickup windows, and a slow refill. Coins sit only at the very top of each long arc — a short or early breath misses them entirely. Exhale fully before the next inhale or you will run out of air mid-flight.',
+    focus: 'Coins sit only at the top of each long arc. Breathe out fully before the next inhale.',
     speed: 1.2,
     lungSec: 2.0,
     refillSec: 2.8,

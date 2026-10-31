@@ -12,6 +12,12 @@ const COUNT_FROM = 3;
 const COUNT_STEP_MS = 1500;
 // Breath sync over the first moments of a run is mostly noise, so it shows "—" until then.
 const SYNC_SETTLE_SEC = 2;
+// The start card's breathing steps: icon, action, breath.
+const START_STEPS = [
+  ['↑', 'Jump', 'inhale when the arrow tilts up'],
+  ['〰', 'Glide', 'keep inhaling'],
+  ['↓', 'Land', 'exhale']
+];
 const GLASS =
   'bg-game-navy/60 backdrop-blur-md border border-white/20 text-white shadow-[0_12px_32px_rgba(4,33,75,0.28)]';
 
@@ -339,8 +345,10 @@ export function ForestRunnerStage({
     <section className="animate-page space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <span className="text-xs font-mono text-brand-teal-ink font-semibold">04 TRAINING GAME // BREATH RUNNER</span>
-          <h2 className="text-2xl md:text-3xl font-bold text-slate-900">{map.name}</h2>
+          <p className="text-sm font-semibold text-brand-teal-ink">Breath Runner</p>
+          <h2 className="text-[26px] md:text-[30px] font-semibold leading-tight tracking-tight text-slate-900">
+            {map.name}
+          </h2>
         </div>
         <div className="flex gap-2 overflow-x-auto max-w-full pb-1">
           {maps.map((m, i) => (
@@ -507,9 +515,9 @@ export function ForestRunnerStage({
                 onPointerDown={keepPointer}
               >
                 <div className="min-h-0 overflow-y-auto">
-                  <div className="flex flex-wrap items-center justify-center gap-2 text-[11px] font-mono font-semibold">
-                    <span className="text-white/70">
-                      LEVEL {level.number} OF {LEVEL_COUNT}
+                  <div className="flex flex-wrap items-center justify-center gap-2 text-xs font-semibold">
+                    <span className="text-white/75">
+                      Level {level.number} of {LEVEL_COUNT}
                     </span>
                     <span className="flex gap-1" role="img" aria-label={`Difficulty ${level.number} of ${LEVEL_COUNT}`}>
                       {Array.from({ length: LEVEL_COUNT }, (_, i) => (
@@ -519,48 +527,55 @@ export function ForestRunnerStage({
                         />
                       ))}
                     </span>
-                    <span className="px-2 py-0.5 rounded-full bg-brand-yellow/20 text-game-coin-soft">
-                      {map.valveKpa} kPa · {map.targetL} L
+                    <span className="px-2 py-0.5 rounded-full bg-brand-yellow/20 text-game-coin-soft tabular-nums">
+                      {map.valveKpa} kPa · {map.targetL} L · pace {level.speed}×
                     </span>
                   </div>
                   <h3 className="text-xl sm:text-2xl font-bold mt-2 sm:mt-3">{map.name}</h3>
                   <div className="mt-1 text-sm font-semibold text-game-mint">Skill: {level.skill}</div>
-                  <p className="hidden sm:block text-sm text-white/85 mt-2 leading-relaxed">{level.focus}</p>
-                  <div className="mt-3 sm:mt-4 grid grid-cols-4 gap-1.5 sm:gap-2 text-center">
+                  <p className="hidden sm:block text-sm text-white/80 mt-1.5">{level.focus}</p>
+
+                  {/* How to breathe, as three steps instead of a paragraph */}
+                  <ol className="mt-4 grid grid-cols-3 gap-1.5 sm:gap-2">
+                    {START_STEPS.map(([icon, what, how]) => (
+                      <li key={what} className="rounded-xl bg-white/10 px-1.5 py-2.5">
+                        <div aria-hidden="true" className="text-lg leading-none text-game-coin">
+                          {icon}
+                        </div>
+                        <div className="mt-1.5 text-[13px] font-semibold leading-tight">{what}</div>
+                        <div className="text-[11px] leading-tight text-white/70 mt-0.5">{how}</div>
+                      </li>
+                    ))}
+                  </ol>
+                  <p className="text-xs text-white/70 mt-2.5">
+                    <strong className="text-game-mint">Breath sync</strong>: how much of the run your breath follows the
+                    arrow.
+                  </p>
+
+                  <p className="mt-3 flex justify-center gap-x-4 gap-y-1 flex-wrap text-[11px] text-white/70">
                     {[
-                      [level.breathsPerLap, 'breaths / lap'],
+                      [level.breathsPerLap, 'breaths a lap'],
                       [`${level.avgBreathSec}s`, 'avg inhale'],
-                      [`${level.config.refillSec}s`, 'breath refill'],
+                      [`${level.config.refillSec}s`, 'refill'],
                       [level.map.coins.length, 'coins']
                     ].map(([v, k]) => (
-                      <div key={k} className="rounded-xl bg-white/10 py-2 px-1">
-                        <div className="text-base font-bold font-mono text-game-coin">{v}</div>
-                        <div className="text-[9px] sm:text-[10px] leading-tight uppercase tracking-wider text-white/70">
-                          {k}
-                        </div>
-                      </div>
+                      <span key={k} className="flex items-baseline gap-1">
+                        <strong className="font-mono text-game-coin">{v}</strong>
+                        {k}
+                      </span>
                     ))}
-                  </div>
-                  <p className="text-xs text-white/75 mt-3 leading-relaxed">
-                    She runs on her own. When the golden arrow tilts up,{' '}
-                    <strong className="text-game-coin">start a long, steady inhale</strong> to jump; keep inhaling to
-                    glide, then exhale to land. Pace {level.speed}×.
                   </p>
-                  <p className="text-xs text-white/75 mt-2 leading-relaxed">
-                    <strong className="text-game-mint">Breath sync</strong> is the share of the run your breath matches
-                    the arrow: in while it tilts up, out while it points down.
-                  </p>
-                  <div className="mt-4 grid grid-cols-3 gap-2 text-[11px] font-mono text-white/75">
-                    <div className="rounded-xl bg-white/10 py-2">Hold screen</div>
-                    <div className="rounded-xl bg-white/10 py-2">or Space ↑</div>
+
+                  <div className="mt-4 flex items-center justify-center gap-2 text-xs text-white/75">
+                    <span>Hold the screen or Space, or</span>
                     <button
                       type="button"
                       onClick={toggleMic}
                       aria-pressed={micStatus !== 'off'}
                       title="Breathe audibly near the microphone to inhale"
-                      className={`rounded-xl py-2 transition-colors ${micStatus === 'off' ? 'bg-white/10 hover:bg-white/20' : 'bg-game-sky/30 text-white'}`}
+                      className={`rounded-full px-3 py-1.5 font-semibold transition-colors ${micStatus === 'off' ? 'bg-white/10 hover:bg-white/20' : 'bg-game-sky/30 text-white'}`}
                     >
-                      {micStatus === 'off' ? 'or 🎙 mic' : micLabel}
+                      {micStatus === 'off' ? 'use the mic' : micLabel}
                     </button>
                   </div>
                 </div>
