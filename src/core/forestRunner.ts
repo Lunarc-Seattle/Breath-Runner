@@ -45,9 +45,13 @@ export type Cue = 'inhale' | 'exhale';
 export interface RunnerConfig {
   runSpeed: number;
   gravity: number;
+  /** Gravity on the way down when not inhaling: she drops faster than she rises. */
+  fallGravity: number;
   floatGravity: number;
   glideVy: number;
   jumpVy: number;
+  /** An inhale this soon after walking off an edge still jumps. */
+  coyoteSec: number;
   lungSec: number;
   refillSec: number;
   stepUp: number;
@@ -77,6 +81,8 @@ export interface RunnerState {
   vy: number;
   onGround: boolean;
   wasHolding: boolean;
+  /** Seconds left in which a new inhale still jumps after leaving the ground without jumping. */
+  coyoteSec: number;
   /** Breath left for floating, 0..1. */
   lung: number;
   cue: Cue;
@@ -105,10 +111,12 @@ export interface Point {
 
 export const RUNNER_CONFIG: RunnerConfig = {
   runSpeed: 165, // design px / s
-  gravity: 1700,
+  gravity: 1700, // rising
+  fallGravity: 2600, // falling while exhaling: a quick, decisive landing
   floatGravity: 420, // while inhaling in the air
   glideVy: 110, // max fall speed while inhaling: a long steady breath glides far
   jumpVy: -600,
+  coyoteSec: 0.2, // ~33 px of grace past an edge, for slow breath onsets (and the mic)
   lungSec: 2.4, // seconds of continuous float on a full breath
   refillSec: 1.6, // seconds to refill from empty while exhaling
   stepUp: 28, // max surface rise the runner walks over
@@ -184,6 +192,7 @@ export function createRunnerState(map: ForestMap): RunnerState {
     vy: 0,
     onGround: true,
     wasHolding: false,
+    coyoteSec: 0,
     lung: 1,
     cue: 'exhale',
     taken: map.coins.map(() => false),
@@ -232,11 +241,13 @@ export function stepRunner(
     return s;
   }
 
-  if (s.onGround && startedInhale) {
+  // A late inhale just past a rounded rock edge, where she has already started to drop, still jumps.
+  if (startedInhale && (s.onGround || s.coyoteSec > 0)) {
     s.vy = cfg.jumpVy;
     s.onGround = false;
+    s.coyoteSec = 0;
     s.events.push({ type: 'jump' });
-  }
+  } else if (!s.onGround) s.coyoteSec = Math.max(0, s.coyoteSec - dt);
 
   const floating = holding && !s.onGround && s.lung > 0;
   if (floating) s.lung = Math.max(0, s.lung - dt / cfg.lungSec);
@@ -248,11 +259,14 @@ export function stepRunner(
   if (s.onGround) {
     const g = groundAt(map, s.x, s.y, cfg.stepUp);
     if (g !== null && g - s.y < 6) s.y = g;
-    else s.onGround = false; // walked off an edge
+    else {
+      s.onGround = false; // walked off an edge
+      s.coyoteSec = cfg.coyoteSec;
+    }
   }
 
   if (!s.onGround) {
-    const gravity = floating && s.vy > -200 ? cfg.floatGravity : cfg.gravity;
+    const gravity = floating && s.vy > -200 ? cfg.floatGravity : s.vy > 0 && !holding ? cfg.fallGravity : cfg.gravity;
     s.vy += gravity * dt;
     if (floating) s.vy = Math.min(s.vy, cfg.glideVy);
     s.y += s.vy * dt;
@@ -282,6 +296,7 @@ export function stepRunner(
     s.safeY = back.y;
     s.vy = 0;
     s.onGround = true;
+    s.coyoteSec = 0;
     s.respawnSec = cfg.respawnPauseSec;
     s.events.push({ type: 'fall', x: s.x, y: s.y });
   }
@@ -305,12 +320,15 @@ export function stepRunner(
     const g = groundAt(map, s.x, s.y, 2);
     return g === null || g > cfg.fallY;
   };
+  // Scripted levels cue "inhale" just before each jump point as a heads-up. Breathing in there
+  // jumps early, so that stretch counts as in sync whatever the player does.
+  let leadIn = false;
   if (cfg.breathCues) {
     // Scripted levels: inhale from just before each scripted jump until its hold ends.
     const pxPerSec = cfg.runSpeed * speedMul;
-    s.cue = cfg.breathCues.some(([cx, hold]) => s.x > cx - cfg.cueLeadPx && s.x < cx + hold * pxPerSec)
-      ? 'inhale'
-      : 'exhale';
+    leadIn = cfg.breathCues.some(([cx]) => s.x > cx - cfg.cueLeadPx && s.x < cx);
+    s.cue =
+      leadIn || cfg.breathCues.some(([cx, hold]) => s.x >= cx && s.x < cx + hold * pxPerSec) ? 'inhale' : 'exhale';
   } else {
     s.cue = !s.onGround
       ? s.vy < 0 || overGap()
@@ -320,7 +338,7 @@ export function stepRunner(
         ? 'inhale'
         : 'exhale';
   }
-  if ((s.cue === 'inhale') === holding) s.syncSec += dt;
+  if (leadIn || (s.cue === 'inhale') === holding) s.syncSec += dt;
 
   if (s.x >= map.width - cfg.endPad) {
     s.events.push({ type: 'lap', lap: s.lap, coins: s.lapCoins, sec: s.lapElapsed, total: map.coins.length });
@@ -333,6 +351,7 @@ export function stepRunner(
       safeX: fresh.x,
       safeY: fresh.y,
       respawnSec: 0,
+      coyoteSec: 0,
       taken: fresh.taken,
       lap: s.lap + 1,
       lapCoins: 0,

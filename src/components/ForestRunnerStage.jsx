@@ -7,14 +7,20 @@ import { solidStyle } from '../data/simStore.js';
 import { startMicBreath, describeMicError } from '../lib/micBreath.js';
 
 const COIN_ICON_URL = `${import.meta.env.BASE_URL}assets/forest/coin.png`;
+// 3-2-1 before every run, at a calm breathing pace: time to settle and breathe out first.
+const COUNT_FROM = 3;
+const COUNT_STEP_MS = 1500;
+// Breath sync over the first moments of a run is mostly noise, so it shows "—" until then.
+const SYNC_SETTLE_SEC = 2;
 const GLASS =
   'bg-game-navy/60 backdrop-blur-md border border-white/20 text-white shadow-[0_12px_32px_rgba(4,33,75,0.28)]';
 
-function Stat({ label, value, tone }) {
+function Stat({ label, value, tone, hint }) {
   return (
-    <div className="min-w-[64px]">
-      <div className="text-[10px] uppercase tracking-wider text-white/60 font-mono">{label}</div>
-      <div className={`text-lg font-bold font-mono leading-tight ${tone}`}>{value}</div>
+    <div className="min-w-[52px] sm:min-w-[64px]">
+      <div className="text-[9px] sm:text-[10px] uppercase tracking-wider text-white/60 font-mono">{label}</div>
+      <div className={`text-base sm:text-lg font-bold font-mono leading-tight ${tone}`}>{value}</div>
+      {hint && <div className="hidden sm:block text-[10px] text-white/55 leading-tight">{hint}</div>}
     </div>
   );
 }
@@ -45,6 +51,8 @@ export function ForestRunnerStage({
   const [sound, setSound] = useState(true);
   const [lapResult, setLapResult] = useState(null);
   const [fallHint, setFallHint] = useState(false);
+  const [countdown, setCountdown] = useState(null); // 3, 2, 1, 'go', or null
+  const countdownTimer = useRef(null);
   const fallHintTimer = useRef(null);
   const [micStatus, setMicStatus] = useState('off'); // off | asking | calibrating | on
   const manualHoldRef = useRef(false);
@@ -101,6 +109,7 @@ export function ForestRunnerStage({
     engine.setRunning(false);
     engine.setHolding(false);
     engine.setMap(map.id);
+    stopCountdown();
     setStarted(false);
     setPaused(false);
     setLapResult(null);
@@ -124,7 +133,15 @@ export function ForestRunnerStage({
     applyHolding();
   };
 
+  const stopCountdown = () => {
+    clearTimeout(countdownTimer.current);
+    countdownTimer.current = null;
+    setCountdown(null);
+  };
+
+  // Count 3-2-1 at a breathing pace, then run. Used for the first start, every lap and resume.
   const begin = () => {
+    if (countdownTimer.current) return;
     // Record best sync before discarding the current lap result.
     if (lapResult !== null && h !== null) {
       const sync = h.sync ?? 0;
@@ -136,14 +153,39 @@ export function ForestRunnerStage({
     setStarted(true);
     setPaused(false);
     setLapResult(null);
-    engineRef.current?.setRunning(true);
+    engineRef.current?.setRunning(false);
+    const tick = n => {
+      if (document.hidden) {
+        // Left the tab mid-count: wait on the pause button instead of starting unseen.
+        stopCountdown();
+        setPaused(true);
+        return;
+      }
+      if (n > 0) {
+        setCountdown(n);
+        if (soundRef.current) playChime('exhale');
+        countdownTimer.current = setTimeout(() => tick(n - 1), COUNT_STEP_MS);
+        return;
+      }
+      setCountdown('go');
+      if (soundRef.current) playChime('inhale');
+      engineRef.current?.setRunning(true);
+      countdownTimer.current = setTimeout(() => {
+        countdownTimer.current = null;
+        setCountdown(null);
+      }, 700);
+    };
+    tick(COUNT_FROM);
   };
+  const counting = countdown !== null && countdown !== 'go';
 
   const togglePause = () => {
-    const next = !paused;
-    setPaused(next);
     setHolding(false);
-    engineRef.current?.setRunning(!next);
+    if (paused) begin();
+    else {
+      setPaused(true);
+      engineRef.current?.setRunning(false);
+    }
   };
 
   const pressStart = () => {
@@ -197,6 +239,7 @@ export function ForestRunnerStage({
       unmountedRef.current = true;
       micStopRef.current?.();
       clearTimeout(fallHintTimer.current);
+      clearTimeout(countdownTimer.current);
     },
     []
   );
@@ -290,6 +333,7 @@ export function ForestRunnerStage({
   const level = getLevel(map.id);
 
   const showFallHint = fallHint && started && !lapResult;
+  const syncText = h.elapsed >= SYNC_SETTLE_SEC ? `${h.sync}%` : '—';
 
   return (
     <section className="animate-page space-y-4">
@@ -334,7 +378,8 @@ export function ForestRunnerStage({
         </div>
       </div>
 
-      <div className="relative">
+      {/* Holding to inhale is a long press: keep mobile browsers from selecting text or opening a menu. */}
+      <div className="relative select-none no-touch-callout" onContextMenu={e => e.preventDefault()}>
         <div
           ref={stageRef}
           className="relative w-full h-[min(62vh,780px)] md:h-[min(70vh,760px)] min-h-[420px] rounded-[32px] overflow-hidden bg-game-mist select-none touch-none cursor-pointer shadow-[0_24px_60px_rgba(4,33,75,0.18)]"
@@ -358,13 +403,13 @@ export function ForestRunnerStage({
 
           {/* Top HUD */}
           <div className="absolute top-3 left-3 right-3 md:top-5 md:left-5 md:right-5 flex flex-wrap items-start justify-between gap-3 pointer-events-none">
-            <div className={`${GLASS} rounded-2xl px-4 py-3 flex items-center gap-4 md:gap-5`}>
-              <div className="flex items-center gap-2.5">
-                <img src={COIN_ICON_URL} alt="" className="w-9 h-9" />
+            <div className={`${GLASS} rounded-2xl px-3 py-2 sm:px-4 sm:py-3 flex items-center gap-3 md:gap-5`}>
+              <div className="flex items-center gap-2 sm:gap-2.5">
+                <img src={COIN_ICON_URL} alt="" className="w-6 h-6 sm:w-9 sm:h-9" />
                 <Stat label="Coins" value={h.coins} tone="text-game-coin" />
               </div>
               <div className="w-px h-8 bg-white/20"></div>
-              <Stat label="Breath sync" value={`${h.sync}%`} tone="text-game-mint" />
+              <Stat label="Breath sync" value={syncText} tone="text-game-mint" hint="breath matches arrow" />
               <div className="w-px h-8 bg-white/20 hidden sm:block"></div>
               <div className="hidden sm:block">
                 <Stat label="Combo" value={`x${h.combo}`} tone="text-game-sky" />
@@ -380,7 +425,7 @@ export function ForestRunnerStage({
                 type="button"
                 onPointerDown={keepPointer}
                 onClick={onToggleDevice}
-                className={`${GLASS} pointer-events-auto rounded-full pl-3 pr-4 py-2 flex items-center gap-2 text-xs font-semibold hover:bg-game-navy/75 transition-colors ${
+                className={`${GLASS} pointer-events-auto rounded-full pl-3 pr-4 py-1.5 sm:py-2 flex items-center gap-2 text-[11px] sm:text-xs font-semibold hover:bg-game-navy/75 transition-colors ${
                   bleConnected ? '' : 'ring-2 ring-brand-yellow/70'
                 }`}
               >
@@ -393,17 +438,16 @@ export function ForestRunnerStage({
                   ></span>
                 </span>
                 <span className={bleConnected ? 'text-game-mint' : 'text-game-coin-soft'}>
-                  {bleScanning
-                    ? 'Pairing trainer…'
-                    : bleConnected
-                      ? `${deviceName} linked`
-                      : `No trainer connected — free trial of ${map.name}`}
+                  {bleScanning ? 'Pairing trainer…' : bleConnected ? `${deviceName} linked` : 'No trainer'}
+                  {!bleScanning && !bleConnected && (
+                    <span className="hidden sm:inline"> connected — free trial of {map.name}</span>
+                  )}
                 </span>
                 <span className="hidden md:inline text-white/50 font-mono">{bleConnected ? 'disconnect' : 'pair'}</span>
               </button>
               <div className={`${GLASS} rounded-full px-3 py-1.5 flex items-center gap-2 text-[11px] font-mono`}>
-                <span className="text-white/60">ROUTE</span>
-                <div className="w-28 md:w-40 h-1.5 rounded-full bg-white/20 overflow-hidden">
+                <span className="hidden sm:inline text-white/60">ROUTE</span>
+                <div className="w-16 sm:w-28 md:w-40 h-1.5 rounded-full bg-white/20 overflow-hidden">
                   <div
                     className="h-full bg-gradient-to-r from-game-mint via-game-sky to-game-coin"
                     style={{ width: `${Math.round(h.progress * 100)}%` }}
@@ -419,11 +463,11 @@ export function ForestRunnerStage({
           {/* After a fall: what to do differently (announced through the live region below) */}
           <div
             aria-hidden="true"
-            className={`absolute left-1/2 top-[38%] -translate-x-1/2 -translate-y-1/2 pointer-events-none transition-all duration-500 ${
+            className={`absolute left-1/2 top-[48%] sm:top-[38%] -translate-x-1/2 -translate-y-1/2 pointer-events-none transition-all duration-500 ${
               showFallHint ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
             }`}
           >
-            <div className={`${GLASS} rounded-2xl px-5 py-3 text-center max-w-xs`}>
+            <div className={`${GLASS} rounded-2xl px-4 py-2.5 sm:px-5 sm:py-3 text-center w-[min(20rem,80vw)]`}>
               <div className="text-sm font-bold text-game-coin">Almost! Back to the start of this cliff</div>
               <div className="text-xs text-white/85 mt-1">
                 When the arrow tilts up, take one long, steady inhale and keep it going over the gap.
@@ -435,68 +479,96 @@ export function ForestRunnerStage({
               'Almost! Back to the start of this cliff. When the arrow tilts up, take one long, steady inhale and keep it going over the gap.'}
           </div>
 
+          {/* 3-2-1 count-in */}
+          {countdown !== null && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+              <div
+                key={countdown}
+                className="motion-safe:animate-[countdown-pop_1.5s_ease-out] text-7xl sm:text-8xl font-bold font-mono text-white drop-shadow-[0_6px_24px_rgba(4,33,75,0.55)]"
+              >
+                {countdown === 'go' ? 'Go!' : countdown}
+              </div>
+              {counting && (
+                <div className={`${GLASS} mt-4 rounded-full px-4 py-1.5 text-xs sm:text-sm font-semibold`}>
+                  Breathe out fully, then get ready
+                </div>
+              )}
+            </div>
+          )}
+          <div className="sr-only" aria-live="assertive">
+            {countdown === 'go' ? 'Go' : countdown}
+          </div>
+
           {/* Start overlay */}
           {!started && (
             <div className="absolute inset-0 flex items-center justify-center p-4 bg-game-navy/25 backdrop-blur-[2px]">
               <div
-                className={`${GLASS} rounded-3xl max-w-md w-full max-h-full overflow-y-auto p-5 md:p-7 text-center pointer-events-auto`}
+                className={`${GLASS} rounded-3xl max-w-md w-full max-h-full flex flex-col p-4 sm:p-5 md:p-7 text-center pointer-events-auto`}
                 onPointerDown={keepPointer}
               >
-                <div className="flex items-center justify-center gap-2 text-[11px] font-mono font-semibold">
-                  <span className="text-white/70">
-                    LEVEL {level.number} OF {LEVEL_COUNT}
-                  </span>
-                  <span className="flex gap-1" role="img" aria-label={`Difficulty ${level.number} of ${LEVEL_COUNT}`}>
-                    {Array.from({ length: LEVEL_COUNT }, (_, i) => (
-                      <span
-                        key={i}
-                        className={`w-2 h-2 rounded-full ${i < level.number ? 'bg-game-coin' : 'bg-white/25'}`}
-                      />
+                <div className="min-h-0 overflow-y-auto">
+                  <div className="flex flex-wrap items-center justify-center gap-2 text-[11px] font-mono font-semibold">
+                    <span className="text-white/70">
+                      LEVEL {level.number} OF {LEVEL_COUNT}
+                    </span>
+                    <span className="flex gap-1" role="img" aria-label={`Difficulty ${level.number} of ${LEVEL_COUNT}`}>
+                      {Array.from({ length: LEVEL_COUNT }, (_, i) => (
+                        <span
+                          key={i}
+                          className={`w-2 h-2 rounded-full ${i < level.number ? 'bg-game-coin' : 'bg-white/25'}`}
+                        />
+                      ))}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full bg-brand-yellow/20 text-game-coin-soft">
+                      {map.valveKpa} kPa · {map.targetL} L
+                    </span>
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-bold mt-2 sm:mt-3">{map.name}</h3>
+                  <div className="mt-1 text-sm font-semibold text-game-mint">Skill: {level.skill}</div>
+                  <p className="hidden sm:block text-sm text-white/85 mt-2 leading-relaxed">{level.focus}</p>
+                  <div className="mt-3 sm:mt-4 grid grid-cols-4 gap-1.5 sm:gap-2 text-center">
+                    {[
+                      [level.breathsPerLap, 'breaths / lap'],
+                      [`${level.avgBreathSec}s`, 'avg inhale'],
+                      [`${level.config.refillSec}s`, 'breath refill'],
+                      [level.map.coins.length, 'coins']
+                    ].map(([v, k]) => (
+                      <div key={k} className="rounded-xl bg-white/10 py-2 px-1">
+                        <div className="text-base font-bold font-mono text-game-coin">{v}</div>
+                        <div className="text-[9px] sm:text-[10px] leading-tight uppercase tracking-wider text-white/70">
+                          {k}
+                        </div>
+                      </div>
                     ))}
-                  </span>
-                  <span className="px-2 py-0.5 rounded-full bg-brand-yellow/20 text-game-coin-soft">
-                    {map.valveKpa} kPa · {map.targetL} L
-                  </span>
-                </div>
-                <h3 className="text-2xl font-bold mt-3">{map.name}</h3>
-                <div className="mt-1 text-sm font-semibold text-game-mint">Skill: {level.skill}</div>
-                <p className="text-sm text-white/85 mt-2 leading-relaxed">{level.focus}</p>
-                <div className="mt-4 grid grid-cols-4 gap-2 text-center">
-                  {[
-                    [level.breathsPerLap, 'breaths / lap'],
-                    [`${level.avgBreathSec}s`, 'avg inhale'],
-                    [`${level.config.refillSec}s`, 'breath refill'],
-                    [level.map.coins.length, 'coins']
-                  ].map(([v, k]) => (
-                    <div key={k} className="rounded-xl bg-white/10 py-2 px-1">
-                      <div className="text-base font-bold font-mono text-game-coin">{v}</div>
-                      <div className="text-[10px] leading-tight uppercase tracking-wider text-white/70">{k}</div>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-xs text-white/75 mt-3 leading-relaxed">
-                  She runs on her own. When the golden arrow tilts up,{' '}
-                  <strong className="text-game-coin">start a long, steady inhale</strong> to jump; keep inhaling to
-                  glide, then exhale to land. Pace {level.speed}×.
-                </p>
-                <div className="mt-4 grid grid-cols-3 gap-2 text-[11px] font-mono text-white/75">
-                  <div className="rounded-xl bg-white/10 py-2">Hold screen</div>
-                  <div className="rounded-xl bg-white/10 py-2">or Space ↑</div>
-                  <button
-                    type="button"
-                    onClick={toggleMic}
-                    aria-pressed={micStatus !== 'off'}
-                    title="Breathe audibly near the microphone to inhale"
-                    className={`rounded-xl py-2 transition-colors ${micStatus === 'off' ? 'bg-white/10 hover:bg-white/20' : 'bg-game-sky/30 text-white'}`}
-                  >
-                    {micStatus === 'off' ? 'or 🎙 mic' : micLabel}
-                  </button>
+                  </div>
+                  <p className="text-xs text-white/75 mt-3 leading-relaxed">
+                    She runs on her own. When the golden arrow tilts up,{' '}
+                    <strong className="text-game-coin">start a long, steady inhale</strong> to jump; keep inhaling to
+                    glide, then exhale to land. Pace {level.speed}×.
+                  </p>
+                  <p className="text-xs text-white/75 mt-2 leading-relaxed">
+                    <strong className="text-game-mint">Breath sync</strong> is the share of the run your breath matches
+                    the arrow: in while it tilts up, out while it points down.
+                  </p>
+                  <div className="mt-4 grid grid-cols-3 gap-2 text-[11px] font-mono text-white/75">
+                    <div className="rounded-xl bg-white/10 py-2">Hold screen</div>
+                    <div className="rounded-xl bg-white/10 py-2">or Space ↑</div>
+                    <button
+                      type="button"
+                      onClick={toggleMic}
+                      aria-pressed={micStatus !== 'off'}
+                      title="Breathe audibly near the microphone to inhale"
+                      className={`rounded-xl py-2 transition-colors ${micStatus === 'off' ? 'bg-white/10 hover:bg-white/20' : 'bg-game-sky/30 text-white'}`}
+                    >
+                      {micStatus === 'off' ? 'or 🎙 mic' : micLabel}
+                    </button>
+                  </div>
                 </div>
                 <button
                   ref={startButtonRef}
                   type="button"
                   onClick={begin}
-                  className="mt-5 w-full py-3.5 rounded-2xl bg-gradient-to-r from-brand-teal to-game-sky text-game-navy font-bold text-sm hover:brightness-110 transition"
+                  className="mt-4 sm:mt-5 shrink-0 w-full py-3.5 rounded-2xl bg-gradient-to-r from-brand-teal to-game-sky text-game-navy font-bold text-sm hover:brightness-110 transition"
                 >
                   ▶ Start running
                 </button>
@@ -555,6 +627,9 @@ export function ForestRunnerStage({
                       {isNewBest && <span>{lapResult.sec.toFixed(1)} s · </span>}
                       {h.falls} slip{h.falls !== 1 ? 's' : ''}
                     </div>
+                    <div className="mt-1 text-[11px] text-white/55">
+                      Breath sync: time your breath matched the arrow
+                    </div>
 
                     <div className="mt-4 flex gap-2">
                       <button
@@ -593,7 +668,7 @@ export function ForestRunnerStage({
               </div>
               <div>
                 <div aria-live="polite" className={`text-sm font-bold ${inhaleCue ? 'text-game-coin' : 'text-white'}`}>
-                  {inhaleCue ? 'Inhale — jump & glide' : 'Exhale — relax & run'}
+                  {counting ? 'Get ready — breathe out' : inhaleCue ? 'Inhale — jump & glide' : 'Exhale — relax & run'}
                 </div>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-[10px] font-mono text-white/60">LUNG</span>
@@ -623,14 +698,14 @@ export function ForestRunnerStage({
                   : 'bg-gradient-to-r from-game-ember to-game-ember-amber text-white'
               }`}
             >
-              {holding ? '▲ Inhaling…' : started ? 'Hold to inhale' : 'Hold to start'}
+              {holding ? '▲ Inhaling…' : counting ? 'Get ready…' : started ? 'Hold to inhale' : 'Tap to start'}
             </button>
 
             <div className="flex items-center gap-2 pointer-events-auto" onPointerDown={keepPointer}>
               <button
                 type="button"
                 onClick={togglePause}
-                disabled={!started || !!lapResult}
+                disabled={!started || !!lapResult || counting}
                 aria-label={paused ? 'Resume' : 'Pause'}
                 title={paused ? 'Resume' : 'Pause'}
                 className="w-10 h-10 rounded-xl bg-white/15 hover:bg-white/25 disabled:opacity-40 text-sm"

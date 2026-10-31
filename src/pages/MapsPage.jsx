@@ -61,11 +61,11 @@ export default function MapsPage() {
                 <dl className="grid grid-cols-2 gap-3">
                   <div className="rounded-2xl bg-canvas px-4 py-3">
                     <dt className="text-xs text-slate-600">Resistance</dt>
-                    <dd className="text-lg font-semibold tabular-nums text-slate-900">{m.kpa} kPa</dd>
+                    <dd className="text-lg font-semibold tabular-nums text-slate-900">{m.kpa}&nbsp;kPa</dd>
                   </div>
                   <div className="rounded-2xl bg-canvas px-4 py-3">
                     <dt className="text-xs text-slate-600">Inhale target</dt>
-                    <dd className="text-lg font-semibold tabular-nums text-slate-900">{m.targetL} L</dd>
+                    <dd className="text-lg font-semibold tabular-nums text-slate-900">{m.targetL}&nbsp;L</dd>
                   </div>
                 </dl>
                 <p className="text-sm text-slate-600 leading-relaxed flex-1">{m.desc}</p>
