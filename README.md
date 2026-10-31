@@ -42,7 +42,7 @@ Each level trains a different breathing skill instead of just running faster. Th
 
 | Level | Skill | Breaths per lap | Avg inhale | Breath refill | Coin reach | Pace |
 |---|---|---|---|---|---|---|
-| Forest · 1 | Learn the jump: only the big gap needs a real breath | 4 | 0.33 s | 1.2 s fast | 58 px generous | 1.0× |
+| Forest · 1 | Learn the jump: only the big gap needs a real breath | 4 | 0.43 s | 1.2 s fast | 58 px generous | 1.0× |
 | Sunlit Canyon · 2 | Keep a rhythm: short hops between the big jumps | 7 | 0.64 s | 2.2 s | 42 px | 1.1× |
 | Glacier Ridge · 3 | Long, controlled breaths: coins only at the arc top, slow refill | 4 | 1.23 s | 2.8 s slow | 28 px precise | 1.2× |
 
