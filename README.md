@@ -11,7 +11,7 @@ Designed, illustrated and built by **Jie (Fia) Yin**.
 
 **[▶ Play it live](https://lunarc-seattle.github.io/breath-runner/)** · **[Quality report](https://lunarc-seattle.github.io/breath-runner/quality/)** · [Full design case study (PDF)](pic/Jie_Yin_Breath_Training.pdf)
 
-![Breath Runner gameplay: the runner jumps a gap on a long inhale and collects coins](docs/media/breath-runner.gif)
+![Breath Runner gameplay: on a long inhale the runner jumps the forest gap and glides through a line of coins](docs/media/level1-glide.gif)
 
 **Versions.** Every web release stays playable at its own URL, rebuilt from its git tag on each deploy (see [how](#engineering-highlights)):
 
@@ -50,10 +50,13 @@ The difficulty gap is intentional: Level 1 refills breath in 1.2 s and has a 58 
 
 A test proves the Glacier point: cutting each breath to 0.6 s at the same jump points collects fewer than half the coins.
 
-<p>
-  <img src="docs/media/level1-forest.jpg" alt="Level 1 in play: HUD with coins and breath sync, runner on the cliffs, breath dock at the bottom" width="49%" />
-  <img src="docs/media/level3-glacier.jpg" alt="Level 3 start card showing 22 coins, 2 s lung and 1.2x pace" width="49%" />
-</p>
+Each level, played by following its breath cues (one clean lap each, recorded frame by frame with [`scripts/media/`](scripts/media/record-gameplay.mjs)):
+
+| | Take-off | Glide | Lap complete |
+|---|---|---|---|
+| **Forest · 1** | ![Level 1: the arrow tilts up, she jumps the first gap and picks up coins](docs/media/level1-first-jump.gif) | ![Level 1: a long inhale carries her over the big gap through a line of coins](docs/media/level1-glide.gif) | ![Level 1: last jumps onto the stone ledge, then the lap card: 24 of 30 coins, 97% breath sync, 0 slips](docs/media/level1-finish.gif) |
+| **Sunlit Canyon · 2** | ![Level 2: short hops in rhythm on the flat cliffs, each one through a coin arc](docs/media/level2-rhythm.gif) | ![Level 2: a longer breath over the gap, coins along the arc](docs/media/level2-glide.gif) | ![Level 2: the final hops, then the lap card: all 23 coins, 98% breath sync](docs/media/level2-finish.gif) |
+| **Glacier Ridge · 3** | ![Level 3: one long, steady inhale lifts her to the coins at the top of the arc](docs/media/level3-long-breath.gif) | ![Level 3: the longest glide of the game, 1.6 s of inhale over the gap](docs/media/level3-glide.gif) | ![Level 3: the last glide, then the lap card: all 18 coins, 99% breath sync](docs/media/level3-finish.gif) |
 
 ## From sketch to playable game
 
